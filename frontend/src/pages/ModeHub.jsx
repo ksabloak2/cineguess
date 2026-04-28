@@ -335,7 +335,7 @@ export default function ModeHub() {
 
         {/* ── 2×2 Ticket grid — widescreen, height-capped to stay in viewport ── */}
         <div
-          className="flex-1 flex items-end justify-center w-full"
+          className="flex-1 flex items-center justify-center w-full"
           style={{ minHeight: 0, overflow: 'hidden' }}
         >
           <div
