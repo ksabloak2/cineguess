@@ -89,6 +89,7 @@ export default function FriendsPage() {
   const [linkCopied, setLinkCopied]     = useState(false);
   const [showQR, setShowQR]             = useState(false);
   const [mobileTab, setMobileTab]       = useState('crew'); // 'crew' | 'screen'
+  const [openInbox, setOpenInbox]       = useState(null);  // null | 'sent' | 'incoming'
 
   const inviteUrl = buildInviteUrl(profile?.username);
 
@@ -638,6 +639,142 @@ export default function FriendsPage() {
               )}
             </GlassPane>
 
+            {/* Pending invites + incoming requests — always visible 2-button row */}
+            <GlassPane borderColor="rgba(168,85,247,0.14)">
+              {/* 2-icon row */}
+              <div style={{ display: 'flex', gap: 6 }}>
+                {/* Sent / Pending Invites */}
+                <button
+                  onClick={() => setOpenInbox(openInbox === 'sent' ? null : 'sent')}
+                  style={{
+                    flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+                    gap: 3, padding: '7px 4px',
+                    borderRadius: 9, cursor: 'pointer', position: 'relative',
+                    background: openInbox === 'sent' ? 'rgba(168,85,247,0.14)' : 'rgba(168,85,247,0.05)',
+                    border: `1px solid ${openInbox === 'sent' ? 'rgba(168,85,247,0.40)' : 'rgba(168,85,247,0.16)'}`,
+                    transition: 'background 0.18s, border-color 0.18s',
+                  }}
+                  onMouseEnter={(e) => { if (openInbox !== 'sent') { e.currentTarget.style.background = 'rgba(168,85,247,0.10)'; } }}
+                  onMouseLeave={(e) => { if (openInbox !== 'sent') { e.currentTarget.style.background = 'rgba(168,85,247,0.05)'; } }}
+                >
+                  {sentRequests.length > 0 && (
+                    <span style={{
+                      position: 'absolute', top: 4, right: 5,
+                      fontSize: '0.52rem', fontWeight: 800,
+                      background: 'rgba(168,85,247,0.85)', color: '#fff',
+                      borderRadius: 999, padding: '1px 4px', minWidth: 14, textAlign: 'center',
+                    }}>{sentRequests.length}</span>
+                  )}
+                  <span style={{ fontSize: '0.95rem', lineHeight: 1 }}>📤</span>
+                  <span style={{ fontSize: '0.58rem', fontWeight: 700, color: 'rgba(255,255,255,0.50)', letterSpacing: '0.03em' }}>Sent</span>
+                </button>
+
+                {/* Incoming Requests */}
+                <button
+                  onClick={() => setOpenInbox(openInbox === 'incoming' ? null : 'incoming')}
+                  style={{
+                    flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+                    gap: 3, padding: '7px 4px',
+                    borderRadius: 9, cursor: 'pointer', position: 'relative',
+                    background: openInbox === 'incoming' ? 'rgba(243,206,19,0.12)' : 'rgba(243,206,19,0.04)',
+                    border: `1px solid ${openInbox === 'incoming' ? 'rgba(243,206,19,0.40)' : 'rgba(243,206,19,0.16)'}`,
+                    transition: 'background 0.18s, border-color 0.18s',
+                  }}
+                  onMouseEnter={(e) => { if (openInbox !== 'incoming') { e.currentTarget.style.background = 'rgba(243,206,19,0.09)'; } }}
+                  onMouseLeave={(e) => { if (openInbox !== 'incoming') { e.currentTarget.style.background = 'rgba(243,206,19,0.04)'; } }}
+                >
+                  {requests.length > 0 && (
+                    <span style={{
+                      position: 'absolute', top: 4, right: 5,
+                      fontSize: '0.52rem', fontWeight: 800,
+                      background: '#F3CE13', color: '#000',
+                      borderRadius: 999, padding: '1px 4px', minWidth: 14, textAlign: 'center',
+                    }}>{requests.length}</span>
+                  )}
+                  <span style={{ fontSize: '0.95rem', lineHeight: 1 }}>📥</span>
+                  <span style={{ fontSize: '0.58rem', fontWeight: 700, color: 'rgba(255,255,255,0.50)', letterSpacing: '0.03em' }}>Requests</span>
+                </button>
+              </div>
+
+              {/* Expanded: Sent invites */}
+              {openInbox === 'sent' && (
+                <div style={{ borderTop: '1px solid rgba(168,85,247,0.12)', paddingTop: 8 }}>
+                  {sentRequests.length === 0 ? (
+                    <p style={{ fontSize: '0.70rem', color: 'rgba(255,255,255,0.28)', textAlign: 'center', padding: '6px 0', margin: 0 }}>
+                      No pending invites
+                    </p>
+                  ) : (
+                    <div style={{
+                      display: 'flex', gap: 8,
+                      overflowX: 'auto', scrollSnapType: 'x mandatory',
+                      WebkitOverflowScrolling: 'touch',
+                      paddingBottom: 2, msOverflowStyle: 'none', scrollbarWidth: 'none',
+                    }}>
+                      {sentRequests.map((req) => (
+                        <div
+                          key={req.receiver_id}
+                          style={{
+                            scrollSnapAlign: 'start', flexShrink: 0,
+                            width: 'clamp(100px,38%,130px)',
+                            borderRadius: 10, padding: '8px 10px',
+                            background: 'rgba(168,85,247,0.06)',
+                            border: '1px solid rgba(168,85,247,0.16)',
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                            position: 'relative',
+                          }}
+                        >
+                          <button
+                            onClick={() => handleCancelSent(req.receiver_id)}
+                            title="Cancel"
+                            style={{
+                              position: 'absolute', top: 5, right: 5,
+                              width: 15, height: 15, borderRadius: '50%',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              background: 'transparent', border: '1px solid rgba(255,255,255,0.10)',
+                              color: 'rgba(255,255,255,0.30)', fontSize: '0.48rem', cursor: 'pointer', lineHeight: 1,
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.color = '#f87171'; e.currentTarget.style.borderColor = 'rgba(248,113,113,0.4)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.30)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)'; }}
+                          >✕</button>
+                          <AvatarCircle letter={req.username[0]} size={26} />
+                          <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', textAlign: 'center' }}>
+                            @{req.username}
+                          </div>
+                          <div style={{ fontSize: '0.53rem', color: 'rgba(168,85,247,0.60)', fontWeight: 600 }}>Pending…</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Expanded: Incoming requests */}
+              {openInbox === 'incoming' && (
+                <div style={{ borderTop: '1px solid rgba(243,206,19,0.12)', paddingTop: 8 }}>
+                  {requests.length === 0 ? (
+                    <p style={{ fontSize: '0.70rem', color: 'rgba(255,255,255,0.28)', textAlign: 'center', padding: '6px 0', margin: 0 }}>
+                      No pending requests
+                    </p>
+                  ) : (
+                    <ul style={{ display: 'flex', flexDirection: 'column', gap: 7, margin: 0, padding: 0, listStyle: 'none' }}>
+                      {requests.map((req) => (
+                        <li key={req.requester_id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <AvatarCircle letter={req.username[0]} size={26} />
+                          <span style={{ flex: 1, minWidth: 0, fontSize: '0.75rem', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            @{req.username}
+                          </span>
+                          <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                            <button onClick={() => handleAccept(req.requester_id)} className="btn-primary" style={{ fontSize: '0.62rem', padding: '3px 7px' }}>✓</button>
+                            <button onClick={() => handleDecline(req.requester_id)} className="btn-secondary" style={{ fontSize: '0.62rem', padding: '3px 7px' }}>✕</button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </GlassPane>
+
             {/* Invite card */}
             <InviteCard
               inviteUrl={inviteUrl}
@@ -647,85 +784,6 @@ export default function FriendsPage() {
               showQR={showQR}
               onToggleQR={() => setShowQR((v) => !v)}
             />
-
-            {/* Pending sent — horizontal swipe carousel */}
-            {sentRequests.length > 0 && (
-              <GlassPane borderColor="rgba(168,85,247,0.14)">
-                <PaneLabel icon={<PendingSendIcon />} badge={sentRequests.length}>
-                  Pending invites
-                </PaneLabel>
-                <div style={{
-                  display: 'flex',
-                  gap: 8,
-                  overflowX: 'auto',
-                  scrollSnapType: 'x mandatory',
-                  WebkitOverflowScrolling: 'touch',
-                  paddingBottom: 2,
-                  msOverflowStyle: 'none',
-                  scrollbarWidth: 'none',
-                }}>
-                  {sentRequests.map((req) => (
-                    <div
-                      key={req.receiver_id}
-                      style={{
-                        scrollSnapAlign: 'start',
-                        flexShrink: 0,
-                        width: 'clamp(110px,40%,140px)',
-                        borderRadius: 10,
-                        padding: '8px 10px',
-                        background: 'rgba(168,85,247,0.06)',
-                        border: '1px solid rgba(168,85,247,0.16)',
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
-                        position: 'relative',
-                      }}
-                    >
-                      <button
-                        onClick={() => handleCancelSent(req.receiver_id)}
-                        title="Cancel"
-                        style={{
-                          position: 'absolute', top: 5, right: 5,
-                          width: 16, height: 16, borderRadius: '50%',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          background: 'transparent', border: '1px solid rgba(255,255,255,0.10)',
-                          color: 'rgba(255,255,255,0.30)', fontSize: '0.50rem', cursor: 'pointer',
-                          lineHeight: 1,
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.color = '#f87171'; e.currentTarget.style.borderColor = 'rgba(248,113,113,0.4)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.30)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)'; }}
-                      >✕</button>
-                      <AvatarCircle letter={req.username[0]} size={28} />
-                      <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', textAlign: 'center' }}>
-                        @{req.username}
-                      </div>
-                      <div style={{ fontSize: '0.55rem', color: 'rgba(168,85,247,0.65)', fontWeight: 600 }}>Pending…</div>
-                    </div>
-                  ))}
-                </div>
-              </GlassPane>
-            )}
-
-            {/* Incoming requests */}
-            {requests.length > 0 && (
-              <GlassPane borderColor="rgba(243,206,19,0.22)">
-                <PaneLabel badgeGold badge={requests.length}>
-                  Requests
-                </PaneLabel>
-                <ul style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                  {requests.map((req) => (
-                    <li key={req.requester_id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <AvatarCircle letter={req.username[0]} size={26} />
-                      <span style={{ flex: 1, minWidth: 0, fontSize: '0.75rem', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        @{req.username}
-                      </span>
-                      <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-                        <button onClick={() => handleAccept(req.requester_id)} className="btn-primary" style={{ fontSize: '0.62rem', padding: '3px 7px' }}>✓</button>
-                        <button onClick={() => handleDecline(req.requester_id)} className="btn-secondary" style={{ fontSize: '0.62rem', padding: '3px 7px' }}>✕</button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </GlassPane>
-            )}
 
             {/* VIP friend list — scrolls independently, top sections stay pinned */}
             <div style={{
@@ -1120,11 +1178,13 @@ function FriendDetail({ friend, viewingFriend, favRgb, myFriends = [], mySentReq
   const [percentiles, setPercentiles]     = useState(null);
   const [friendFriends, setFriendFriends] = useState(null);
   const [addingPill, setAddingPill]       = useState(null); // id of pill showing add-prompt
+  const [crewExpanded, setCrewExpanded]   = useState(false);
 
   useEffect(() => {
     if (!friend?.id) return;
     setPercentiles(null);
     setFriendFriends(null);
+    setCrewExpanded(false);
     getFriendPercentiles(friend.id)
       .then(setPercentiles)
       .catch(() => setPercentiles({}));
@@ -1505,98 +1565,131 @@ function FriendDetail({ friend, viewingFriend, favRgb, myFriends = [], mySentReq
               No friends yet.
             </p>
           ) : (
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
-              {friendFriends.map((f) => {
-                const isFriend  = myFriends.some((mf) => mf.id === f.id);
-                const isPending = mySentRequests.some((r) => r.receiver_id === f.id);
-                const isMe      = f.id === viewingFriend?.id; // the person whose profile we're on
-                const showPrompt = addingPill === f.id;
+            <>
+              {/* Pills container — capped at 2 lines (~72px) when collapsed */}
+              <div style={{ position: 'relative', marginTop: 8 }}>
+                <div style={{
+                  display: 'flex', gap: 8, flexWrap: 'wrap',
+                  maxHeight: crewExpanded ? 'none' : 72,
+                  overflow: 'hidden',
+                }}>
+                  {[...friendFriends].sort((a, b) => a.username.localeCompare(b.username)).map((f) => {
+                    const isFriend  = myFriends.some((mf) => mf.id === f.id);
+                    const isPending = mySentRequests.some((r) => r.receiver_id === f.id);
+                    const isMe      = f.id === viewingFriend?.id;
+                    const showPrompt = addingPill === f.id;
 
-                return (
-                  <div key={f.id} style={{ position: 'relative' }}>
-                    {/* pill */}
-                    <button
-                      onClick={() => {
-                        if (isFriend) { onViewFriend?.(f.id, f.username); }
-                        else if (!isPending && !isMe) { setAddingPill(showPrompt ? null : f.id); }
-                      }}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 6,
-                        padding: '5px 10px 5px 6px',
-                        borderRadius: 999,
-                        background: isFriend
-                          ? `rgba(${favRgb},0.12)`
-                          : isPending
-                          ? 'rgba(243,206,19,0.07)'
-                          : 'rgba(255,255,255,0.05)',
-                        border: `1px solid ${isFriend
-                          ? `rgba(${favRgb},0.35)`
-                          : isPending
-                          ? 'rgba(243,206,19,0.22)'
-                          : 'rgba(255,255,255,0.12)'}`,
-                        cursor: isMe ? 'default' : 'pointer',
-                        transition: 'background 0.18s, border-color 0.18s',
-                      }}
-                    >
-                      <AvatarCircle letter={f.username[0]} size={20} />
-                      <span style={{ fontSize: '0.68rem', fontWeight: 700, color: 'rgba(255,255,255,0.85)' }}>
-                        @{f.username}
-                      </span>
-                      {isFriend && (
-                        <span style={{ fontSize: '0.55rem', color: `rgba(${favRgb},0.75)`, marginLeft: 1 }}>→</span>
-                      )}
-                      {isPending && (
-                        <span style={{ fontSize: '0.55rem', color: 'rgba(243,206,19,0.65)', marginLeft: 1 }}>⏳</span>
-                      )}
-                      {!isFriend && !isPending && !isMe && (
-                        <span style={{ fontSize: '0.55rem', color: 'rgba(168,85,247,0.70)', marginLeft: 1 }}>+</span>
-                      )}
-                    </button>
+                    return (
+                      <div key={f.id} style={{ position: 'relative' }}>
+                        {/* pill */}
+                        <button
+                          onClick={() => {
+                            if (isFriend) { onViewFriend?.(f.id, f.username); }
+                            else if (!isPending && !isMe) { setAddingPill(showPrompt ? null : f.id); }
+                          }}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 6,
+                            padding: '5px 10px 5px 6px',
+                            borderRadius: 999,
+                            background: isFriend
+                              ? `rgba(${favRgb},0.12)`
+                              : isPending
+                              ? 'rgba(243,206,19,0.07)'
+                              : 'rgba(255,255,255,0.05)',
+                            border: `1px solid ${isFriend
+                              ? `rgba(${favRgb},0.35)`
+                              : isPending
+                              ? 'rgba(243,206,19,0.22)'
+                              : 'rgba(255,255,255,0.12)'}`,
+                            cursor: isMe ? 'default' : 'pointer',
+                            transition: 'background 0.18s, border-color 0.18s',
+                          }}
+                        >
+                          <AvatarCircle letter={f.username[0]} size={20} />
+                          <span style={{ fontSize: '0.68rem', fontWeight: 700, color: 'rgba(255,255,255,0.85)' }}>
+                            @{f.username}
+                          </span>
+                          {isFriend && (
+                            <span style={{ fontSize: '0.55rem', color: `rgba(${favRgb},0.75)`, marginLeft: 1 }}>→</span>
+                          )}
+                          {isPending && (
+                            <span style={{ fontSize: '0.55rem', color: 'rgba(243,206,19,0.65)', marginLeft: 1 }}>⏳</span>
+                          )}
+                          {!isFriend && !isPending && !isMe && (
+                            <span style={{ fontSize: '0.55rem', color: 'rgba(168,85,247,0.70)', marginLeft: 1 }}>+</span>
+                          )}
+                        </button>
 
-                    {/* add-friend prompt popover */}
-                    {showPrompt && (
-                      <div style={{
-                        position: 'absolute', bottom: 'calc(100% + 6px)', left: '50%',
-                        transform: 'translateX(-50%)',
-                        zIndex: 20,
-                        background: 'rgba(10,10,20,0.96)',
-                        border: '1px solid rgba(168,85,247,0.35)',
-                        borderRadius: 10, padding: '8px 10px',
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-                        whiteSpace: 'nowrap',
-                        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-                      }}>
-                        <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.65)' }}>
-                          Add @{f.username}?
-                        </span>
-                        <div style={{ display: 'flex', gap: 6 }}>
-                          <button
-                            onClick={() => { onAddFriend?.(f.username); setAddingPill(null); }}
-                            style={{
-                              padding: '4px 12px', borderRadius: 7, fontSize: '0.65rem',
-                              fontWeight: 700, cursor: 'pointer',
-                              background: 'rgba(168,85,247,0.20)',
-                              border: '1px solid rgba(168,85,247,0.45)',
-                              color: '#c084fc',
-                            }}
-                          >Send request</button>
-                          <button
-                            onClick={() => setAddingPill(null)}
-                            style={{
-                              padding: '4px 8px', borderRadius: 7, fontSize: '0.65rem',
-                              fontWeight: 600, cursor: 'pointer',
-                              background: 'rgba(255,255,255,0.05)',
-                              border: '1px solid rgba(255,255,255,0.10)',
-                              color: 'rgba(255,255,255,0.40)',
-                            }}
-                          >Cancel</button>
-                        </div>
+                        {/* add-friend prompt popover */}
+                        {showPrompt && (
+                          <div style={{
+                            position: 'absolute', bottom: 'calc(100% + 6px)', left: '50%',
+                            transform: 'translateX(-50%)',
+                            zIndex: 20,
+                            background: 'rgba(10,10,20,0.96)',
+                            border: '1px solid rgba(168,85,247,0.35)',
+                            borderRadius: 10, padding: '8px 10px',
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                            whiteSpace: 'nowrap',
+                            boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                          }}>
+                            <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.65)' }}>
+                              Add @{f.username}?
+                            </span>
+                            <div style={{ display: 'flex', gap: 6 }}>
+                              <button
+                                onClick={() => { onAddFriend?.(f.username); setAddingPill(null); }}
+                                style={{
+                                  padding: '4px 12px', borderRadius: 7, fontSize: '0.65rem',
+                                  fontWeight: 700, cursor: 'pointer',
+                                  background: 'rgba(168,85,247,0.20)',
+                                  border: '1px solid rgba(168,85,247,0.45)',
+                                  color: '#c084fc',
+                                }}
+                              >Send request</button>
+                              <button
+                                onClick={() => setAddingPill(null)}
+                                style={{
+                                  padding: '4px 8px', borderRadius: 7, fontSize: '0.65rem',
+                                  fontWeight: 600, cursor: 'pointer',
+                                  background: 'rgba(255,255,255,0.05)',
+                                  border: '1px solid rgba(255,255,255,0.10)',
+                                  color: 'rgba(255,255,255,0.40)',
+                                }}
+                              >Cancel</button>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                    );
+                  })}
+                </div>
+                {/* Fade gradient at bottom when collapsed */}
+                {!crewExpanded && (
+                  <div style={{
+                    position: 'absolute', bottom: 0, left: 0, right: 0, height: 28,
+                    background: 'linear-gradient(transparent, rgba(4,4,12,0.94))',
+                    pointerEvents: 'none',
+                  }} />
+                )}
+              </div>
+
+              {/* Show more / less toggle */}
+              <button
+                onClick={() => setCrewExpanded((v) => !v)}
+                style={{
+                  marginTop: 5, background: 'none', border: 'none', cursor: 'pointer',
+                  fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.06em',
+                  color: `rgba(${favRgb},0.60)`,
+                  padding: 0, display: 'flex', alignItems: 'center', gap: 3,
+                  transition: 'color 0.15s',
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.color = `rgba(${favRgb},0.90)`}
+                onMouseLeave={(e) => e.currentTarget.style.color = `rgba(${favRgb},0.60)`}
+              >
+                {crewExpanded ? '↑ Show less' : `↓ Show all (${friendFriends.length})`}
+              </button>
+            </>
           )}
         </div>
       )}
