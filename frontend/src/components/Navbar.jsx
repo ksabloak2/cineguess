@@ -207,11 +207,12 @@ export default function Navbar() {
           MOBILE BOTTOM TOGGLE (sm and below only)
       ════════════════════════════════════════════════════ */}
       <div
-        className="mob-mode-bar sm:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pb-4 pt-2"
+        className="mob-mode-bar sm:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pt-2"
         style={{
-          background:           'linear-gradient(to top, rgba(10,10,15,0.98) 60%, transparent)',
-          backdropFilter:       'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
+          paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)',
+          background:           'linear-gradient(to top, rgba(10,10,15,1) 55%, rgba(10,10,15,0.92) 80%, transparent)',
+          backdropFilter:       'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
         }}
       >
         <ModeToggle

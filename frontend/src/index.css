@@ -234,6 +234,19 @@ svg *,
   }
 }
 
+/* ── Main content bottom padding ────────────────────────────────────────────
+   Mobile: leaves room for the fixed Daily/Unlimited toggle + iOS home bar.
+   Desktop (sm+): standard padding, no fixed bar exists.                      */
+.main-content-pad {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
+}
+@media (min-width: 640px) {
+  .main-content-pad { padding-bottom: 2rem; }
+}
+@media (min-width: 1024px) {
+  .main-content-pad { padding-bottom: 2.5rem; }
+}
+
 /* ---- Responsive container utility ---- */
 .container-game {
   width: 100%;

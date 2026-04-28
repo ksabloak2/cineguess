@@ -993,11 +993,11 @@ function EmptyDetail() {
 
 // ── Category display metadata for the standings section ─────────────────────
 const CAT_META = {
-  top250:                 { emoji: '🏆', label: 'Top 250' },
+  top250:                 { emoji: '🏆', label: 'Most Popular' },
   superhero:              { emoji: '🦸', label: 'Superhero' },
   animated:               { emoji: '✨', label: 'Animated' },
   indiancinema:           { emoji: '🎭', label: 'Indian Cinema' },
-  unlimited_top250:       { emoji: '♾️', label: 'Unlimited Top 250' },
+  unlimited_top250:       { emoji: '♾️', label: 'Unlimited Most Popular' },
   unlimited_superhero:    { emoji: '♾️', label: 'Unlimited Superhero' },
   unlimited_animated:     { emoji: '♾️', label: 'Unlimited Animated' },
   unlimited_indiancinema: { emoji: '♾️', label: 'Unlimited Indian' },

@@ -186,7 +186,7 @@ export default function App() {
   return (
     <div className="min-h-dvh flex flex-col" style={{ background: '#0a0a0f', color: '#ffffff' }}>
       <Navbar />
-      <main className="flex-1 container-game py-4 sm:py-6 lg:py-8 pb-24 sm:pb-8 lg:pb-10">
+      <main className="flex-1 container-game py-4 sm:py-6 lg:py-8 main-content-pad">
         {/* ErrorBoundary ensures a broken page never kills the whole app */}
         <ErrorBoundary>
           <Suspense fallback={<PageSpinner />}>
