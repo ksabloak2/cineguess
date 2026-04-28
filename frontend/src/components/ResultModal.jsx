@@ -57,11 +57,10 @@ export default function ResultModal({
   const shareText = buildShareString(category, guessResults.map((g) => g.tiles), won, profile?.username);
   const fields    = getTileFields(category);
 
-  // Use Letterboxd's TMDB redirect — always lands on the exact right film
-  // regardless of title conflicts (e.g. Smile 2022 vs Smile 1975).
-  const letterboxdUrl = result.tmdb_id
-    ? `https://letterboxd.com/tmdb/movie/${result.tmdb_id}/`
-    : `https://letterboxd.com/film/${result.title?.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim().replace(/\s+/g, '-')}/`;
+  // Always include the year in the slug to avoid title conflicts (e.g. Smile 2022 vs 1975).
+  // Letterboxd's canonical URL format for disambiguation is /film/title-year/.
+  const _lbSlug = result.title?.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim().replace(/\s+/g, '-') || '';
+  const letterboxdUrl = `https://letterboxd.com/film/${_lbSlug}${result.year ? `-${result.year}` : ''}/`;
   const imdbUrl = result.imdb_id ? `https://www.imdb.com/title/${result.imdb_id}/` : null;
 
   const accentColor = won ? '#22c55e' : '#ef4444';
