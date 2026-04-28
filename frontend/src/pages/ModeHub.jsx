@@ -75,6 +75,13 @@ function horizontalTicketMask() {
   };
 }
 
+// ── True-hover detection ─────────────────────────────────────────────────────
+// On touch-only devices the browser fires synthetic mouseenter/mouseleave after
+// a tap, causing the just-navigated-to card to light up immediately.
+// (hover: hover) is false on phones/tablets, so we skip mouse handlers there.
+const CAN_HOVER = typeof window !== 'undefined'
+  && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
 // ── Dust particles — 6 near-layer only (reduced from 10 to lower GPU load) ──
 const PARTICLES = [
   { x: 18, dur: 7, delay:  0.5, size: 2.2, op: 0.26, drift:  8 },
@@ -471,8 +478,8 @@ function TicketCard({ cfg, catId, to, floatDelay, hoveredId, setHoveredId, navig
   return (
     <div
       onClick={handleClick}
-      onMouseEnter={() => !ripping && setHoveredId(catId)}
-      onMouseLeave={() => setHoveredId(null)}
+      onMouseEnter={CAN_HOVER ? () => !ripping && setHoveredId(catId) : undefined}
+      onMouseLeave={CAN_HOVER ? () => setHoveredId(null) : undefined}
       className={`ticket-card group relative flex${ripping ? ' ticket-ripping' : ''}`}
       style={{
         cursor:   ripping ? 'default' : 'pointer',
