@@ -539,7 +539,10 @@ export default function FriendsPage() {
               <PaneLabel>Add a friend</PaneLabel>
               <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: 6 }}>
                 <input
-                  type="text"
+                  type="search"
+                  name="friend-search"
+                  id="friend-search"
+                  autoComplete="off"
                   value={searchQ}
                   onChange={handleSearch}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit()}

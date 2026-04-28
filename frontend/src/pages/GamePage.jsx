@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useSettings } from '../context/SettingsContext';
 import {
   getMoviePool, getDailyState, submitGuess, checkGuess, getResult,
   submitUnlimitedResult, getStreaks,
@@ -28,6 +29,7 @@ export default function GamePage() {
   const category = slugToCategory(rawCategory);
   const navigate = useNavigate();
   const { session } = useAuth();
+  const { colorblind } = useSettings();
 
   useEffect(() => {
     if (!VALID_MODES.has(mode) || !VALID_IDS.has(rawCategory)) {
@@ -664,6 +666,44 @@ export default function GamePage() {
         latestType={latestHintType}
         onClose={() => setShowHintModal(false)}
       />
+
+      {/* Colorblind legend — only shown when colorblind mode is active */}
+      {colorblind && (
+        <div style={{
+          display: 'flex', flexWrap: 'wrap', gap: '6px 12px',
+          alignItems: 'center', justifyContent: 'center',
+          padding: '7px 14px',
+          borderRadius: 10,
+          background: 'rgba(96,165,250,0.07)',
+          border: '1px solid rgba(96,165,250,0.18)',
+        }}>
+          <span style={{ fontSize: '0.60rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(96,165,250,0.75)', marginRight: 2 }}>
+            🎨 Legend:
+          </span>
+          {[
+            { pattern: 'diagonal-stripes', color: '#4ade80', label: 'Match' },
+            { pattern: 'dots',             color: '#fbbf24', label: '≤2 Yr' },
+            { pattern: 'dots',             color: '#f59e0b', label: '≤5 Yr' },
+            { pattern: 'bars',             color: '#f87171', label: 'Wrong' },
+          ].map(({ pattern, color, label }, i) => (
+            <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+              <span style={{
+                display: 'inline-block', width: 14, height: 14,
+                borderRadius: 3,
+                background: color,
+                opacity: 0.85,
+                backgroundImage: pattern === 'diagonal-stripes'
+                  ? 'repeating-linear-gradient(45deg,rgba(0,0,0,0.25) 0px,rgba(0,0,0,0.25) 2px,transparent 2px,transparent 6px)'
+                  : pattern === 'dots'
+                  ? 'radial-gradient(circle 1.5px at 4px 4px,rgba(0,0,0,0.30) 100%,transparent 100%)'
+                  : 'repeating-linear-gradient(0deg,rgba(0,0,0,0.28) 0px,rgba(0,0,0,0.28) 2px,transparent 2px,transparent 5px)',
+                backgroundSize: pattern === 'dots' ? '7px 7px' : 'auto',
+              }} />
+              <span style={{ fontSize: '0.62rem', fontWeight: 600, color: 'rgba(255,255,255,0.65)' }}>{label}</span>
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* Game board */}
       <div ref={boardRef}>
