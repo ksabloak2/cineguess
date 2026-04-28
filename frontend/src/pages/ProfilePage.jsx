@@ -1400,7 +1400,7 @@ function SettingsTab({ onRefresh }) {
   return (
     <div
       className="scrollbar-hide"
-      style={{ height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 'clamp(10px,1.4vh,16px)', paddingBottom: 12 }}
+      style={{ height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 'clamp(10px,1.4vh,16px)', paddingBottom: 12, alignItems: 'stretch' }}
     >
       {/* ── Account ──────────────────────────────────────────────────── */}
       <div style={{
@@ -1617,7 +1617,9 @@ function SettingsTab({ onRefresh }) {
       </button>
 
       {/* ── Live Preview Theater ─────────────────────────────────────── */}
-      <LivePreviewTheater colorblind={colorblind} />
+      <div style={{ flexShrink: 0 }}>
+        <LivePreviewTheater colorblind={colorblind} />
+      </div>
 
       {/* ── Colorblind Mode ──────────────────────────────────────────── */}
       <div style={{
@@ -1642,7 +1644,7 @@ function SettingsTab({ onRefresh }) {
               Colorblind Mode
             </div>
             <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.5 }}>
-              Diagonal stripes (Correct) · Dots (Partial) · Bars (Incorrect)<br />
+              Diagonal stripes (Match) · Vertical lines (≤2 Yr) · Dots (≤5 Yr) · Bars (Wrong)<br />
               Particles: ◯ (0–9) · △ (10+) · ◇ (50+) · + (100+) · ★ (250+)
             </div>
           </div>
@@ -1813,7 +1815,7 @@ function LivePreviewTheater({ colorblind }) {
       </div>
 
       {/* Stage */}
-      <div style={{ padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 18 }}>
+      <div style={{ padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 18, minHeight: 72, flexShrink: 0 }}>
         {/* Sample guess tiles — fully inline, no CSS class dependency */}
         <div style={{ display: 'flex', gap: 6, flex: 1, minWidth: 0 }}>
           {PREVIEW_TILES_DEF.map(({ bg, label, textColor }) => (

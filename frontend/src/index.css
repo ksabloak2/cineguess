@@ -101,12 +101,16 @@ svg *,
       linear-gradient(135deg, #FFBF00, #d4a017) !important;
     background-size: 10px 10px, auto !important;
   }
-  /* CYAN → dotted stipple — denser, higher contrast (Extreme proximity) */
+  /* CYAN → vertical lines (≤2 yr — distinct from amber dots) */
   html.colorblind-mode .tile-cyan {
     background:
-      radial-gradient(circle 1.8px at 5px 5px, rgba(0,0,0,0.28) 100%, transparent 100%),
+      repeating-linear-gradient(
+        90deg,
+        rgba(0,0,0,0.22) 0px, rgba(0,0,0,0.22) 2px,
+        transparent 2px, transparent 7px
+      ),
       linear-gradient(135deg, #00E5FF, #00bcd4) !important;
-    background-size: 8px 8px, auto !important;
+    background-size: auto !important;
   }
   /* YELLOW → dotted stipple (Partial match) */
   html.colorblind-mode .tile-yellow,

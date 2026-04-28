@@ -681,23 +681,26 @@ export default function GamePage() {
             🎨 Legend:
           </span>
           {[
-            { pattern: 'diagonal-stripes', color: '#4ade80', label: 'Match' },
-            { pattern: 'dots',             color: '#fbbf24', label: '≤2 Yr' },
-            { pattern: 'dots',             color: '#f59e0b', label: '≤5 Yr' },
-            { pattern: 'bars',             color: '#f87171', label: 'Wrong' },
+            { pattern: 'diagonal-stripes', color: '#22c55e', label: 'Match' },
+            { pattern: 'vertical-lines',   color: '#00E5FF', label: '≤2 Yr' },
+            { pattern: 'dots',             color: '#FFBF00', label: '≤5 Yr' },
+            { pattern: 'h-bars',           color: '#ef4444', label: 'Wrong' },
           ].map(({ pattern, color, label }, i) => (
             <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
               <span style={{
                 display: 'inline-block', width: 14, height: 14,
                 borderRadius: 3,
                 background: color,
-                opacity: 0.85,
-                backgroundImage: pattern === 'diagonal-stripes'
-                  ? 'repeating-linear-gradient(45deg,rgba(0,0,0,0.25) 0px,rgba(0,0,0,0.25) 2px,transparent 2px,transparent 6px)'
+                backgroundImage:
+                  pattern === 'diagonal-stripes'
+                    ? 'repeating-linear-gradient(-45deg,rgba(255,255,255,0.22) 0px,rgba(255,255,255,0.22) 2px,transparent 2px,transparent 8px)'
+                  : pattern === 'vertical-lines'
+                    ? 'repeating-linear-gradient(90deg,rgba(0,0,0,0.22) 0px,rgba(0,0,0,0.22) 2px,transparent 2px,transparent 7px)'
                   : pattern === 'dots'
-                  ? 'radial-gradient(circle 1.5px at 4px 4px,rgba(0,0,0,0.30) 100%,transparent 100%)'
-                  : 'repeating-linear-gradient(0deg,rgba(0,0,0,0.28) 0px,rgba(0,0,0,0.28) 2px,transparent 2px,transparent 5px)',
-                backgroundSize: pattern === 'dots' ? '7px 7px' : 'auto',
+                    ? 'radial-gradient(circle 1.5px at 4px 4px,rgba(255,255,255,0.35) 100%,transparent 100%)'
+                  : 'repeating-linear-gradient(0deg,rgba(0,0,0,0.22) 0px,rgba(0,0,0,0.22) 2px,transparent 2px,transparent 6px)',
+                backgroundSize:
+                  pattern === 'dots' ? '7px 7px' : 'auto',
               }} />
               <span style={{ fontSize: '0.62rem', fontWeight: 600, color: 'rgba(255,255,255,0.65)' }}>{label}</span>
             </span>
