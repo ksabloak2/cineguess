@@ -226,34 +226,36 @@ export default function App() {
   if (maintenance) return <IntermissionScreen />;
 
   return (
-    <div className="min-h-dvh flex flex-col" style={{ background: '#0a0a0f', color: '#ffffff' }}>
-      <Navbar />
-      <main className="flex-1 flex flex-col container-game py-4 sm:py-6 lg:py-8 sm:pb-8 lg:pb-10">
-        {/* ErrorBoundary ensures a broken page never kills the whole app */}
-        <ErrorBoundary>
-          <Suspense fallback={<PageSpinner />}>
-            {/* flex-1 so this div fills remaining height when content is short,
-                which pushes MobileFooterToggle to the bottom of the viewport */}
-            <div className="flex-1">
-              <Routes>
-                <Route path="/"                        element={<HomePage />} />
-                <Route path="/daily"                   element={<ModeHub />} />
-                <Route path="/unlimited"               element={<ModeHub />} />
-                <Route path="/play/:mode/:category"    element={<GamePage />} />
-                <Route path="/play/:mode/top250"       element={<Top250Redirect />} />
-                <Route path="/play/:category"          element={<LegacyPlayRedirect />} />
-                <Route path="/auth"                    element={<AuthPage />} />
-                <Route path="/friends"                 element={<FriendsPage />} />
-                <Route path="/profile"                 element={<ProfilePage />} />
-                <Route path="*"                        element={<Navigate to="/" replace />} />
-              </Routes>
-            </div>
-            <MobileFooterToggle />
-          </Suspense>
-        </ErrorBoundary>
-      </main>
-    </div>
-    <Analytics />
-    <SpeedInsights />
+    <>
+      <div className="min-h-dvh flex flex-col" style={{ background: '#0a0a0f', color: '#ffffff' }}>
+        <Navbar />
+        <main className="flex-1 flex flex-col container-game py-4 sm:py-6 lg:py-8 sm:pb-8 lg:pb-10">
+          {/* ErrorBoundary ensures a broken page never kills the whole app */}
+          <ErrorBoundary>
+            <Suspense fallback={<PageSpinner />}>
+              {/* flex-1 so this div fills remaining height when content is short,
+                  which pushes MobileFooterToggle to the bottom of the viewport */}
+              <div className="flex-1">
+                <Routes>
+                  <Route path="/"                        element={<HomePage />} />
+                  <Route path="/daily"                   element={<ModeHub />} />
+                  <Route path="/unlimited"               element={<ModeHub />} />
+                  <Route path="/play/:mode/:category"    element={<GamePage />} />
+                  <Route path="/play/:mode/top250"       element={<Top250Redirect />} />
+                  <Route path="/play/:category"          element={<LegacyPlayRedirect />} />
+                  <Route path="/auth"                    element={<AuthPage />} />
+                  <Route path="/friends"                 element={<FriendsPage />} />
+                  <Route path="/profile"                 element={<ProfilePage />} />
+                  <Route path="*"                        element={<Navigate to="/" replace />} />
+                </Routes>
+              </div>
+              <MobileFooterToggle />
+            </Suspense>
+          </ErrorBoundary>
+        </main>
+      </div>
+      <Analytics />
+      <SpeedInsights />
+    </>
   );
 }
