@@ -41,7 +41,7 @@ function getFavRgb(friend) {
 }
 
 function buildInviteUrl(username) {
-  const base = typeof window !== 'undefined' ? window.location.origin : 'https://cineguess.com';
+  const base = typeof window !== 'undefined' ? window.location.origin : 'https://cineguessit.com';
   return username ? `${base}/join?ref=${encodeURIComponent(username)}` : base;
 }
 

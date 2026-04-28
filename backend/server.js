@@ -24,7 +24,8 @@ app.use(helmet({
 // Explicit origin allowlist — FRONTEND_URL should be your production Vercel URL.
 // localhost variants are always permitted for local development.
 const ALLOWED_ORIGINS = [
-  process.env.FRONTEND_URL,       // e.g. https://cineguess.vercel.app
+  process.env.FRONTEND_URL,       // e.g. https://cineguessit.com
+  process.env.FRONTEND_URL_WWW,   // e.g. https://www.cineguessit.com
   'http://localhost:5173',        // Vite dev server
   'http://localhost:4173',        // Vite preview
   'http://localhost:3001',        // Frame gallery (served by the backend itself)
