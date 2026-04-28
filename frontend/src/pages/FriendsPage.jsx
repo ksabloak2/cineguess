@@ -907,8 +907,12 @@ export default function FriendsPage() {
                   friend={viewedFriendData}
                   viewingFriend={viewingFriend}
                   favRgb={favRgb}
+                  myFriends={friends}
+                  mySentRequests={sentRequests}
                   onUnfriend={handleUnfriend}
                   onClose={() => { setViewingFriend(null); setMobileTab('crew'); }}
+                  onViewFriend={(id, username) => { setViewingFriend({ id, username }); setMobileTab('screen'); }}
+                  onAddFriend={handleSendRequest}
                 />
               ) : (
                 <EmptyDetail />
@@ -1111,10 +1115,11 @@ function FriendFlameCollection({ friend, rgb }) {
 }
 
 /* ── FriendDetail — cinematic "Now Showing" screen ─────────────────────────── */
-function FriendDetail({ friend, viewingFriend, favRgb, onUnfriend, onClose }) {
+function FriendDetail({ friend, viewingFriend, favRgb, myFriends = [], mySentRequests = [], onUnfriend, onClose, onViewFriend, onAddFriend }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [percentiles, setPercentiles]     = useState(null);
   const [friendFriends, setFriendFriends] = useState(null);
+  const [addingPill, setAddingPill]       = useState(null); // id of pill showing add-prompt
 
   useEffect(() => {
     if (!friend?.id) return;
@@ -1500,23 +1505,97 @@ function FriendDetail({ friend, viewingFriend, favRgb, onUnfriend, onClose }) {
               No friends yet.
             </p>
           ) : (
-            <div style={{
-              display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8,
-            }}>
-              {friendFriends.map((f) => (
-                <div key={f.id} style={{
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  padding: '5px 10px 5px 6px',
-                  borderRadius: 999,
-                  background: `rgba(${favRgb},0.07)`,
-                  border: `1px solid rgba(${favRgb},0.20)`,
-                }}>
-                  <AvatarCircle letter={f.username[0]} size={20} />
-                  <span style={{ fontSize: '0.68rem', fontWeight: 700, color: 'rgba(255,255,255,0.80)' }}>
-                    @{f.username}
-                  </span>
-                </div>
-              ))}
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+              {friendFriends.map((f) => {
+                const isFriend  = myFriends.some((mf) => mf.id === f.id);
+                const isPending = mySentRequests.some((r) => r.receiver_id === f.id);
+                const isMe      = f.id === viewingFriend?.id; // the person whose profile we're on
+                const showPrompt = addingPill === f.id;
+
+                return (
+                  <div key={f.id} style={{ position: 'relative' }}>
+                    {/* pill */}
+                    <button
+                      onClick={() => {
+                        if (isFriend) { onViewFriend?.(f.id, f.username); }
+                        else if (!isPending && !isMe) { setAddingPill(showPrompt ? null : f.id); }
+                      }}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 6,
+                        padding: '5px 10px 5px 6px',
+                        borderRadius: 999,
+                        background: isFriend
+                          ? `rgba(${favRgb},0.12)`
+                          : isPending
+                          ? 'rgba(243,206,19,0.07)'
+                          : 'rgba(255,255,255,0.05)',
+                        border: `1px solid ${isFriend
+                          ? `rgba(${favRgb},0.35)`
+                          : isPending
+                          ? 'rgba(243,206,19,0.22)'
+                          : 'rgba(255,255,255,0.12)'}`,
+                        cursor: isMe ? 'default' : 'pointer',
+                        transition: 'background 0.18s, border-color 0.18s',
+                      }}
+                    >
+                      <AvatarCircle letter={f.username[0]} size={20} />
+                      <span style={{ fontSize: '0.68rem', fontWeight: 700, color: 'rgba(255,255,255,0.85)' }}>
+                        @{f.username}
+                      </span>
+                      {isFriend && (
+                        <span style={{ fontSize: '0.55rem', color: `rgba(${favRgb},0.75)`, marginLeft: 1 }}>→</span>
+                      )}
+                      {isPending && (
+                        <span style={{ fontSize: '0.55rem', color: 'rgba(243,206,19,0.65)', marginLeft: 1 }}>⏳</span>
+                      )}
+                      {!isFriend && !isPending && !isMe && (
+                        <span style={{ fontSize: '0.55rem', color: 'rgba(168,85,247,0.70)', marginLeft: 1 }}>+</span>
+                      )}
+                    </button>
+
+                    {/* add-friend prompt popover */}
+                    {showPrompt && (
+                      <div style={{
+                        position: 'absolute', bottom: 'calc(100% + 6px)', left: '50%',
+                        transform: 'translateX(-50%)',
+                        zIndex: 20,
+                        background: 'rgba(10,10,20,0.96)',
+                        border: '1px solid rgba(168,85,247,0.35)',
+                        borderRadius: 10, padding: '8px 10px',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                        whiteSpace: 'nowrap',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                      }}>
+                        <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.65)' }}>
+                          Add @{f.username}?
+                        </span>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button
+                            onClick={() => { onAddFriend?.(f.username); setAddingPill(null); }}
+                            style={{
+                              padding: '4px 12px', borderRadius: 7, fontSize: '0.65rem',
+                              fontWeight: 700, cursor: 'pointer',
+                              background: 'rgba(168,85,247,0.20)',
+                              border: '1px solid rgba(168,85,247,0.45)',
+                              color: '#c084fc',
+                            }}
+                          >Send request</button>
+                          <button
+                            onClick={() => setAddingPill(null)}
+                            style={{
+                              padding: '4px 8px', borderRadius: 7, fontSize: '0.65rem',
+                              fontWeight: 600, cursor: 'pointer',
+                              background: 'rgba(255,255,255,0.05)',
+                              border: '1px solid rgba(255,255,255,0.10)',
+                              color: 'rgba(255,255,255,0.40)',
+                            }}
+                          >Cancel</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

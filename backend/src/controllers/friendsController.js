@@ -411,20 +411,11 @@ async function cancelSentRequest(req, res) {
 }
 
 // GET /api/friends/:friend_id/friends
-// Returns the public friend list of a user who is already your friend.
+// Returns the public friend list of any user (authenticated access only).
 async function getFriendFriends(req, res) {
   const { friend_id } = req.params;
   const client = await pool.connect();
   try {
-    // Only allow if the viewer is actually friends with this person
-    const { rows: check } = await client.query(
-      `SELECT 1 FROM friends
-       WHERE status = 'accepted'
-         AND ((requester_id = $1 AND receiver_id = $2)
-           OR (requester_id = $2 AND receiver_id = $1))`,
-      [req.user.id, friend_id]
-    );
-    if (!check.length) return res.status(403).json({ error: 'Not friends' });
 
     const { rows } = await client.query(
       `SELECT u.id, u.username
