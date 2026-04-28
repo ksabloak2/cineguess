@@ -373,6 +373,7 @@ export default function FriendsPage() {
             width: 100% !important;
             flex: 1 !important;
             min-width: 0 !important;
+            overflow-x: hidden !important;
           }
 
           /* Bigger avatar + name in FriendDetail on mobile */
@@ -865,6 +866,7 @@ export default function FriendsPage() {
               style={{
                 flex: 1, minHeight: 0,
                 overflowY: 'auto',
+                overflowX: 'hidden',
                 padding: 'clamp(14px,2vh,24px) clamp(14px,2.2vw,28px)',
                 position: 'relative', zIndex: 6,
               }}

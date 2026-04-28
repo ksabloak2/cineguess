@@ -86,7 +86,7 @@ export default function AuthPage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirm] = useState('');
   const [username, setUsername]       = useState(
-    () => sessionStorage.getItem('pending_username') || ''
+    () => localStorage.getItem('pending_username') || ''
   );
   const [loading, setLoading]         = useState(false);
   const [error, setError]             = useState('');
@@ -155,8 +155,22 @@ export default function AuthPage() {
           navigate('/play/top250');
         } catch (err) {
           if (err?.response?.status === 404) {
+            // No profile row yet — check if we saved a username during signup.
+            const pending = localStorage.getItem('pending_username');
+            if (pending) {
+              // Auto-register silently — user entered the username at signup already.
+              try {
+                const prof = await registerProfile(pending);
+                setProfile(prof);
+                localStorage.removeItem('pending_username');
+                navigate('/play/top250');
+                return;
+              } catch {
+                // If auto-register fails (e.g. username taken), fall through to manual entry.
+              }
+            }
             setMode(MODES.username);
-            setInfo('Finish setting up your account by choosing a username.');
+            setInfo('Almost there — pick a username to finish setting up your account.');
           } else {
             throw err;
           }
@@ -174,16 +188,16 @@ export default function AuthPage() {
         }
         const data = await signUp(email, password);
         if (!data?.session) {
-          // Email verification required — persist username so it auto-registers
-          // when they come back and sign in after clicking the link.
-          sessionStorage.setItem('pending_username', username.trim());
+          // Email verification required — persist username in localStorage so it
+          // survives tab changes and browser restarts, and auto-registers on sign-in.
+          localStorage.setItem('pending_username', username.trim());
           setMode(MODES.confirm);
           setInfo(`We sent a confirmation link to ${email}. Click it, then come back and sign in.`);
         } else {
           // Immediate session — register profile right now.
           const prof = await registerProfile(username);
           setProfile(prof);
-          sessionStorage.removeItem('pending_username');
+          localStorage.removeItem('pending_username');
           navigate('/play/top250');
         }
 
@@ -191,7 +205,7 @@ export default function AuthPage() {
       } else if (mode === MODES.username) {
         const prof = await registerProfile(username);
         setProfile(prof);
-        sessionStorage.removeItem('pending_username');
+        localStorage.removeItem('pending_username');
         navigate('/play/top250');
 
       // ── Forgot password — verify account exists, then send reset email ──
