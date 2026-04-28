@@ -46,7 +46,7 @@ export default function Navbar() {
       <header
         className="sticky top-0 z-50 border-b"
         style={{
-          background:           'rgba(10,10,15,0.82)',
+          background:           'rgba(10,10,15,0.97)',
           backdropFilter:       'blur(24px) saturate(1.4)',
           WebkitBackdropFilter: 'blur(24px) saturate(1.4)',
           borderColor:          'rgba(255,255,255,0.05)',
@@ -203,26 +203,6 @@ export default function Navbar() {
         )}
       </header>
 
-      {/* ════════════════════════════════════════════════════
-          MOBILE BOTTOM TOGGLE (sm and below only)
-      ════════════════════════════════════════════════════ */}
-      <div
-        className="mob-mode-bar sm:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pt-2"
-        style={{
-          paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)',
-          background:           'linear-gradient(to top, rgba(10,10,15,1) 55%, rgba(10,10,15,0.92) 80%, transparent)',
-          backdropFilter:       'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-        }}
-      >
-        <ModeToggle
-          toggleMode={toggleMode}
-          activeMode={activeMode}
-          inGame={inGame}
-          activeCategory={activeCategory}
-          fullWidth
-        />
-      </div>
 
       {/* ════════════════════════════════════════════════════
           RULES MODAL
@@ -308,7 +288,7 @@ function CategoryPill({ cat, isActive, to }) {
 }
 
 // ── Sliding mode toggle ───────────────────────────────────────────────────────
-function ModeToggle({ toggleMode, activeMode, inGame, activeCategory, fullWidth = false }) {
+export function ModeToggle({ toggleMode, activeMode, inGame, activeCategory, fullWidth = false }) {
   const hasActiveMode = toggleMode === 'daily' || toggleMode === 'unlimited';
   const isUnlimited   = toggleMode === 'unlimited';
   const accent        = MODE_ACCENT[toggleMode] || MODE_ACCENT.daily;

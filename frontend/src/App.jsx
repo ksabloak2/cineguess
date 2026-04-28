@@ -1,7 +1,8 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { Routes, Route, Navigate, useParams } from 'react-router-dom';
-import Navbar from './components/Navbar';
+import { Routes, Route, Navigate, useParams, useMatch, useLocation } from 'react-router-dom';
+import Navbar, { ModeToggle } from './components/Navbar';
 import ErrorBoundary from './components/ErrorBoundary';
+import { slugToCategory, categoryToSlug } from './utils/gameLogic';
 import { useAuth } from './context/AuthContext';
 
 // Critical path — always bundled (used on every page load)
@@ -14,6 +15,44 @@ import GamePage from './pages/GamePage';
 const AuthPage    = lazy(() => import('./pages/AuthPage'));
 const FriendsPage = lazy(() => import('./pages/FriendsPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+
+// ── Mobile footer toggle ─────────────────────────────────────────────────────
+// Rendered as a normal document-flow element at the bottom of <main>.
+// This means it naturally sits at the bottom of the screen when content is
+// short, and gets pushed further down as guesses accumulate — it never
+// overlaps game tiles because it is not fixed-positioned.
+function MobileFooterToggle() {
+  const { pathname } = useLocation();
+  const gameMatch    = useMatch('/play/:mode/:category');
+
+  const activeMode     = gameMatch?.params.mode
+    || (pathname.startsWith('/unlimited') ? 'unlimited'
+      : pathname.startsWith('/daily')     ? 'daily'
+      : null);
+  const activeCategory = gameMatch?.params.category
+    ? slugToCategory(gameMatch.params.category)
+    : null;
+  const inGame = !!gameMatch;
+
+  // Only show on game pages and hub pages (where mode switching is relevant)
+  const isHub = pathname === '/daily' || pathname === '/unlimited';
+  if (!inGame && !isHub) return null;
+
+  return (
+    <div
+      className="sm:hidden w-full pt-4"
+      style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)' }}
+    >
+      <ModeToggle
+        toggleMode={activeMode}
+        activeMode={activeMode}
+        inGame={inGame}
+        activeCategory={activeCategory}
+        fullWidth
+      />
+    </div>
+  );
+}
 
 // Old URLs like /play/top250 or /play/unlimited get rewritten.
 function LegacyPlayRedirect() {
@@ -186,22 +225,27 @@ export default function App() {
   return (
     <div className="min-h-dvh flex flex-col" style={{ background: '#0a0a0f', color: '#ffffff' }}>
       <Navbar />
-      <main className="flex-1 container-game py-4 sm:py-6 lg:py-8 main-content-pad">
+      <main className="flex-1 flex flex-col container-game py-4 sm:py-6 lg:py-8 sm:pb-8 lg:pb-10">
         {/* ErrorBoundary ensures a broken page never kills the whole app */}
         <ErrorBoundary>
           <Suspense fallback={<PageSpinner />}>
-            <Routes>
-              <Route path="/"                        element={<HomePage />} />
-              <Route path="/daily"                   element={<ModeHub />} />
-              <Route path="/unlimited"               element={<ModeHub />} />
-              <Route path="/play/:mode/:category"    element={<GamePage />} />
-              <Route path="/play/:mode/top250"       element={<Top250Redirect />} />
-              <Route path="/play/:category"          element={<LegacyPlayRedirect />} />
-              <Route path="/auth"                    element={<AuthPage />} />
-              <Route path="/friends"                 element={<FriendsPage />} />
-              <Route path="/profile"                 element={<ProfilePage />} />
-              <Route path="*"                        element={<Navigate to="/" replace />} />
-            </Routes>
+            {/* flex-1 so this div fills remaining height when content is short,
+                which pushes MobileFooterToggle to the bottom of the viewport */}
+            <div className="flex-1">
+              <Routes>
+                <Route path="/"                        element={<HomePage />} />
+                <Route path="/daily"                   element={<ModeHub />} />
+                <Route path="/unlimited"               element={<ModeHub />} />
+                <Route path="/play/:mode/:category"    element={<GamePage />} />
+                <Route path="/play/:mode/top250"       element={<Top250Redirect />} />
+                <Route path="/play/:category"          element={<LegacyPlayRedirect />} />
+                <Route path="/auth"                    element={<AuthPage />} />
+                <Route path="/friends"                 element={<FriendsPage />} />
+                <Route path="/profile"                 element={<ProfilePage />} />
+                <Route path="*"                        element={<Navigate to="/" replace />} />
+              </Routes>
+            </div>
+            <MobileFooterToggle />
           </Suspense>
         </ErrorBoundary>
       </main>

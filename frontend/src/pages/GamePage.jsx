@@ -35,25 +35,6 @@ export default function GamePage() {
     }
   }, [mode, rawCategory, navigate]);
 
-  // Scroll-away: hide the fixed bottom mode bar when the user scrolls down
-  // in the game, revealing more board real estate on mobile.
-  useEffect(() => {
-    let lastY = window.scrollY;
-    function onScroll() {
-      const y = window.scrollY;
-      if (y > 60) {
-        document.body.classList.add('game-scrolled');
-      } else {
-        document.body.classList.remove('game-scrolled');
-      }
-      lastY = y;
-    }
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-      document.body.classList.remove('game-scrolled');
-    };
-  }, []);
 
   const isUnlimited = mode === 'unlimited';
   const catMeta     = CATEGORIES.find((c) => c.id === category);
