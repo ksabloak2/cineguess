@@ -529,8 +529,9 @@ export default function GamePage() {
     // Indian Cinema: image first (guess 4), then clue (5), then music (6)
     // Other categories: clue first (5), then image (6)
     if (category === 'indiancinema') {
-      // Indian Cinema: logline (4th), frame (5th), music (6th)
+      // Indian Cinema: logline (4), cast member (5), frame (6), music (7)
       if (serverHint.ai_quote)      out.push({ type: 'clue',  label: 'The Logline',            value: serverHint.ai_quote });
+      if (serverHint.cast_actor)    out.push({ type: 'actor', label: 'A Cast Member',           value: serverHint.cast_actor });
       if (serverHint.backdrop_path) out.push({ type: 'image', label: 'A Frame From The Movie', value: serverHint.backdrop_path });
       if (serverHint.music_song)    out.push({ type: 'music', label: 'Musical Hint',           value: serverHint.music_song, singers: serverHint.music_singers || '' });
     } else {
