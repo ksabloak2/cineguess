@@ -70,7 +70,7 @@ function AListBadge({ size = 'md' }) {
   const isSmall = size === 'sm';
   return (
     <span
-      title="A-List: All awards and all flame tiers collected"
+      title="A-List: All Cinema Awards collected"
       style={{
         display:       'inline-flex',
         alignItems:    'center',
@@ -98,15 +98,9 @@ function AListBadge({ size = 'md' }) {
   );
 }
 
-// ── A-List status: earned when all awards + all flame tiers are collected ────
-// Requires: every award earned AND longest streak ≥ 500 (unlocks all 7 flames)
+// ── A-List status: earned when every Cinema Award is collected ───────────────
 function computeIsAList(awards, allStreaks) {
-  const allAwardsEarned = awards.length > 0 && awards.every((a) => a.earned);
-  const maxBest = Math.max(
-    0,
-    ...Object.values(allStreaks).map((s) => Number(s?.longest_streak || s?.best || 0))
-  );
-  return allAwardsEarned && maxBest >= 500;
+  return awards.length > 0 && awards.every((a) => a.earned);
 }
 
 // ── Awards list ───────────────────────────────────────────────────────────────
@@ -1039,7 +1033,7 @@ function AwardsTab({ awards, allStreaks, loading }) {
                 {isAList && !loading && <AListBadge size="sm" />}
               </div>
               <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.30)', marginTop: 1 }}>
-                {isAList ? 'All awards & flames collected — A-List achieved! ⭐' : 'Collect all awards + all flame tiers to reach A-List'}
+                {isAList ? 'All Cinema Awards collected — A-List achieved! ⭐' : 'Collect all Cinema Awards to reach A-List'}
               </div>
             </div>
           </div>
