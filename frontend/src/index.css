@@ -11,10 +11,12 @@
 }
 
 /* ── Theme transition — smooth on key properties ───────────────────────────── */
+/* box-shadow is intentionally excluded: animating it triggers paint on every
+   element that has one, causing jank when hovering anything on the page. */
 *,
 *::before,
 *::after {
-  transition-property: background-color, border-color, color, box-shadow;
+  transition-property: background-color, border-color, color;
   transition-duration: 0.45s;
   transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -24,6 +26,17 @@ svg *,
 .tile,
 [class*="animate-"] {
   transition: none !important;
+}
+
+/* ── Respect reduced-motion preference ─────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 @layer base {

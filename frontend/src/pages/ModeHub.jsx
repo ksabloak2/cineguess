@@ -75,17 +75,13 @@ function horizontalTicketMask() {
   };
 }
 
-// ── Dust particles — 10 near-layer only (fast, visible, minimal DOM nodes) ──
+// ── Dust particles — 6 near-layer only (reduced from 10 to lower GPU load) ──
 const PARTICLES = [
   { x: 18, dur: 7, delay:  0.5, size: 2.2, op: 0.26, drift:  8 },
-  { x: 32, dur: 9, delay:  3.8, size: 2.6, op: 0.23, drift: -6 },
-  { x: 47, dur: 6, delay:  7.2, size: 2.0, op: 0.29, drift:  7 },
+  { x: 40, dur: 9, delay:  3.8, size: 2.6, op: 0.23, drift: -6 },
   { x: 60, dur: 8, delay:  1.0, size: 2.4, op: 0.25, drift: -5 },
-  { x: 72, dur: 7, delay:  5.5, size: 2.2, op: 0.28, drift:  6 },
-  { x:  9, dur: 6, delay:  4.6, size: 2.0, op: 0.30, drift:  5 },
-  { x: 55, dur: 8, delay:  2.3, size: 2.4, op: 0.26, drift: -4 },
-  { x: 78, dur: 7, delay:  8.9, size: 2.2, op: 0.27, drift:  8 },
-  { x: 22, dur: 6, delay:  0.7, size: 2.0, op: 0.30, drift:  4 },
+  { x: 75, dur: 7, delay:  5.5, size: 2.2, op: 0.28, drift:  6 },
+  { x: 28, dur: 6, delay:  4.6, size: 2.0, op: 0.30, drift:  5 },
   { x: 88, dur: 8, delay:  6.1, size: 2.4, op: 0.25, drift: -6 },
 ];
 
@@ -334,7 +330,7 @@ export default function ModeHub() {
       {/* ── Projector — outer ambient ────────────────────────────────────────── */}
       <div aria-hidden="true" style={{
         position:'fixed', bottom:'-8%', left:'50%',
-        width:'1400px', height:'1100px', transform:'translateX(-50%)',
+        width:'860px', height:'680px', transform:'translateX(-50%)',
         background:`radial-gradient(ellipse 55% 70% at 50% 100%,
           rgba(80,130,255,0.11) 0%, rgba(55,100,230,0.055) 30%,
           rgba(30,65,190,0.018) 55%, transparent 72%)`,
@@ -346,7 +342,7 @@ export default function ModeHub() {
       {/* ── Projector — inner bright core ───────────────────────────────────── */}
       <div aria-hidden="true" style={{
         position:'fixed', bottom:'-4%', left:'50%',
-        width:'680px', height:'820px', transform:'translateX(-50%)',
+        width:'420px', height:'500px', transform:'translateX(-50%)',
         background:`radial-gradient(ellipse 38% 58% at 50% 100%,
           rgba(200,220,255,0.18) 0%, rgba(140,180,255,0.10) 18%,
           rgba(90,140,255,0.05) 38%, transparent 68%)`,
@@ -360,6 +356,8 @@ export default function ModeHub() {
         position:'fixed', inset:0, pointerEvents:'none', zIndex:1,
         overflow:'hidden',
         clipPath:'polygon(22% 100%, 78% 100%, 100% 0%, 0% 0%)',
+        // contain limits repaint scope to this element only
+        contain:'layout paint style',
       }}>
         {PARTICLES.map((p, i) => (
           <span key={i} style={{
@@ -485,9 +483,8 @@ function TicketCard({ cfg, catId, to, floatDelay, hoveredId, setHoveredId, navig
         // Let the torn stub exit past the card edge
         overflow: ripping ? 'visible' : 'hidden',
         // ── Static base — never changes, no repaint budget ──
-        background:           `linear-gradient(135deg, ${cfg.bg} 0%, rgba(5,5,12,0.85) 100%)`,
-        backdropFilter:       'blur(12px) brightness(0.82)',
-        WebkitBackdropFilter: 'blur(12px) brightness(0.82)',
+        // backdrop-filter removed: blurring near-black is invisible but very GPU-expensive.
+        background:           `linear-gradient(135deg, ${cfg.bg} 0%, rgba(5,5,12,0.88) 100%)`,
         borderRadius:         '16px',
         border:               `1px solid ${cfg.border}`,
         boxShadow:            `0 0 22px ${cfg.glowDim}, inset 0 1px 0 rgba(255,255,255,0.04)`,
@@ -586,10 +583,13 @@ function TicketCard({ cfg, catId, to, floatDelay, hoveredId, setHoveredId, navig
               borderRadius: '16px',
               background:   `${cfg.color}${isHovered ? '20' : '0e'}`,
               border:       `2px solid ${cfg.color}${isHovered ? '55' : '25'}`,
-              boxShadow:    isHovered ? `0 0 40px ${cfg.color}60, inset 0 0 20px ${cfg.color}22` : 'none',
+              // Static shadow — no value flip on hover avoids a repaint.
+              // The card's hover overlay already provides the glow effect.
+              boxShadow:    `0 0 18px ${cfg.color}20, inset 0 0 10px ${cfg.color}0c`,
               display:      'flex', alignItems:'center', justifyContent:'center',
-              transition:   'opacity 0.18s ease',
+              willChange:   'transform',
               transform:    isHovered ? 'scale(1.10)' : 'scale(1)',
+              transition:   'transform 0.18s ease',
             }}
           >
             <div style={{ color:cfg.color, width:'46%', height:'46%', minWidth:20 }}>
