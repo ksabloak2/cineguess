@@ -403,7 +403,17 @@ export default function FriendsPage() {
           .invite-card-mob .invite-subtitle { display: none !important; }
           .invite-card-mob .invite-icon { width: 24px !important; height: 24px !important; }
           .invite-card-mob .invite-buttons { flex-direction: row !important; flex-shrink: 0; }
-          .invite-card-mob .invite-qr-toggle { display: none !important; }
+          /* QR toggle: icon-only square, sits alongside the buttons */
+          .invite-card-mob .invite-qr-toggle {
+            flex-shrink: 0 !important;
+            width: 32px !important; height: 32px !important;
+            padding: 0 !important;
+            border: 1px solid rgba(255,255,255,0.10) !important;
+            border-radius: 8px !important;
+            background: rgba(255,255,255,0.04) !important;
+            justify-content: center !important;
+          }
+          .invite-card-mob .invite-qr-label { display: none !important; }
         }
       `}</style>
 
@@ -2019,6 +2029,7 @@ function InviteCard({ inviteUrl, linkCopied, onCopy, onShare, showQR, onToggleQR
       <button
         className="invite-qr-toggle"
         onClick={onToggleQR}
+        title={showQR ? 'Hide QR code' : 'Show QR code'}
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
           fontSize: '0.62rem', color: 'rgba(255,255,255,0.28)', cursor: 'pointer',
@@ -2028,8 +2039,10 @@ function InviteCard({ inviteUrl, linkCopied, onCopy, onShare, showQR, onToggleQR
         onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.28)'; }}
       >
         <QRSmallIcon />
-        {showQR ? 'Hide QR code' : 'Show QR code'}
-        <span style={{ marginLeft: 2, fontSize: '0.55rem' }}>{showQR ? '▲' : '▼'}</span>
+        <span className="invite-qr-label">
+          {showQR ? 'Hide QR code' : 'Show QR code'}
+          <span style={{ marginLeft: 2, fontSize: '0.55rem' }}>{showQR ? '▲' : '▼'}</span>
+        </span>
       </button>
     </div>
   );
