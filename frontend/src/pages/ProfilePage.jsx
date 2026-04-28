@@ -1777,20 +1777,21 @@ function SettingsTab({ onRefresh }) {
 }
 
 // ── Live Preview Theater ───────────────────────────────────────────────────────
-function LivePreviewTheater({ colorblind }) {
-  const PREVIEW_TILES = [
-    { cls: 'tile tile-green', label: 'MATCH'  },
-    { cls: 'tile tile-cyan',  label: '≤2 YR'  },
-    { cls: 'tile tile-amber', label: '≤5 YR'  },
-    { cls: 'tile tile-red',   label: 'WRONG'  },
-  ];
+// Fully inline-styled so it renders correctly on every page (no CSS class deps).
+const PREVIEW_TILES_DEF = [
+  { bg: 'linear-gradient(135deg,#22c55e,#16a34a)', label: 'MATCH',  textColor: '#fff' },
+  { bg: 'linear-gradient(135deg,#00E5FF,#00bcd4)', label: '≤2 YR', textColor: 'rgba(0,0,0,0.80)' },
+  { bg: 'linear-gradient(135deg,#FFBF00,#cc9900)', label: '≤5 YR', textColor: 'rgba(0,0,0,0.82)' },
+  { bg: 'linear-gradient(135deg,#ef4444,#dc2626)', label: 'WRONG', textColor: '#fff' },
+];
 
+function LivePreviewTheater({ colorblind }) {
   return (
     <div style={{
-      borderRadius: 16, overflow: 'hidden',
+      borderRadius: 16,
       border: '1px solid rgba(243,206,19,0.28)',
       background: 'rgba(6,6,14,0.90)',
-      backdropFilter: 'blur(14px)',
+      display: 'flex', flexDirection: 'column',
     }}>
       {/* Header */}
       <div style={{
@@ -1798,6 +1799,7 @@ function LivePreviewTheater({ colorblind }) {
         background: 'rgba(243,206,19,0.08)',
         borderBottom: '1px solid rgba(243,206,19,0.13)',
         display: 'flex', alignItems: 'center',
+        borderRadius: '16px 16px 0 0',
       }}>
         <span style={{
           fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.15em',
@@ -1812,10 +1814,21 @@ function LivePreviewTheater({ colorblind }) {
 
       {/* Stage */}
       <div style={{ padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 18 }}>
-        {/* Sample guess tiles */}
-        <div style={{ display: 'flex', gap: 6, flex: 1 }}>
-          {PREVIEW_TILES.map(({ cls, label }) => (
-            <div key={label} className={cls} style={{ height: 40, flex: 1, fontSize: '0.48rem', borderRadius: 8 }}>
+        {/* Sample guess tiles — fully inline, no CSS class dependency */}
+        <div style={{ display: 'flex', gap: 6, flex: 1, minWidth: 0 }}>
+          {PREVIEW_TILES_DEF.map(({ bg, label, textColor }) => (
+            <div
+              key={label}
+              style={{
+                height: 40, flex: '1 1 0', minWidth: 0,
+                background: bg,
+                borderRadius: 8,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '0.48rem', fontWeight: 700, letterSpacing: '0.06em',
+                textTransform: 'uppercase', color: textColor,
+                userSelect: 'none',
+              }}
+            >
               {label}
             </div>
           ))}
