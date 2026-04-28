@@ -527,7 +527,7 @@ export default function FriendsPage() {
             style={{
               width: 'clamp(220px,24vw,290px)',
               flexShrink: 0,
-              overflowY: 'auto',
+              overflow: 'hidden',
               display: 'flex',
               flexDirection: 'column',
               gap: 10,
@@ -693,10 +693,14 @@ export default function FriendsPage() {
               </GlassPane>
             )}
 
-            {/* VIP friend list */}
-            <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.28)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700, padding: '2px 2px 0' }}>
-              Film Crew · {friends.length}
-            </div>
+            {/* VIP friend list — scrolls independently, top sections stay pinned */}
+            <div style={{
+              flex: 1, minHeight: 0,
+              display: 'flex', flexDirection: 'column', gap: 8,
+            }}>
+              <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.28)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700, padding: '2px 2px 0', flexShrink: 0 }}>
+                Film Crew · {friends.length}
+              </div>
 
             {friends.length === 0 ? (
               <GlassPane>
@@ -707,8 +711,8 @@ export default function FriendsPage() {
                 </div>
               </GlassPane>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {friends.map((friend) => {
+              <div className="scrollbar-hide" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {[...friends].sort((a, b) => a.username.localeCompare(b.username)).map((friend) => {
                   const isSelected = viewingFriend?.id === friend.id;
                   return (
                     <button
@@ -778,6 +782,7 @@ export default function FriendsPage() {
                 })}
               </div>
             )}
+            </div>{/* end Film Crew scroll container */}
           </div>
 
           {/* ── RIGHT: Cinema Screen ─────────────────────────────── */}
