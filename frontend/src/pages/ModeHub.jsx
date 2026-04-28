@@ -125,7 +125,7 @@ export default function ModeHub() {
           50%      { transform: translateY(-9px); }
         }
 
-        /* ── Ticket notch mask — desktop: left & right bites ── */
+        /* ── Ticket notch mask — desktop: left & right bites at mid-height ── */
         .ticket-card {
           -webkit-mask-image:
             radial-gradient(circle 26px at 0%   50%, transparent 26px, white 26.5px),
@@ -136,6 +136,10 @@ export default function ModeHub() {
             radial-gradient(circle 26px at 100% 50%, transparent 26px, white 26.5px);
           mask-composite: intersect;
         }
+
+        /* Perforation + stub label: desktop hidden, mobile shown */
+        .ticket-perf       { display: none; }
+        .ticket-admit      { display: none; }
 
         /* ── Mobile overrides (< 768px) ─────────────────────── */
         @media (max-width: 767px) {
@@ -148,8 +152,7 @@ export default function ModeHub() {
             padding-bottom:14px !important;
           }
 
-          /* Grid: fill all remaining flex-1 space; tight gap; full width */
-          /* On mobile, subtract bottom mode-bar (~68px) from grid height */
+          /* Grid: fill remaining flex-1 space */
           .ticket-grid-inner {
             height:     calc(100dvh - 4rem - 68px - 130px) !important;
             width:      100% !important;
@@ -163,76 +166,91 @@ export default function ModeHub() {
             border-radius: 14px !important;
           }
 
-          /* Notches: top & bottom bites — smaller radius so they don't eat into text */
+          /* ── Ticket punch effect:
+             Left & right semi-circle notches at 72% from the top,
+             exactly where the perforation line sits.
+             The page background shows through — real physical bites. ── */
           .ticket-card {
             -webkit-mask-image:
-              radial-gradient(circle 10px at 50% 0%,   transparent 10px, white 10.5px),
-              radial-gradient(circle 10px at 50% 100%, transparent 10px, white 10.5px) !important;
+              radial-gradient(circle 13px at 0%   72%, transparent 13px, white 13.5px),
+              radial-gradient(circle 13px at 100% 72%, transparent 13px, white 13.5px) !important;
             -webkit-mask-composite: destination-in !important;
             mask-image:
-              radial-gradient(circle 10px at 50% 0%,   transparent 10px, white 10.5px),
-              radial-gradient(circle 10px at 50% 100%, transparent 10px, white 10.5px) !important;
+              radial-gradient(circle 13px at 0%   72%, transparent 13px, white 13.5px),
+              radial-gradient(circle 13px at 100% 72%, transparent 13px, white 13.5px) !important;
             mask-composite: intersect !important;
           }
 
-          /* Hide stub strip and subtext */
+          /* Show perforation line + stub text on mobile */
+          .ticket-perf  { display: block !important; }
+          .ticket-admit { display: flex  !important; }
+
+          /* Hide desktop left stub strip and description */
           .ticket-stub { display: none !important; }
           .ticket-desc { display: none !important; }
 
-          /* ── Vertical stack layout ─────────────────────────────
-             ticket-body becomes a column: icon → title → play ── */
+          /* ── Ticket body: icon+title at top, PLAY pushed to stub below perf ── */
           .ticket-body {
-            flex-direction:  column    !important;
-            align-items:     center    !important;
-            justify-content: center    !important;
-            gap:             clamp(8px, 1.8vh, 14px) !important;
-            padding:         14px 10px !important;
+            flex-direction:  column        !important;
+            align-items:     center        !important;
+            justify-content: space-between !important;
+            gap:             0             !important;
+            padding:         18px 10px 14px !important;
           }
 
-          /* Left cluster: icon + title also stack vertically & centre */
+          /* Left cluster: icon + title stack vertically & centre */
           .ticket-left {
             flex-direction:  column !important;
             align-items:     center !important;
             justify-content: center !important;
-            gap:             8px    !important;
+            gap:             clamp(7px, 1.6vh, 11px) !important;
             min-width:       0      !important;
             width:           100%   !important;
           }
 
-          /* Icon box: slightly larger since it has dedicated vertical space */
+          /* Icon box */
           .ticket-main-icon {
-            width:         50px !important;
-            height:        50px !important;
+            width:         clamp(46px, 13vw, 58px) !important;
+            height:        clamp(46px, 13vw, 58px) !important;
             border-radius: 12px !important;
           }
 
-          /* Title: hero text — bold, centred, responsive */
+          /* Title */
           .ticket-title {
-            font-size:     clamp(1.05rem, 5.2vw, 1.3rem) !important;
-            text-align:    center    !important;
-            margin-bottom: 0         !important;
-            white-space:   normal    !important;
-            line-height:   1.2       !important;
+            font-size:     clamp(1.05rem, 5.2vw, 1.28rem) !important;
+            text-align:    center  !important;
+            margin-bottom: 0       !important;
+            white-space:   normal  !important;
+            line-height:   1.15    !important;
           }
 
-          /* Text wrapper: also centre-align on mobile */
+          /* Text wrapper */
           .ticket-text {
             text-align: center !important;
             min-width:  0      !important;
             width:      100%   !important;
           }
 
-          /* Play CTA: centred, slightly larger so it reads on a small screen */
+          /* Play CTA — sits in stub section below perforation */
           .ticket-play {
             font-size:       0.68rem  !important;
             justify-content: center   !important;
             width:           100%     !important;
             gap:             5px      !important;
             flex-shrink:     0        !important;
+            padding-bottom:  2px      !important;
           }
           .ticket-play svg {
             width:  11px !important;
             height: 11px !important;
+          }
+
+          /* "ADMIT ONE" stub label */
+          .ticket-admit {
+            align-items:     center !important;
+            justify-content: center !important;
+            gap:             5px    !important;
+            margin-bottom:   2px    !important;
           }
 
           /* Compact header text */
@@ -242,11 +260,11 @@ export default function ModeHub() {
           }
           .hub-title { font-size: 1rem !important; }
 
-          /* Back link: adequate tap-target height */
+          /* Back link */
           .hub-back {
-            display:        block  !important;
-            padding:        10px 0 !important;
-            font-size:      11px   !important;
+            display:   block  !important;
+            padding:   10px 0 !important;
+            font-size: 11px   !important;
           }
         }
       `}</style>
@@ -508,7 +526,6 @@ function TicketCard({ cfg, catId, to, floatDelay, hoveredId, setHoveredId }) {
               border:       `2px solid ${cfg.color}${isHovered ? '55' : '25'}`,
               boxShadow:    isHovered ? `0 0 40px ${cfg.color}60, inset 0 0 20px ${cfg.color}22` : 'none',
               display:      'flex', alignItems:'center', justifyContent:'center',
-              // opacity-only transition on the icon box glow (use a wrapper approach)
               transition:   'opacity 0.18s ease',
               transform:    isHovered ? 'scale(1.10)' : 'scale(1)',
             }}
@@ -544,7 +561,7 @@ function TicketCard({ cfg, catId, to, floatDelay, hoveredId, setHoveredId }) {
           </div>
         </div>
 
-        {/* Right: Play CTA */}
+        {/* Right / bottom: Play CTA */}
         <div
           className="ticket-play flex-shrink-0 flex items-center font-black uppercase tracking-widest"
           style={{
@@ -555,6 +572,30 @@ function TicketCard({ cfg, catId, to, floatDelay, hoveredId, setHoveredId }) {
             transition:'opacity 0.18s ease',
           }}
         >
+          {/* "ADMIT ONE" label — mobile stub decoration, hidden on desktop */}
+          <div
+            className="ticket-admit"
+            aria-hidden="true"
+            style={{ display: 'none', pointerEvents: 'none' }}
+          >
+            <span style={{
+              fontSize: '0.42rem', fontWeight: 900, letterSpacing: '0.28em',
+              textTransform: 'uppercase', color: `${cfg.color}55`,
+            }}>
+              ADMIT
+            </span>
+            <span style={{
+              width: '18px', height: '1px',
+              background: `${cfg.color}30`,
+              display: 'inline-block', flexShrink: 0,
+            }}/>
+            <span style={{
+              fontSize: '0.42rem', fontWeight: 900, letterSpacing: '0.28em',
+              textTransform: 'uppercase', color: `${cfg.color}55`,
+            }}>
+              ONE
+            </span>
+          </div>
           <span>Play</span>
           <svg
             style={{
@@ -569,6 +610,49 @@ function TicketCard({ cfg, catId, to, floatDelay, hoveredId, setHoveredId }) {
           </svg>
         </div>
       </div>
+
+      {/* ── Perforation line — mobile only, sits at 72% from top ── */}
+      <div
+        className="ticket-perf"
+        aria-hidden="true"
+        style={{
+          position:     'absolute',
+          top:          '72%',
+          left:         '13px',   /* clears the notch radius */
+          right:        '13px',
+          height:       '0',
+          /* Dashed via repeating-gradient: dash 6px, gap 5px */
+          borderTop:    'none',
+          background:   'none',
+          backgroundImage: `repeating-linear-gradient(
+            90deg,
+            ${cfg.color}55 0px,
+            ${cfg.color}55 5px,
+            transparent   5px,
+            transparent   10px
+          )`,
+          backgroundSize:     '10px 1px',
+          backgroundRepeat:   'repeat-x',
+          backgroundPosition: '0 0',
+          height:       '1px',
+          pointerEvents:'none',
+          zIndex:       3,
+        }}
+      />
+
+      {/* ── Cardstock inner border — subtle double-border texture ── */}
+      <div
+        aria-hidden="true"
+        style={{
+          position:     'absolute',
+          inset:        '3px',
+          borderRadius: '12px',
+          border:       `1px solid ${cfg.color}10`,
+          pointerEvents:'none',
+          zIndex:       1,
+          /* Desktop: invisible; mobile CSS makes it slightly more visible */
+        }}
+      />
 
       {/* Top shimmer — static, no transition */}
       <div aria-hidden="true" style={{
