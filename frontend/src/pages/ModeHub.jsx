@@ -144,14 +144,14 @@ export default function ModeHub() {
           .hub-content {
             padding-left:  12px !important;
             padding-right: 12px !important;
-            padding-top:   20px !important;
+            padding-top:   8px  !important;
             padding-bottom:14px !important;
           }
 
           /* Grid: fill all remaining flex-1 space; tight gap; full width */
           /* On mobile, subtract bottom mode-bar (~68px) from grid height */
           .ticket-grid-inner {
-            height:     calc(100dvh - 4rem - 68px - 180px) !important;
+            height:     calc(100dvh - 4rem - 68px - 130px) !important;
             width:      100% !important;
             column-gap: 10px !important;
             row-gap:    10px !important;
@@ -314,7 +314,7 @@ export default function ModeHub() {
         className="hub-content relative flex flex-col items-center z-10"
         style={{
           height:  '100%',
-          padding: 'clamp(20px,3.8vh,52px) clamp(10px,4vw,32px) clamp(14px,2vh,24px)',
+          padding: 'clamp(8px,1.4vh,18px) clamp(10px,4vw,32px) clamp(14px,2vh,24px)',
         }}
       >
         {/* Header — ultra-compact so tickets dominate */}
@@ -335,7 +335,7 @@ export default function ModeHub() {
 
         {/* ── 2×2 Ticket grid — widescreen, height-capped to stay in viewport ── */}
         <div
-          className="flex-1 flex items-stretch justify-center w-full"
+          className="flex-1 flex items-end justify-center w-full"
           style={{ minHeight: 0, overflow: 'hidden' }}
         >
           <div
@@ -347,7 +347,7 @@ export default function ModeHub() {
               columnGap:           'clamp(8px, 1.2vw, 16px)',
               rowGap:              'clamp(7px, 1.0vh, 12px)',
               width:               'min(92vw, 1600px)',
-              height:              'calc(100dvh - 4rem - 180px)',
+              height:              'calc(100dvh - 4rem - 130px)',
             }}
           >
             {CAT_ORDER.map((id, i) => {
