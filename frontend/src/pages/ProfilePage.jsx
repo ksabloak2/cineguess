@@ -240,15 +240,26 @@ export default function ProfilePage() {
   return (
     <div
       className="profile-outer animate-fade-in"
-      style={{ position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+      style={{ position: 'relative', display: 'flex', flexDirection: 'column' }}
     >
       {/* ── Keyframes + CSS classes ───────────────────────────────── */}
       <style>{`
+        /* Desktop: fixed viewport height so the IMAX layout fills the screen */
         .profile-outer {
           height: calc(100dvh - 4rem);
+          overflow: hidden;
         }
+        /* Mobile: let the page scroll naturally — no fixed height, no clipping */
         @media (max-width: 639px) {
-          .profile-outer { height: calc(100dvh - 4rem - 68px); }
+          .profile-outer {
+            height: auto !important;
+            overflow: visible !important;
+          }
+          .profile-tab-content {
+            overflow: visible !important;
+            min-height: 0 !important;
+            flex: none !important;
+          }
         }
 
         @keyframes spin {
@@ -511,7 +522,7 @@ export default function ProfilePage() {
         </div>
 
         {/* ── Tab content ───────────────────────────────────────────── */}
-        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}>
+        <div className="profile-tab-content" style={{ flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}>
           {activeTab === 'streaks'  && <StreaksTab allStreaks={allStreaks} allPercentiles={allPercentiles} loading={streaksLoading} />}
           {activeTab === 'history'  && <HistoryTab />}
           {activeTab === 'awards'   && <AwardsTab  awards={awards} allStreaks={allStreaks} loading={streaksLoading} />}
@@ -808,14 +819,23 @@ function IMAXCard({ catId, emoji, label, current, best, avgGuesses, percentile, 
           {loading ? (
             <div style={{ width: 30, height: 30, background: 'rgba(255,255,255,0.06)', borderRadius: 6, marginLeft: 'auto' }} />
           ) : (
-            <div
-              className="imax-best-num"
-              style={{
-                fontSize: 'clamp(1.3rem,2.8vw,2.1rem)', fontWeight: 800, lineHeight: 1,
-                color: 'rgba(255,255,255,0.45)', fontVariantNumeric: 'tabular-nums',
-              }}
-            >
-              {best ?? 0}
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', gap: 4 }}>
+              <div
+                className="imax-best-num"
+                style={{
+                  fontSize: 'clamp(1.3rem,2.8vw,2.1rem)', fontWeight: 800, lineHeight: 1,
+                  color: 'rgba(255,255,255,0.45)', fontVariantNumeric: 'tabular-nums',
+                }}
+              >
+                {best ?? 0}
+              </div>
+              {(best ?? 0) > 0 && (
+                <FlameSVG
+                  streak={best ?? 0}
+                  size={18}
+                  idKey={`prof-best-${catId}-${color}`}
+                />
+              )}
             </div>
           )}
           <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.22)', marginTop: 3, fontWeight: 600, letterSpacing: '0.05em' }}>
