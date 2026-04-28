@@ -436,8 +436,11 @@ export default function GamePage() {
         } else if (revealedResult) {
           setResult(revealedResult);
           postGameResult = revealedResult;
-          if (revealedResult.hint && Object.keys(revealedResult.hint).length > 0) {
-            postGameHints = hintsFromServer(revealedResult.hint);
+          // serverHint is the top-level hint from the guess response — the backend
+          // now returns guessNumber:99 hints when the game ends, so this always
+          // contains the full set.
+          if (serverHint && Object.keys(serverHint).length > 0) {
+            postGameHints = hintsFromServer(serverHint);
             mergeHints(postGameHints, true);
           }
         } else {

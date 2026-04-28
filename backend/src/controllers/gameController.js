@@ -220,7 +220,8 @@ async function submitGuess(req, res) {
     const guessNumber = req.user
       ? serverGuessCount
       : (Number(clientGuessCount) || 0);
-    const hint = buildHint(target, { guessNumber, category });
+    // When the game is over, reveal ALL hints regardless of guess count.
+    const hint = buildHint(target, { guessNumber: gameOver ? 99 : guessNumber, category });
 
     // Reveal full movie on game over (correct guess OR authed user hit 7/7)
     const movieReveal = (isCorrect || serverGameOver)
