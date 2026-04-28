@@ -232,31 +232,20 @@ export default function GamePage() {
         // pick was changed after the user finished.
         const lsSaved = loadDailyState(guestKey);
         if (lsSaved?.gameOver && !lsSaved?.hints?.length) {
-          const winningRow = lsSaved.rows?.find((r) => r.correct);
-          if (winningRow?.movie) {
-            // Won game — use the actual winning movie from local state.
-            const restoredHints = getHints(99, winningRow.movie, category);
-            mergeHints(restoredHints, true);
-            if (!lsSaved.result) setResult(winningRow.movie);
-            saveDailyState(guestKey, {
-              ...lsSaved,
-              hints:  restoredHints,
-              result: lsSaved.result || winningRow.movie,
-            });
-          } else {
-            // Lost game — we need the server to tell us the answer movie.
-            try {
-              const rev = await getResult(category);
-              if (rev) {
-                setResult(rev);
-                if (rev.hint && Object.keys(rev.hint).length > 0) {
-                  const restoredHints = hintsFromServer(rev.hint);
-                  mergeHints(restoredHints, true);
-                  saveDailyState(guestKey, { ...lsSaved, hints: restoredHints, result: rev });
-                }
-              }
-            } catch {}
-          }
+          // Always use getResult so we get the full server-side hint data
+          // (backdrop_paths, ai_hint_quote) — winningRow.movie from localStorage
+          // doesn't carry those fields since they aren't in the guess response.
+          try {
+            const rev = await getResult(category);
+            if (rev) {
+              setResult(rev);
+              const restoredHints = rev.hint && Object.keys(rev.hint).length > 0
+                ? hintsFromServer(rev.hint)
+                : [];
+              if (restoredHints.length) mergeHints(restoredHints, true);
+              saveDailyState(guestKey, { ...lsSaved, hints: restoredHints, result: rev });
+            }
+          } catch {}
         }
       } catch (err) {
         if (err?.response?.status === 404) {
