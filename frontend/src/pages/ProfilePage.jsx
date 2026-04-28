@@ -1402,28 +1402,6 @@ function SettingsTab({ onRefresh }) {
       className="scrollbar-hide"
       style={{ height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 'clamp(10px,1.4vh,16px)', paddingBottom: 12 }}
     >
-      <style>{`
-        .settings-two-col {
-          display: flex;
-          flex-direction: column;
-          gap: clamp(10px,1.4vh,16px);
-        }
-        @media (min-width: 640px) {
-          .settings-two-col {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: auto;
-            gap: clamp(10px,1.2vw,16px);
-            align-items: start;
-          }
-        }
-      `}</style>
-
-      {/* ── Two-column grid on desktop ────────────────────────────────── */}
-      <div className="settings-two-col">
-        {/* ── LEFT COLUMN: Account ──────────────────────────────────── */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(10px,1.4vh,16px)' }}>
-
       {/* ── Account ──────────────────────────────────────────────────── */}
       <div style={{
         borderRadius: 14, padding: 'clamp(14px,2vh,20px) clamp(14px,2vw,20px)',
@@ -1638,11 +1616,6 @@ function SettingsTab({ onRefresh }) {
         Report an Issue
       </button>
 
-        </div>{/* end left column */}
-
-        {/* ── RIGHT COLUMN: Live Preview + Accessibility ────────────── */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(10px,1.4vh,16px)' }}>
-
       {/* ── Live Preview Theater ─────────────────────────────────────── */}
       <LivePreviewTheater colorblind={colorblind} />
 
@@ -1676,9 +1649,6 @@ function SettingsTab({ onRefresh }) {
           <ToggleSwitch value={colorblind} onChange={setColorblind} />
         </div>
       </div>
-
-        </div>{/* end right column */}
-      </div>{/* end settings-two-col */}
 
       {/* ── Sign Out ─────────────────────────────────────────────────── */}
       <div style={{ marginTop: 'auto', paddingTop: 4 }}>
