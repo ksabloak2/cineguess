@@ -141,6 +141,8 @@ export const getFriendYearCalendar = (friend_id, year) =>
   api.get(`/friends/${friend_id}/calendar-year`, { params: { year } }).then(r => r.data);
 export const getFriendPercentiles = (friend_id) =>
   api.get(`/friends/${friend_id}/percentiles`).then(r => r.data);
+export const getFriendFriends = (friend_id) =>
+  api.get(`/friends/${friend_id}/friends`).then(r => r.data);
 export const getSentRequests = () =>
   api.get('/friends/sent-requests').then(r => r.data);
 export const cancelSentRequest = (receiver_id) =>

@@ -319,9 +319,17 @@ export default function AuthPage() {
                 We sent a link to <span className="text-white font-medium">{email}</span>.
                 Click it to verify your account, then sign in here.
               </p>
-              <p className="text-xs text-gray-600 text-center">
-                Can't find it? Check your spam folder.
-              </p>
+              <div style={{
+                display: 'flex', alignItems: 'flex-start', gap: 8,
+                background: 'rgba(243,206,19,0.07)',
+                border: '1px solid rgba(243,206,19,0.22)',
+                borderRadius: 10, padding: '9px 12px',
+              }}>
+                <span style={{ fontSize: '0.9rem', flexShrink: 0 }}>📬</span>
+                <p style={{ fontSize: '0.75rem', color: 'rgba(243,206,19,0.80)', margin: 0, lineHeight: 1.5 }}>
+                  <strong>Don't see it?</strong> Check your <strong>spam or junk folder</strong> — verification emails sometimes land there.
+                </p>
+              </div>
 
               {/* Resend verification */}
               <button

@@ -5,7 +5,7 @@ import {
   getFriends, getFriendRequests, getSentRequests,
   sendFriendRequest, acceptFriendRequest, declineFriendRequest,
   unfriend, cancelSentRequest, searchUsers, getFriendYearCalendar,
-  getFriendPercentiles,
+  getFriendPercentiles, getFriendFriends,
 } from '../utils/api';
 import { CATEGORIES } from '../utils/gameLogic';
 import YearCalendar from '../components/YearCalendar';
@@ -648,40 +648,59 @@ export default function FriendsPage() {
               onToggleQR={() => setShowQR((v) => !v)}
             />
 
-            {/* Pending sent */}
+            {/* Pending sent — horizontal swipe carousel */}
             {sentRequests.length > 0 && (
               <GlassPane borderColor="rgba(168,85,247,0.14)">
                 <PaneLabel icon={<PendingSendIcon />} badge={sentRequests.length}>
                   Pending invites
                 </PaneLabel>
-                <ul style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                <div style={{
+                  display: 'flex',
+                  gap: 8,
+                  overflowX: 'auto',
+                  scrollSnapType: 'x mandatory',
+                  WebkitOverflowScrolling: 'touch',
+                  paddingBottom: 2,
+                  msOverflowStyle: 'none',
+                  scrollbarWidth: 'none',
+                }}>
                   {sentRequests.map((req) => (
-                    <li key={req.receiver_id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <AvatarCircle letter={req.username[0]} size={26} />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: '0.75rem', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          @{req.username}
-                        </div>
-                        <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.25)' }}>Awaiting response</div>
-                      </div>
+                    <div
+                      key={req.receiver_id}
+                      style={{
+                        scrollSnapAlign: 'start',
+                        flexShrink: 0,
+                        width: 'clamp(110px,40%,140px)',
+                        borderRadius: 10,
+                        padding: '8px 10px',
+                        background: 'rgba(168,85,247,0.06)',
+                        border: '1px solid rgba(168,85,247,0.16)',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
+                        position: 'relative',
+                      }}
+                    >
                       <button
                         onClick={() => handleCancelSent(req.receiver_id)}
                         title="Cancel"
                         style={{
-                          width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
+                          position: 'absolute', top: 5, right: 5,
+                          width: 16, height: 16, borderRadius: '50%',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          background: 'transparent', border: '1px solid rgba(255,255,255,0.08)',
-                          color: 'rgba(255,255,255,0.35)', fontSize: '0.65rem', cursor: 'pointer',
-                          transition: 'all 0.18s',
+                          background: 'transparent', border: '1px solid rgba(255,255,255,0.10)',
+                          color: 'rgba(255,255,255,0.30)', fontSize: '0.50rem', cursor: 'pointer',
+                          lineHeight: 1,
                         }}
-                        onMouseEnter={(e) => { e.currentTarget.style.color = '#f87171'; e.currentTarget.style.borderColor = 'rgba(248,113,113,0.3)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.35)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
-                      >
-                        ✕
-                      </button>
-                    </li>
+                        onMouseEnter={(e) => { e.currentTarget.style.color = '#f87171'; e.currentTarget.style.borderColor = 'rgba(248,113,113,0.4)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.30)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)'; }}
+                      >✕</button>
+                      <AvatarCircle letter={req.username[0]} size={28} />
+                      <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', textAlign: 'center' }}>
+                        @{req.username}
+                      </div>
+                      <div style={{ fontSize: '0.55rem', color: 'rgba(168,85,247,0.65)', fontWeight: 600 }}>Pending…</div>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </GlassPane>
             )}
 
@@ -1095,13 +1114,18 @@ function FriendFlameCollection({ friend, rgb }) {
 function FriendDetail({ friend, viewingFriend, favRgb, onUnfriend, onClose }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [percentiles, setPercentiles]     = useState(null);
+  const [friendFriends, setFriendFriends] = useState(null);
 
   useEffect(() => {
     if (!friend?.id) return;
     setPercentiles(null);
+    setFriendFriends(null);
     getFriendPercentiles(friend.id)
       .then(setPercentiles)
       .catch(() => setPercentiles({}));
+    getFriendFriends(friend.id)
+      .then(setFriendFriends)
+      .catch(() => setFriendFriends([]));
   }, [friend?.id]);
 
   if (!friend) return null;
@@ -1460,6 +1484,39 @@ function FriendDetail({ friend, viewingFriend, favRgb, onUnfriend, onClose }) {
                   </div>
                 );
               })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ════ THEIR FILM CREW ════ */}
+      {friendFriends !== null && (
+        <div>
+          <SectionLabel rgb={favRgb}>
+            Their Film Crew {friendFriends.length > 0 && `(${friendFriends.length})`}
+          </SectionLabel>
+          {friendFriends.length === 0 ? (
+            <p style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.25)', marginTop: 6 }}>
+              No friends yet.
+            </p>
+          ) : (
+            <div style={{
+              display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8,
+            }}>
+              {friendFriends.map((f) => (
+                <div key={f.id} style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '5px 10px 5px 6px',
+                  borderRadius: 999,
+                  background: `rgba(${favRgb},0.07)`,
+                  border: `1px solid rgba(${favRgb},0.20)`,
+                }}>
+                  <AvatarCircle letter={f.username[0]} size={20} />
+                  <span style={{ fontSize: '0.68rem', fontWeight: 700, color: 'rgba(255,255,255,0.80)' }}>
+                    @{f.username}
+                  </span>
+                </div>
+              ))}
             </div>
           )}
         </div>

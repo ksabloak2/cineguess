@@ -410,8 +410,44 @@ async function cancelSentRequest(req, res) {
   }
 }
 
+// GET /api/friends/:friend_id/friends
+// Returns the public friend list of a user who is already your friend.
+async function getFriendFriends(req, res) {
+  const { friend_id } = req.params;
+  const client = await pool.connect();
+  try {
+    // Only allow if the viewer is actually friends with this person
+    const { rows: check } = await client.query(
+      `SELECT 1 FROM friends
+       WHERE status = 'accepted'
+         AND ((requester_id = $1 AND receiver_id = $2)
+           OR (requester_id = $2 AND receiver_id = $1))`,
+      [req.user.id, friend_id]
+    );
+    if (!check.length) return res.status(403).json({ error: 'Not friends' });
+
+    const { rows } = await client.query(
+      `SELECT u.id, u.username
+       FROM friends f
+       JOIN users u ON u.id = CASE
+         WHEN f.requester_id = $1 THEN f.receiver_id
+         ELSE f.requester_id
+       END
+       WHERE f.status = 'accepted'
+         AND (f.requester_id = $1 OR f.receiver_id = $1)`,
+      [friend_id]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('getFriendFriends:', err.message);
+    res.status(500).json({ error: 'Server error' });
+  } finally {
+    client.release();
+  }
+}
+
 module.exports = {
   sendRequest, acceptRequest, declineRequest, unfriend,
   listFriends, listRequests, getFriendYearCalendar,
-  getSentRequests, cancelSentRequest, getFriendPercentiles,
+  getSentRequests, cancelSentRequest, getFriendPercentiles, getFriendFriends,
 };
