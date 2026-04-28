@@ -191,6 +191,7 @@ export default function AuthPage() {
           // Email verification required — persist username in localStorage so it
           // survives tab changes and browser restarts, and auto-registers on sign-in.
           localStorage.setItem('pending_username', username.trim());
+          localStorage.setItem('pending_email', email.trim());
           setMode(MODES.confirm);
           setInfo(`We sent a confirmation link to ${email}. Click it, then come back and sign in.`);
         } else {
@@ -198,6 +199,7 @@ export default function AuthPage() {
           const prof = await registerProfile(username);
           setProfile(prof);
           localStorage.removeItem('pending_username');
+          localStorage.removeItem('pending_email');
           navigate('/play/top250');
         }
 
@@ -206,6 +208,7 @@ export default function AuthPage() {
         const prof = await registerProfile(username);
         setProfile(prof);
         localStorage.removeItem('pending_username');
+        localStorage.removeItem('pending_email');
         navigate('/play/top250');
 
       // ── Forgot password — verify account exists, then send reset email ──

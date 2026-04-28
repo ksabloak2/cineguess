@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../utils/supabase';
-import { getProfile, lookupEmail } from '../utils/api';
+import { getProfile, lookupEmail, registerProfile } from '../utils/api';
 
 const AuthContext = createContext(null);
 
@@ -31,7 +31,24 @@ export function AuthProvider({ children }) {
     try {
       const prof = await getProfile();
       setProfile(prof);
-    } catch {
+    } catch (err) {
+      // Profile row doesn't exist yet — happens right after email verification
+      // when registerProfile hasn't been called. Auto-register with the pending
+      // username stored during signup so users never have to enter it twice.
+      if (err?.response?.status === 404) {
+        const pending = localStorage.getItem('pending_username');
+        if (pending) {
+          try {
+            const prof = await registerProfile(pending);
+            setProfile(prof);
+            localStorage.removeItem('pending_username');
+            localStorage.removeItem('pending_email');
+            return;
+          } catch {
+            // Username taken or other error — fall through, profile stays null
+          }
+        }
+      }
       setProfile(null);
     } finally {
       setLoading(false);
@@ -45,11 +62,24 @@ export function AuthProvider({ children }) {
   }
 
   async function signIn(login, password) {
-    // If login doesn't look like an email, resolve it to one via username lookup.
+    // If login doesn't look like an email, resolve username → email.
     let email = login;
     if (!login.includes('@')) {
-      const result = await lookupEmail(login); // throws on 404
-      email = result.email;
+      try {
+        const result = await lookupEmail(login);
+        email = result.email;
+      } catch {
+        // Username not found in users table yet — can happen right after email
+        // verification before registerProfile runs. Fall back to the email stored
+        // during signup if the pending_username matches what they typed.
+        const pendingEmail = localStorage.getItem('pending_email');
+        const pendingUsername = localStorage.getItem('pending_username');
+        if (pendingEmail && pendingUsername?.toLowerCase() === login.toLowerCase()) {
+          email = pendingEmail;
+        } else {
+          throw new Error('No account found with that username.');
+        }
+      }
     }
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
