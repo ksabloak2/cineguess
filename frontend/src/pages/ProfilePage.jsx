@@ -65,7 +65,7 @@ const TABS = [
   { id: 'awards',  label: 'Awards',  icon: '🏆' },
 ];
 
-// ── A-List badge ─────────────────────────────────────────────────────────────
+// ── A-List badge — gold (all Cinema Awards) ───────────────────────────────────
 function AListBadge({ size = 'md' }) {
   const isSmall = size === 'sm';
   return (
@@ -98,9 +98,55 @@ function AListBadge({ size = 'md' }) {
   );
 }
 
-// ── A-List status: earned when every Cinema Award is collected ───────────────
+// ── Certified Cinephile badge — iridescent purple/gold (all awards + all flames) ──
+function CertifiedCinephileBadge({ size = 'md' }) {
+  const isSmall = size === 'sm';
+  return (
+    <span
+      title="Certified Cinephile: All Cinema Awards + all flame tiers collected"
+      style={{
+        display:       'inline-flex',
+        alignItems:    'center',
+        gap:           isSmall ? 2 : 4,
+        padding:       isSmall ? '1px 6px' : '2px 9px',
+        borderRadius:  999,
+        background:    'linear-gradient(135deg, rgba(168,85,247,0.22) 0%, rgba(243,206,19,0.14) 50%, rgba(168,85,247,0.14) 100%)',
+        border:        '1px solid rgba(192,132,252,0.65)',
+        boxShadow:     '0 0 14px rgba(168,85,247,0.40), 0 0 6px rgba(243,206,19,0.20), inset 0 0 10px rgba(168,85,247,0.08)',
+        flexShrink:    0,
+        animation:     'badge-glow-purple 2.8s ease-in-out infinite',
+      }}
+    >
+      <span style={{ fontSize: isSmall ? '0.6rem' : '0.72rem', lineHeight: 1 }}>🎬</span>
+      <span style={{
+        fontSize:       isSmall ? '0.47rem' : '0.55rem',
+        fontWeight:     900,
+        letterSpacing:  '0.14em',
+        textTransform:  'uppercase',
+        background:     'linear-gradient(90deg, #c084fc, #F3CE13, #c084fc)',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor:  'transparent',
+        backgroundClip: 'text',
+      }}>
+        Certified Cinephile
+      </span>
+    </span>
+  );
+}
+
+// ── A-List: all Cinema Awards earned ─────────────────────────────────────────
 function computeIsAList(awards, allStreaks) {
   return awards.length > 0 && awards.every((a) => a.earned);
+}
+
+// ── Certified Cinephile: all Cinema Awards + all 7 flame tiers (streak ≥ 500) ──
+function computeIsCertifiedCinephile(awards, allStreaks) {
+  if (!computeIsAList(awards, allStreaks)) return false;
+  const maxBest = Math.max(
+    0,
+    ...Object.values(allStreaks).map((s) => Number(s?.longest_streak || s?.best || 0))
+  );
+  return maxBest >= 500;
 }
 
 // ── Awards list ───────────────────────────────────────────────────────────────
@@ -188,8 +234,9 @@ export default function ProfilePage() {
 
   if (!session) return <GuestPrompt navigate={navigate} icon="🎬" headline="Your Cinematic Record" detail="Sign in to track streaks, earn awards, and compare scores with friends." />;
 
-  const awards  = computeAwards(allStreaks);
-  const isAList = computeIsAList(awards, allStreaks);
+  const awards               = computeAwards(allStreaks);
+  const isAList              = computeIsAList(awards, allStreaks);
+  const isCertifiedCinephile = computeIsCertifiedCinephile(awards, allStreaks);
 
   return (
     <div
@@ -387,7 +434,9 @@ export default function ProfilePage() {
               }}>
                 @{profile?.username || '…'}
               </h1>
-              {isAList ? (
+              {isCertifiedCinephile ? (
+                <CertifiedCinephileBadge />
+              ) : isAList ? (
                 <AListBadge />
               ) : (
                 <span style={{
@@ -988,9 +1037,10 @@ function FlameCollection({ allStreaks, loading }) {
 }
 
 function AwardsTab({ awards, allStreaks, loading }) {
-  const earnedCount = awards.filter((a) => a.earned).length;
-  const pct         = Math.round((earnedCount / awards.length) * 100);
-  const isAList     = computeIsAList(awards, allStreaks);
+  const earnedCount          = awards.filter((a) => a.earned).length;
+  const pct                  = Math.round((earnedCount / awards.length) * 100);
+  const isAList              = computeIsAList(awards, allStreaks);
+  const isCertifiedCinephile = computeIsCertifiedCinephile(awards, allStreaks);
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 'clamp(8px,1.2vh,12px)' }}>
@@ -1030,10 +1080,18 @@ function AwardsTab({ awards, allStreaks, loading }) {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#fff' }}>Total Progress</span>
-                {isAList && !loading && <AListBadge size="sm" />}
+                {isCertifiedCinephile && !loading ? (
+                  <CertifiedCinephileBadge size="sm" />
+                ) : isAList && !loading ? (
+                  <AListBadge size="sm" />
+                ) : null}
               </div>
               <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.30)', marginTop: 1 }}>
-                {isAList ? 'All Cinema Awards collected — A-List achieved! ⭐' : 'Collect all Cinema Awards to reach A-List'}
+                {isCertifiedCinephile
+                  ? 'Certified Cinephile achieved! 🎬'
+                  : isAList
+                  ? 'A-List reached — hit a 500 streak to become a Certified Cinephile'
+                  : 'Collect all Cinema Awards to reach A-List'}
               </div>
             </div>
           </div>

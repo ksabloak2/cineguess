@@ -1227,22 +1227,25 @@ function FriendDetail({ friend, viewingFriend, favRgb, onUnfriend, onClose }) {
                   0,
                   ...Object.values(friend?.bestStreaks || {}).map((v) => Number(v) || 0)
                 );
-                // A-List badge supersedes rank badge when max longest streak ≥ 500
+                // Certified Cinephile badge supersedes rank badge when max longest streak ≥ 500
                 if (maxBestStreak >= 500) {
                   return (
                     <div style={{
                       display: 'inline-flex', alignItems: 'center', gap: 4,
                       marginTop: 5, padding: '2px 8px',
                       borderRadius: 999,
-                      background: 'linear-gradient(135deg, rgba(243,206,19,0.18) 0%, rgba(255,255,255,0.08) 100%)',
-                      border: '1px solid rgba(243,206,19,0.55)',
-                      boxShadow: '0 0 10px rgba(243,206,19,0.30)',
+                      background: 'linear-gradient(135deg, rgba(168,85,247,0.22) 0%, rgba(243,206,19,0.12) 100%)',
+                      border: '1px solid rgba(168,85,247,0.55)',
+                      boxShadow: '0 0 10px rgba(168,85,247,0.30)',
                     }}>
-                      <span style={{ fontSize: '0.65rem', lineHeight: 1 }}>⭐</span>
+                      <span style={{ fontSize: '0.65rem', lineHeight: 1 }}>🎬</span>
                       <span style={{
-                        fontSize: '0.47rem', fontWeight: 900, letterSpacing: '0.18em',
-                        textTransform: 'uppercase', color: '#F3CE13',
-                      }}>A-List</span>
+                        fontSize: '0.42rem', fontWeight: 900, letterSpacing: '0.15em',
+                        textTransform: 'uppercase',
+                        background: 'linear-gradient(90deg, #c084fc, #F3CE13)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                      }}>Certified Cinephile</span>
                     </div>
                   );
                 }
