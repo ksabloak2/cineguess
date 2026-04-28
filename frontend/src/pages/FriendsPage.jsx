@@ -103,10 +103,17 @@ export default function FriendsPage() {
       .finally(() => setLoading(false));
   }, [session]);
 
-  async function handleSearch(e) {
+  function handleSearch(e) {
     const q = e.target.value;
     setSearchQ(q);
-    if (q.length < 2) { setSearchRes([]); return; }
+    // Clear results when the user edits the input — only search on Enter
+    setSearchRes([]);
+  }
+
+  async function handleSearchSubmit(e) {
+    if (e) e.preventDefault();
+    const q = searchQ.trim();
+    if (q.length < 2) return;
     try { setSearchRes(await searchUsers(q)); } catch {}
   }
 
@@ -530,14 +537,32 @@ export default function FriendsPage() {
             {/* Add a friend pane */}
             <GlassPane borderColor="rgba(168,85,247,0.18)">
               <PaneLabel>Add a friend</PaneLabel>
-              <input
-                type="text"
-                value={searchQ}
-                onChange={handleSearch}
-                placeholder="Search by username…"
-                className="input-field"
-                style={{ fontSize: '0.75rem' }}
-              />
+              <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: 6 }}>
+                <input
+                  type="text"
+                  value={searchQ}
+                  onChange={handleSearch}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit()}
+                  placeholder="Enter exact username…"
+                  className="input-field"
+                  style={{ fontSize: '0.75rem', flex: 1 }}
+                />
+                <button
+                  type="submit"
+                  style={{
+                    padding: '0 14px', borderRadius: 10, flexShrink: 0,
+                    background: 'rgba(168,85,247,0.15)',
+                    border: '1px solid rgba(168,85,247,0.35)',
+                    color: 'rgba(168,85,247,0.9)',
+                    fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer',
+                    transition: 'background 0.18s',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(168,85,247,0.28)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(168,85,247,0.15)'}
+                >
+                  Search
+                </button>
+              </form>
               {addMsg && (
                 <p
                   style={{

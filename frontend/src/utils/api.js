@@ -117,6 +117,7 @@ export const getRatings       = (tmdb_id) => api.get(`/game/ratings/${tmdb_id}`)
 export const registerProfile  = (username) => api.post('/auth/register', { username }).then(r => r.data);
 export const getProfile       = () => api.get('/auth/profile').then(r => r.data);
 export const updateUsername   = (username) => api.patch('/auth/username', { username }).then(r => r.data);
+export const deleteAccount    = () => api.delete('/auth/account').then(r => r.data);
 export const searchUsers      = (q) => api.get('/auth/search', { params: { q } }).then(r => r.data);
 // Check whether an email address has a registered account (used by forgot-password).
 export const checkEmailExists = (email) => api.post('/auth/check-email', { email }).then(r => r.data);

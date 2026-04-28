@@ -1,5 +1,13 @@
 const pool = require('../db/pool');
 const { supabase } = require('../middleware/auth');
+const { createClient } = require('@supabase/supabase-js');
+
+// Admin client needed to delete users from Supabase Auth
+const supabaseAdmin = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
+  { auth: { autoRefreshToken: false, persistSession: false } }
+);
 
 // POST /api/auth/register  — create user profile after Supabase signup
 async function registerProfile(req, res) {
@@ -147,15 +155,45 @@ async function updateUsername(req, res) {
       return res.status(409).json({ error: 'Username already taken' });
     }
 
+    // UPSERT — handles the case where the user confirmed their email but
+    // closed the browser before completing the username step, leaving them
+    // with a valid Supabase session but no row in the users table.
     const { rows } = await client.query(
-      'UPDATE users SET username = $1 WHERE id = $2 RETURNING id, username, email',
-      [username.trim(), req.user.id]
+      `INSERT INTO users (id, username, email)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (id) DO UPDATE SET username = EXCLUDED.username
+       RETURNING id, username, email`,
+      [req.user.id, username.trim(), req.user.email]
     );
-    if (!rows.length) return res.status(404).json({ error: 'Profile not found' });
     res.json(rows[0]);
   } finally {
     client.release();
   }
 }
 
-module.exports = { registerProfile, getProfile, searchUsers, checkEmail, lookupEmail, updateUsername };
+// DELETE /api/auth/account — permanently delete account and all associated data
+async function deleteAccount(req, res) {
+  const userId = req.user.id;
+  const client = await pool.connect();
+  try {
+    // Delete user row — FK cascades should handle streaks, guesses, friends, etc.
+    await client.query('DELETE FROM users WHERE id = $1', [userId]);
+
+    // Remove from Supabase Auth (requires service-role key)
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
+    if (error) {
+      console.error('Supabase auth delete error:', error);
+      // Don't surface internal details — the DB row is already gone
+      return res.status(500).json({ error: 'Account data removed but auth cleanup failed. Contact support.' });
+    }
+
+    res.json({ message: 'Account deleted.' });
+  } catch (err) {
+    console.error('deleteAccount error:', err);
+    res.status(500).json({ error: 'Could not delete account. Please try again.' });
+  } finally {
+    client.release();
+  }
+}
+
+module.exports = { registerProfile, getProfile, searchUsers, checkEmail, lookupEmail, updateUsername, deleteAccount };

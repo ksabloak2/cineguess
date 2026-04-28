@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
-import { getStreaks, getPercentiles, updateUsername, clearPoolCache } from '../utils/api';
+import { getStreaks, getPercentiles, updateUsername, deleteAccount, clearPoolCache } from '../utils/api';
 import { CATEGORIES } from '../utils/gameLogic';
 import YearCalendar from '../components/YearCalendar';
 import { FlameSVG, FLAME_TIERS } from '../components/FlameIndicator';
@@ -1358,6 +1358,23 @@ function SettingsTab({ onRefresh }) {
   // ── Report Issue ─────────────────────────────────────────────────────────
   const [reportOpen, setReportOpen] = useState(false);
 
+  // ── Delete Account (2-step) ──────────────────────────────────────────────
+  const [deleteStep,    setDeleteStep]    = useState(0); // 0=hidden 1=confirm 2=deleting
+  const [deleteMsg,     setDeleteMsg]     = useState('');
+
+  async function handleDeleteAccount() {
+    setDeleteStep(2);
+    setDeleteMsg('');
+    try {
+      await deleteAccount();
+      await signOut();
+      navigate('/');
+    } catch (err) {
+      setDeleteMsg(err?.response?.data?.error || err.message || 'Could not delete account.');
+      setDeleteStep(1);
+    }
+  }
+
   // ── Account: Change Username ─────────────────────────────────────────────
   const [unOpen,    setUnOpen]    = useState(false);
   const [newUn,     setNewUn]     = useState('');
@@ -1665,6 +1682,85 @@ function SettingsTab({ onRefresh }) {
           Sign Out
         </button>
       </div>
+
+      {/* ── Delete Account (2-step) ──────────────────────────────── */}
+      {deleteStep === 0 && (
+        <button
+          onClick={() => setDeleteStep(1)}
+          style={{
+            width: '100%', padding: '10px 0',
+            borderRadius: 14, cursor: 'pointer',
+            border: '1px solid rgba(239,68,68,0.15)',
+            background: 'transparent',
+            color: 'rgba(239,68,68,0.45)',
+            fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.03em',
+            transition: 'all 0.2s',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = 'rgba(239,68,68,0.35)';
+            e.currentTarget.style.color = 'rgba(239,68,68,0.75)';
+            e.currentTarget.style.background = 'rgba(239,68,68,0.04)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = 'rgba(239,68,68,0.15)';
+            e.currentTarget.style.color = 'rgba(239,68,68,0.45)';
+            e.currentTarget.style.background = 'transparent';
+          }}
+        >
+          Delete Account
+        </button>
+      )}
+
+      {deleteStep >= 1 && (
+        <div style={{
+          borderRadius: 14, padding: '16px',
+          border: '1px solid rgba(239,68,68,0.35)',
+          background: 'rgba(239,68,68,0.06)',
+          display: 'flex', flexDirection: 'column', gap: 10,
+        }}>
+          <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#f87171' }}>
+            ⚠ Delete your account?
+          </div>
+          <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.55)', lineHeight: 1.6 }}>
+            This permanently removes your account, all streaks, guesses, and friends. <strong style={{ color: '#f87171' }}>This cannot be undone.</strong>
+          </div>
+          {deleteMsg && (
+            <div style={{ fontSize: '0.72rem', color: '#f87171', background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.20)', borderRadius: 8, padding: '6px 10px' }}>
+              {deleteMsg}
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={() => { setDeleteStep(0); setDeleteMsg(''); }}
+              disabled={deleteStep === 2}
+              style={{
+                flex: 1, padding: '9px 0', borderRadius: 10, cursor: 'pointer',
+                border: '1px solid rgba(255,255,255,0.12)',
+                background: 'rgba(255,255,255,0.05)',
+                color: 'rgba(209,213,219,0.8)',
+                fontSize: '0.78rem', fontWeight: 600,
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDeleteAccount}
+              disabled={deleteStep === 2}
+              style={{
+                flex: 1, padding: '9px 0', borderRadius: 10,
+                cursor: deleteStep === 2 ? 'default' : 'pointer',
+                border: '1px solid rgba(239,68,68,0.50)',
+                background: 'rgba(239,68,68,0.18)',
+                color: '#f87171',
+                fontSize: '0.78rem', fontWeight: 700,
+                opacity: deleteStep === 2 ? 0.6 : 1,
+              }}
+            >
+              {deleteStep === 2 ? 'Deleting…' : 'Yes, delete everything'}
+            </button>
+          </div>
+        </div>
+      )}
 
       <SignOutModal
         open={signOutOpen}

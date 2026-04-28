@@ -13,5 +13,6 @@ router.post('/register',    requireAuth, ah(ctrl.registerProfile));
 router.get('/profile',      requireAuth, ah(ctrl.getProfile));
 router.get('/search',       requireAuth, ah(ctrl.searchUsers));
 router.patch('/username',   requireAuth, bodyValidator(schemas.updateUsername), ah(ctrl.updateUsername));
+router.delete('/account',   requireAuth, ah(ctrl.deleteAccount));
 
 module.exports = router;

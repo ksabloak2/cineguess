@@ -85,7 +85,9 @@ export default function AuthPage() {
   const [password, setPassword]       = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirm] = useState('');
-  const [username, setUsername]       = useState('');
+  const [username, setUsername]       = useState(
+    () => sessionStorage.getItem('pending_username') || ''
+  );
   const [loading, setLoading]         = useState(false);
   const [error, setError]             = useState('');
   const [info, setInfo]               = useState('');
@@ -162,18 +164,34 @@ export default function AuthPage() {
 
       // ── Sign up ──────────────────────────────────────────────────────────
       } else if (mode === MODES.signup) {
+        if (!username || username.trim().length < 2) {
+          setError('Username must be at least 2 characters.');
+          return;
+        }
+        if (!/^[a-zA-Z0-9_]+$/.test(username.trim())) {
+          setError('Username may only contain letters, numbers, and underscores.');
+          return;
+        }
         const data = await signUp(email, password);
         if (!data?.session) {
+          // Email verification required — persist username so it auto-registers
+          // when they come back and sign in after clicking the link.
+          sessionStorage.setItem('pending_username', username.trim());
           setMode(MODES.confirm);
           setInfo(`We sent a confirmation link to ${email}. Click it, then come back and sign in.`);
         } else {
-          setMode(MODES.username);
+          // Immediate session — register profile right now.
+          const prof = await registerProfile(username);
+          setProfile(prof);
+          sessionStorage.removeItem('pending_username');
+          navigate('/play/top250');
         }
 
       // ── Choose username ──────────────────────────────────────────────────
       } else if (mode === MODES.username) {
         const prof = await registerProfile(username);
         setProfile(prof);
+        sessionStorage.removeItem('pending_username');
         navigate('/play/top250');
 
       // ── Forgot password — verify account exists, then send reset email ──
@@ -413,8 +431,8 @@ export default function AuthPage() {
                 />
               )}
 
-              {/* Username only on username mode */}
-              {mode === MODES.username && (
+              {/* Username — on signup form AND on the standalone username step */}
+              {(mode === MODES.signup || mode === MODES.username) && (
                 <input
                   type="text"
                   value={username}
@@ -425,7 +443,7 @@ export default function AuthPage() {
                   minLength={2}
                   maxLength={30}
                   className="input-field"
-                  autoFocus
+                  autoFocus={mode === MODES.username}
                 />
               )}
 

@@ -9,6 +9,16 @@ async function sendRequest(req, res) {
 
   const client = await pool.connect();
   try {
+    // Ensure the requester has a profile row — a valid Supabase session does
+    // not guarantee one exists (user may not have completed username setup).
+    const { rows: requesterRows } = await client.query(
+      'SELECT id FROM users WHERE id = $1',
+      [req.user.id]
+    );
+    if (!requesterRows.length) {
+      return res.status(403).json({ error: 'Please set a username before adding friends.' });
+    }
+
     const { rows } = await client.query(
       'SELECT id FROM users WHERE username = $1',
       [receiver_username]
@@ -27,6 +37,9 @@ async function sendRequest(req, res) {
       [req.user.id, receiverId]
     );
     res.json({ message: 'Friend request sent' });
+  } catch (err) {
+    console.error('sendRequest error:', err);
+    res.status(500).json({ error: 'Could not send friend request. Please try again.' });
   } finally {
     client.release();
   }
