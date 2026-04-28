@@ -702,7 +702,7 @@ function TicketCard({ cfg, catId, to, floatDelay, hoveredId, setHoveredId, navig
           top:          '72%',
           left:         '13px',   /* clears the notch radius */
           right:        '13px',
-          height:       '0',
+          height:       '1px',
           /* Dashed via repeating-gradient: dash 6px, gap 5px */
           borderTop:    'none',
           background:   'none',
@@ -716,7 +716,6 @@ function TicketCard({ cfg, catId, to, floatDelay, hoveredId, setHoveredId, navig
           backgroundSize:     '10px 1px',
           backgroundRepeat:   'repeat-x',
           backgroundPosition: '0 0',
-          height:       '1px',
           pointerEvents:'none',
           zIndex:       3,
         }}
