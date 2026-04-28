@@ -1,0 +1,181 @@
+# Indian Cinema category — 138 films
+# Source: backend/src/scripts/seedBollywood.js (hardcoded INDIAN_CINEMA_LIST array)
+# Renamed from 'bollywood' to 'indiancinema' — April 2026
+# Covers: Bollywood (Hindi), and open to Tollywood / Kollywood / Malayalam / etc.
+# Format: Title (Year)
+
+# ── Blockbusters & Franchises ─────────────────────────────────────────────────
+Dangal (2016)
+Dhurandhar (2025)
+Pathaan (2023)
+Jawan (2023)
+Bajrangi Bhaijaan (2015)
+Secret Superstar (2017)
+PK (2014)
+Sultan (2016)
+Sanju (2018)
+Padmaavat (2018)
+Dhoom 3 (2013)
+War (2019)
+Stree 2 (2024)
+Tiger Zinda Hai (2017)
+Simmba (2018)
+Brahmastra: Part One - Shiva (2022)
+Sooryavanshi (2021)
+Kabir Singh (2019)
+Tanhaji (2020)
+Bhool Bhulaiyaa 2 (2022)
+The Kashmir Files (2022)
+Gadar 2 (2023)
+Animal (2023)
+Fighter (2024)
+Singham Again (2024)
+
+# ── SRK Classics ──────────────────────────────────────────────────────────────
+Dilwale Dulhania Le Jayenge (1995)
+Kuch Kuch Hota Hai (1998)
+Kabhi Khushi Kabhie Gham... (2001)
+Kal Ho Naa Ho (2003)
+Veer-Zaara (2004)
+My Name Is Khan (2010)
+Chennai Express (2013)
+Happy New Year (2014)
+Dilwale (2015)
+Raees (2017)
+Swades (2004)
+Dil Se.. (1998)
+Devdas (2002)
+Don (2006)
+Don 2 (2011)
+Om Shanti Om (2007)
+
+# ── Aamir Khan Classics ───────────────────────────────────────────────────────
+Chak De! India (2007)
+Rab Ne Bana Di Jodi (2008)
+3 Idiots (2009)
+Lagaan (2001)
+Taare Zameen Par (2007)
+Ghajini (2008)
+Dil Chahta Hai (2001)
+Rang De Basanti (2006)
+Fanaa (2006)
+
+# ── Dhoom Franchise ───────────────────────────────────────────────────────────
+Dhoom (2004)
+Dhoom 2 (2006)
+Talaash (2012)
+
+# ── Retro & Golden Era ────────────────────────────────────────────────────────
+Sarfarosh (1999)
+Andaz Apna Apna (1994)
+Jo Jeeta Wohi Sikandar (1992)
+Qayamat Se Qayamat Tak (1988)
+Sholay (1975)
+Deewaar (1975)
+Agneepath (1990)
+
+# ── Salman Khan Hits ──────────────────────────────────────────────────────────
+Dabangg (2010)
+Dabangg 2 (2012)
+Ek Tha Tiger (2012)
+Bodyguard (2011)
+Kick (2014)
+Prem Ratan Dhan Payo (2015)
+Bharat (2019)
+
+# ── Amitabh Bachchan ──────────────────────────────────────────────────────────
+Mohabbatein (2000)
+Baghban (2003)
+Black (2005)
+Paa (2009)
+Badla (2019)
+
+# ── Hrithik Roshan ────────────────────────────────────────────────────────────
+Kaho Naa... Pyaar Hai (2000)
+Koi... Mil Gaya (2003)
+Krrish (2006)
+Krrish 3 (2013)
+Jodhaa Akbar (2008)
+Bang Bang! (2014)
+Super 30 (2019)
+Vikram Vedha (2022)
+
+# ── Ranveer / Deepika Era ─────────────────────────────────────────────────────
+Bajirao Mastani (2015)
+Gully Boy (2019)
+83 (2021)
+Rocky Aur Rani Kii Prem Kahaani (2023)
+
+# ── Ranbir / Alia Era ─────────────────────────────────────────────────────────
+Rockstar (2011)
+Barfi! (2012)
+Yeh Jawaani Hai Deewani (2013)
+Tamasha (2015)
+Ae Dil Hai Mushkil (2016)
+
+# ── Female-led / Drama ────────────────────────────────────────────────────────
+Piku (2015)
+Cocktail (2012)
+Queen (2013)
+Kahaani (2012)
+English Vinglish (2012)
+Thappad (2020)
+Gangubai Kathiawadi (2022)
+
+# ── Comedy & Munna Bhai ───────────────────────────────────────────────────────
+Munna Bhai M.B.B.S. (2003)
+Lage Raho Munna Bhai (2006)
+Dunki (2023)
+Kabhi Alvida Naa Kehna (2006)
+
+# ── Thriller & Crime ──────────────────────────────────────────────────────────
+Raazi (2018)
+Good Newwz (2019)
+Shershaah (2021)
+Gangs of Wasseypur (2012)
+Gangs of Wasseypur - Part 2 (2012)
+Andhadhun (2018)
+Drishyam (2015)
+Drishyam 2 (2022)
+A Wednesday! (2008)
+Special 26 (2013)
+
+# ── Nostalgia Classics ────────────────────────────────────────────────────────
+Hum Aapke Hain Koun..! (1994)
+Maine Pyar Kiya (1989)
+Karan Arjun (1995)
+Baazigar (1993)
+Darr (1993)
+
+# ── Arthouse & Drama ──────────────────────────────────────────────────────────
+Zindagi Na Milegi Dobara (2011)
+Band Baaja Baaraat (2010)
+Dil Dhadakne Do (2015)
+Udta Punjab (2016)
+Ludo (2020)
+
+# ── Horror ────────────────────────────────────────────────────────────────────
+Stree (2018)
+
+# ── Coming of Age / Romance ───────────────────────────────────────────────────
+Wake Up Sid (2009)
+Ishaqzaade (2012)
+Jab We Met (2007)
+Love Aaj Kal (2009)
+Kai Po Che! (2013)
+
+# ── Biopics ───────────────────────────────────────────────────────────────────
+Bhaag Milkha Bhaag (2013)
+Mary Kom (2014)
+Neerja (2016)
+Toilet: Ek Prem Katha (2017)
+Pad Man (2018)
+Manikarnika: The Queen of Jhansi (2019)
+Shakuntala Devi (2020)
+
+# ── Recent ────────────────────────────────────────────────────────────────────
+Gehraiyaan (2022)
+Laal Singh Chaddha (2022)
+Crew (2024)
+Kesari (2019)
+OMG 2 (2023)

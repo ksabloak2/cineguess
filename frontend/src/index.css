@@ -1,0 +1,242 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Theme transition — smooth on key properties ───────────────────────────── */
+*,
+*::before,
+*::after {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 0.45s;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+/* Exempt properties that should never be slowed by a global transition */
+*[style*="animation"],
+svg *,
+.tile,
+[class*="animate-"] {
+  transition: none !important;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: #0a0a0f;
+    color: #ffffff;
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  /* Subtle film-grain noise overlay on the root */
+  #root {
+    min-height: 100dvh;
+    position: relative;
+  }
+  #root::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.015;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 256px 256px;
+  }
+
+  /* ── Colorblind tile patterns ───────────────────────────────────────────────── */
+  /* GREEN  → diagonal safety stripes (Correct) */
+  html.colorblind-mode .tile-green {
+    background:
+      repeating-linear-gradient(
+        -45deg,
+        rgba(255,255,255,0.22) 0px, rgba(255,255,255,0.22) 3px,
+        transparent 3px, transparent 10px
+      ),
+      linear-gradient(135deg, #22c55e, #16a34a) !important;
+  }
+  /* AMBER → dotted stipple (Partial/Near) */
+  html.colorblind-mode .tile-amber {
+    background:
+      radial-gradient(circle 1.8px at 5px 5px, rgba(255,255,255,0.38) 100%, transparent 100%),
+      linear-gradient(135deg, #FFBF00, #d4a017) !important;
+    background-size: 10px 10px, auto !important;
+  }
+  /* CYAN → dotted stipple — denser, higher contrast (Extreme proximity) */
+  html.colorblind-mode .tile-cyan {
+    background:
+      radial-gradient(circle 1.8px at 5px 5px, rgba(0,0,0,0.28) 100%, transparent 100%),
+      linear-gradient(135deg, #00E5FF, #00bcd4) !important;
+    background-size: 8px 8px, auto !important;
+  }
+  /* YELLOW → dotted stipple (Partial match) */
+  html.colorblind-mode .tile-yellow,
+  html.colorblind-mode .tile-orange-yellow,
+  html.colorblind-mode .tile-light-yellow {
+    background:
+      radial-gradient(circle 1.8px at 5px 5px, rgba(255,255,255,0.38) 100%, transparent 100%),
+      linear-gradient(135deg, #eab308, #ca8a04) !important;
+    background-size: 10px 10px, auto !important;
+  }
+  /* RED → horizontal matte bars (Incorrect) */
+  html.colorblind-mode .tile-red {
+    background:
+      repeating-linear-gradient(
+        0deg,
+        rgba(0,0,0,0.16) 0px, rgba(0,0,0,0.16) 2px,
+        transparent 2px, transparent 8px
+      ),
+      linear-gradient(135deg, #ef4444, #dc2626) !important;
+  }
+
+  /* ── Cyan glitch animation ──────────────────────────────────────────────────── */
+  @keyframes tile-cyan-shimmer {
+    0%, 100% {
+      box-shadow: 0 0 0px rgba(0,229,255,0), inset 0 0 0px rgba(255,255,255,0);
+    }
+    20% {
+      box-shadow: 0 0 8px rgba(0,229,255,0.50), inset 0 0 4px rgba(255,255,255,0.18);
+    }
+    22% {
+      box-shadow: 0 0 0px rgba(0,229,255,0), inset 0 0 0px rgba(255,255,255,0);
+    }
+    40% {
+      box-shadow: 0 0 12px rgba(0,229,255,0.60), inset 0 0 6px rgba(255,255,255,0.22);
+    }
+    42% {
+      box-shadow: 0 0 2px rgba(0,229,255,0.20), inset 0 0 0px rgba(255,255,255,0);
+    }
+    80% {
+      box-shadow: 0 0 10px rgba(0,229,255,0.45), inset 0 0 5px rgba(255,255,255,0.16);
+    }
+  }
+  .tile-cyan {
+    animation: tile-cyan-shimmer 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite !important;
+  }
+
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #252538; border-radius: 10px; }
+  ::-webkit-scrollbar-thumb:hover { background: #3a3a4a; }
+
+  /* Hide scrollbar on mobile */
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+@layer components {
+  /* ---- Tiles ---- */
+  .tile {
+    @apply flex items-center justify-center rounded-lg font-semibold text-white text-xs
+           transition-all duration-300 select-none uppercase tracking-wider;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  }
+
+  .tile-green         { background: linear-gradient(135deg, #22c55e, #16a34a); }
+  .tile-yellow        { background: linear-gradient(135deg, #eab308, #ca8a04); }
+  .tile-orange-yellow { background: linear-gradient(135deg, #f59e0b, #d97706); }
+  .tile-light-yellow  { background: linear-gradient(135deg, #eab308, #a16207); }
+  .tile-red           { background: linear-gradient(135deg, #ef4444, #dc2626); }
+  .tile-empty         { background: #1e1e2e; border: 1px solid #2a2a3a; }
+
+  /* ── New precision year tiles ── */
+  .tile-amber {
+    background: linear-gradient(135deg, #FFBF00, #cc9900);
+    /* Amber text should be dark for contrast */
+    color: rgba(0,0,0,0.82) !important;
+    text-shadow: none !important;
+  }
+  .tile-cyan {
+    background: linear-gradient(135deg, #00E5FF, #00bcd4);
+    /* Cyan text dark for contrast */
+    color: rgba(0,0,0,0.80) !important;
+    text-shadow: none !important;
+  }
+
+  /* ---- Buttons ---- */
+  .btn-primary {
+    @apply bg-accent hover:bg-accent-hover text-black font-bold py-2.5 px-5 rounded-xl
+           transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed;
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
+  }
+  .btn-primary:hover:not(:disabled) {
+    box-shadow: 0 0 30px rgba(245, 158, 11, 0.35);
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    @apply bg-surface-input hover:bg-surface-border text-gray-200 font-medium py-2 px-4
+           rounded-xl transition-all duration-200 border border-surface-border;
+  }
+  .btn-secondary:hover {
+    border-color: #3a3a4a;
+  }
+
+  /* ---- Inputs ---- */
+  .input-field {
+    @apply w-full bg-surface-input border border-surface-border rounded-xl px-4 py-3
+           text-white placeholder-gray-600 focus:outline-none
+           transition-all duration-200 text-sm;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  }
+  .input-field:focus {
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15), 0 2px 10px rgba(0,0,0,0.2);
+  }
+
+  /* ---- Cards ---- */
+  .card {
+    @apply bg-surface-card rounded-2xl border border-surface-border;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+
+  /* ---- Glass cards (used for overlays, navs) ---- */
+  .glass {
+    background: rgba(14, 14, 22, 0.8);
+    backdrop-filter: blur(20px) saturate(1.2);
+    -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  }
+
+  /* ---- Ambient glow effects ---- */
+  .glow-gold {
+    box-shadow: 0 0 40px rgba(245, 158, 11, 0.15);
+  }
+  .glow-purple {
+    box-shadow: 0 0 40px rgba(168, 85, 247, 0.15);
+  }
+  .glow-green {
+    box-shadow: 0 0 40px rgba(34, 197, 94, 0.15);
+  }
+}
+
+/* ---- Responsive container utility ---- */
+.container-game {
+  width: 100%;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+@media (min-width: 640px) {
+  .container-game { padding-left: 2rem; padding-right: 2rem; }
+}
+@media (min-width: 1024px) {
+  .container-game { padding-left: 3rem; padding-right: 3rem; }
+}
+@media (min-width: 1280px) {
+  .container-game { padding-left: 4rem; padding-right: 4rem; }
+}

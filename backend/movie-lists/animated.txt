@@ -1,0 +1,110 @@
+# Animated category
+# Sources: backend/src/scripts/importAnimated.js
+#   • PIXAR_MOVIES  — hardcoded (28 films)
+#   • DISNEY_MOVIES — hardcoded (44 films; 5 low-visibility titles removed April 2026)
+#   • GHIBLI_MOVIES — hardcoded (5 major hits only; was Letterboxd-scraped before April 2026)
+#   • LETTERBOXD_SOURCES — scraped at seed time from these lists:
+#       Illumination : https://letterboxd.com/mroreo1/list/illumination-movies-ranked/
+#       DreamWorks   : https://letterboxd.com/schaffrillas/list/every-dreamworks-movie-ranked/
+# Format: Title (Year)
+#
+# Removed from Disney (April 2026): The Great Mouse Detective (1986),
+#   Oliver & Company (1988), The Rescuers Down Under (1990),
+#   Atlantis: The Lost Empire (2001), Treasure Planet (2002).
+#
+# Ghibli now hardcoded (major hits only):
+#   Spirited Away, My Neighbor Totoro, Princess Mononoke,
+#   Howl's Moving Castle, Grave of the Fireflies.
+
+# ── Pixar (28) ───────────────────────────────────────────────────────
+Toy Story (1995)
+A Bug's Life (1998)
+Toy Story 2 (1999)
+Monsters, Inc. (2001)
+Finding Nemo (2003)
+The Incredibles (2004)
+Cars (2006)
+Ratatouille (2007)
+WALL-E (2008)
+Up (2009)
+Toy Story 3 (2010)
+Cars 2 (2011)
+Brave (2012)
+Monsters University (2013)
+Inside Out (2015)
+The Good Dinosaur (2015)
+Finding Dory (2016)
+Cars 3 (2017)
+Coco (2017)
+Incredibles 2 (2018)
+Toy Story 4 (2019)
+Onward (2020)
+Soul (2020)
+Luca (2021)
+Turning Red (2022)
+Lightyear (2022)
+Elemental (2023)
+Inside Out 2 (2024)
+
+# ── Disney Animation (49) ────────────────────────────────────────────
+The Lion King (1994)
+Frozen (2013)
+Moana (2016)
+Aladdin (1992)
+Beauty and the Beast (1991)
+The Little Mermaid (1989)
+Zootopia (2016)
+Tangled (2010)
+Mulan (1998)
+Encanto (2021)
+Wreck-It Ralph (2012)
+Ralph Breaks the Internet (2018)
+Moana 2 (2024)
+Frozen II (2019)
+Lilo & Stitch (2002)
+Tarzan (1999)
+Hercules (1997)
+The Hunchback of Notre Dame (1996)
+Pocahontas (1995)
+Big Hero 6 (2014)
+Snow White and the Seven Dwarfs (1937)
+Cinderella (1950)
+Sleeping Beauty (1959)
+Pinocchio (1940)
+Fantasia (1940)
+Bambi (1942)
+Dumbo (1941)
+Alice in Wonderland (1951)
+Peter Pan (1953)
+Lady and the Tramp (1955)
+The Jungle Book (1967)
+Robin Hood (1973)
+The Aristocats (1970)
+One Hundred and One Dalmatians (1961)
+The Sword in the Stone (1963)
+The Rescuers (1977)
+The Fox and the Hound (1981)
+The Emperor's New Groove (2000)
+Brother Bear (2003)
+Home on the Range (2004)
+Bolt (2008)
+The Princess and the Frog (2009)
+Raya and the Last Dragon (2021)
+Strange World (2022)
+Wish (2023)
+
+# ── Scraped from Letterboxd at seed time ─────────────────────────────
+# ── Studio Ghibli (5 major hits, hardcoded) ──────────────────
+Spirited Away (2001)
+My Neighbor Totoro (1988)
+Princess Mononoke (1997)
+Howl's Moving Castle (2004)
+Grave of the Fireflies (1988)
+
+# ── Scraped from Letterboxd at seed time ────────────────────
+# Illumination and DreamWorks are scraped live when importAnimated.js runs.
+# To see the current pool, query Postgres:
+#   SELECT title, year FROM movies WHERE 'animated' = ANY(categories) ORDER BY year;
+#
+# Illumination  → https://letterboxd.com/mroreo1/list/illumination-movies-ranked/
+# DreamWorks    → https://letterboxd.com/schaffrillas/list/every-dreamworks-movie-ranked/

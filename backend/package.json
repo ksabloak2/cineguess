@@ -1,0 +1,51 @@
+{
+  "name": "cineguess-backend",
+  "version": "1.0.0",
+  "description": "CineGuess backend API",
+  "main": "server.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+
+    "fetch-movies": "node src/scripts/fetchMovies.js",
+    "daily-pick": "node src/scripts/dailyPick.js",
+
+    "generate-hints":       "node src/scripts/generateAiHints.js",
+    "generate-hints:force": "node src/scripts/generateAiHints.js --force",
+    "verify-hints":          "node src/scripts/verifyAiHints.js",
+    "verify-hints:fix":      "node src/scripts/verifyAiHints.js --fix",
+    "verify-hints:fix-only": "node src/scripts/verifyAiHints.js --fix-only",
+
+    "import-letterboxd": "node src/scripts/importLetterboxd.js",
+    "import-animated": "node src/scripts/importAnimated.js",
+    "update-oscars": "node src/scripts/updateOscars.js",
+
+    "db:migrate":            "psql $DATABASE_URL -f src/db/schema.sql",
+    "db:migrate:perf":       "psql $DATABASE_URL -f src/db/migrate_performance.sql",
+    "db:migrate:monitoring": "psql $DATABASE_URL -f src/db/migrate_monitoring.sql",
+    "db:migrate:rls":        "psql $DATABASE_URL -f src/db/migrate_rls.sql",
+    "db:rollback:rls":       "psql $DATABASE_URL -f src/db/rollback_rls.sql",
+
+    "db:verify:indexes": "psql $DATABASE_URL -c \"SELECT indexname, tablename FROM pg_indexes WHERE schemaname='public' ORDER BY tablename, indexname;\"",
+    "db:verify:rls":     "psql $DATABASE_URL -c \"SELECT tablename, rowsecurity FROM pg_tables WHERE schemaname='public' ORDER BY tablename;\""
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.89.0",
+    "@supabase/supabase-js": "^2.38.4",
+    "axios": "^1.6.0",
+    "cheerio": "^1.2.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "helmet": "^7.1.0",
+    "node-cron": "^3.0.3",
+    "pg": "^8.11.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

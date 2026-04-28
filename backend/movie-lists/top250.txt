@@ -1,0 +1,21 @@
+# Most Popular category (top250)
+# Source: Scraped at seed time from a Letterboxd list URL.
+# There is NO hardcoded array for this category — the list is scraped live
+# when you run `node importLetterboxd.js <url> top250`.
+#
+# Default source (per the script header comment):
+#   https://letterboxd.com/official/list/top-250-films-with-the-most-fans/
+#
+# The live pool currently in the app is whatever was on that Letterboxd
+# list at the moment the import script was last run. To see the exact
+# current pool, query the database:
+#
+#   SELECT title, year
+#   FROM movies
+#   WHERE category = 'top250'
+#   ORDER BY year;
+#
+# Or via the API (returns the same pool the client uses):
+#   GET /api/movies/pool/top250
+#
+# Script: backend/src/scripts/importLetterboxd.js

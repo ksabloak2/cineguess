@@ -1,0 +1,10 @@
+node_modules/
+.env
+*.log
+
+# Extracted trailer frames (generated locally, 130MB+)
+public/frames/
+
+# Misc log files from scripts
+extraction-log.txt
+extraction-log-retry.txt
