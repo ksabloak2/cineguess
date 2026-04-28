@@ -142,11 +142,11 @@ export default function ModeHub() {
           100% { transform: translateY(120%) rotate(14deg);  opacity: 0; }
         }
 
-        /* Desktop left stub: tilt and slide left */
+        /* Desktop left stub: pivots from top-right corner, falls down + left */
         @keyframes ticket-rip-stub-left {
-          0%   { transform: translateX(0)     rotate(0deg);   opacity: 1; }
-          20%  { transform: translateX(-4px)  rotate(-2deg);  opacity: 1; }
-          100% { transform: translateX(-130%) rotate(-10deg); opacity: 0; }
+          0%   { transform: translate(0,    0)    rotate(0deg);   opacity: 1; }
+          18%  { transform: translate(-5px, 14px) rotate(-6deg);  opacity: 1; }
+          100% { transform: translate(-16px,180%) rotate(-26deg); opacity: 0; }
         }
 
         /* Jagged tear edge flash */
@@ -303,6 +303,15 @@ export default function ModeHub() {
              hide the desktop left-stub overlay and its tear edge */
           .ticket-rip-desktop-stub  { display: none !important; }
           .ticket-rip-edge-desktop  { display: none !important; }
+        }
+
+        /* Desktop ripping: clip away the left stub area so the card looks
+           like it no longer has that section (bottom-left is "gone").
+           Sharp left edge = fresh tear; rounded right = original corners. */
+        @media (min-width: 768px) {
+          .ticket-ripping {
+            clip-path: inset(0 0 0 12% round 0 16px 16px 0) !important;
+          }
         }
       `}</style>
 
@@ -466,11 +475,15 @@ function TicketCard({ cfg, catId, to, floatDelay, hoveredId, setHoveredId, navig
       onClick={handleClick}
       onMouseEnter={() => !ripping && setHoveredId(catId)}
       onMouseLeave={() => setHoveredId(null)}
-      className="ticket-card group relative flex"
+      className={`ticket-card group relative flex${ripping ? ' ticket-ripping' : ''}`}
       style={{
-        cursor: ripping ? 'default' : 'pointer',
-        width:  '100%',
-        height: '100%',
+        cursor:   ripping ? 'default' : 'pointer',
+        width:    '100%',
+        height:   '100%',
+        // Raise above sibling cards so the falling stub isn't obscured
+        zIndex:   ripping ? 50 : undefined,
+        // Let the torn stub exit past the card edge
+        overflow: ripping ? 'visible' : 'hidden',
         // ── Static base — never changes, no repaint budget ──
         background:           `linear-gradient(135deg, ${cfg.bg} 0%, rgba(5,5,12,0.85) 100%)`,
         backdropFilter:       'blur(12px) brightness(0.82)',
@@ -490,7 +503,6 @@ function TicketCard({ cfg, catId, to, floatDelay, hoveredId, setHoveredId, navig
         animation:  ripping ? 'none'
           : isHovered || isDimmed ? 'none'
           : `ticket-float 3s ${floatDelay} ease-in-out infinite`,
-        overflow: 'hidden',
       }}
     >
       {/* ── Hover glow overlay — opacity 0→1 only, compositor-only, zero repaint ── */}
@@ -751,8 +763,8 @@ function TicketCard({ cfg, catId, to, floatDelay, hoveredId, setHoveredId, navig
             background: cfg.stubBg,
             borderTopLeftRadius:    '14px',
             borderBottomLeftRadius: '14px',
-            animation:  'ticket-rip-stub-left 0.40s cubic-bezier(0.55,0,1,0.45) forwards',
-            transformOrigin: 'right center',
+            animation:  'ticket-rip-stub-left 0.42s cubic-bezier(0.55,0,1,0.45) forwards',
+            transformOrigin: 'top right',
           }}
         />
         {/* Mobile jagged tear edge at perforation */}
