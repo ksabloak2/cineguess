@@ -13,30 +13,32 @@ export function AuthProvider({ children }) {
     // Load initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session) fetchProfile();
+      if (session) fetchProfile(session);
       else setLoading(false);
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      if (session) fetchProfile();
+      if (session) fetchProfile(session);
       else { setProfile(null); setLoading(false); }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  async function fetchProfile() {
+  async function fetchProfile(session) {
     try {
       const prof = await getProfile();
       setProfile(prof);
     } catch (err) {
-      // Profile row doesn't exist yet — happens right after email verification
-      // when registerProfile hasn't been called. Auto-register with the pending
-      // username stored during signup so users never have to enter it twice.
+      // Profile row doesn't exist yet — happens right after email verification.
+      // Try to auto-register using:
+      //   1. user_metadata.username (set at signUp — works across devices)
+      //   2. localStorage pending_username (fallback for same-device flow)
       if (err?.response?.status === 404) {
-        const pending = localStorage.getItem('pending_username');
+        const metaUsername = session?.user?.user_metadata?.username;
+        const pending = metaUsername || localStorage.getItem('pending_username');
         if (pending) {
           try {
             const prof = await registerProfile(pending);
@@ -55,8 +57,12 @@ export function AuthProvider({ children }) {
     }
   }
 
-  async function signUp(email, password) {
-    const { data, error } = await supabase.auth.signUp({ email, password });
+  async function signUp(email, password, username) {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { username } }, // stored in user_metadata — survives across devices
+    });
     if (error) throw error;
     return data;
   }

@@ -82,6 +82,7 @@ export default function FriendsPage() {
   const [sentRequests, setSentRequests] = useState([]);
   const [searchQ, setSearchQ]           = useState('');
   const [searchRes, setSearchRes]       = useState([]);
+  const [searchDone, setSearchDone]     = useState(false);
   const [addMsg, setAddMsg]             = useState('');
   const [loading, setLoading]           = useState(true);
   const [viewingFriend, setViewingFriend] = useState(null);
@@ -106,15 +107,20 @@ export default function FriendsPage() {
   function handleSearch(e) {
     const q = e.target.value;
     setSearchQ(q);
-    // Clear results when the user edits the input — only search on Enter
+    // Clear results and done flag when the user edits — only search on Enter
     setSearchRes([]);
+    setSearchDone(false);
   }
 
   async function handleSearchSubmit(e) {
     if (e) e.preventDefault();
     const q = searchQ.trim();
     if (q.length < 2) return;
-    try { setSearchRes(await searchUsers(q)); } catch {}
+    try {
+      const res = await searchUsers(q);
+      setSearchRes(res);
+      setSearchDone(true);
+    } catch {}
   }
 
   async function handleSendRequest(username) {
@@ -576,6 +582,11 @@ export default function FriendsPage() {
                   }}
                 >
                   {addMsg}
+                </p>
+              )}
+              {searchDone && searchRes.length === 0 && (
+                <p style={{ fontSize: '0.7rem', fontWeight: 600, color: 'rgba(255,255,255,0.40)', textAlign: 'center', padding: '6px 0' }}>
+                  No user found for &ldquo;{searchQ}&rdquo;
                 </p>
               )}
               {searchRes.length > 0 && (

@@ -186,7 +186,7 @@ export default function AuthPage() {
           setError('Username may only contain letters, numbers, and underscores.');
           return;
         }
-        const data = await signUp(email, password);
+        const data = await signUp(email, password, username.trim());
         if (!data?.session) {
           // Email verification required — persist username in localStorage so it
           // survives tab changes and browser restarts, and auto-registers on sign-in.
