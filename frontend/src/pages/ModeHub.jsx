@@ -310,11 +310,14 @@ export default function ModeHub() {
 
         /* Desktop ripping: clip away the left stub area so the card looks
            like it no longer has that section (bottom-left is "gone").
-           Sharp left edge = fresh tear; rounded right = original corners. */
+           Sharp left edge = fresh tear; rounded right = original corners.
+           Also hide the mobile-only rip overlays (horizontal stub + edge). */
         @media (min-width: 768px) {
           .ticket-ripping {
             clip-path: inset(0 0 0 12% round 0 16px 16px 0) !important;
           }
+          .ticket-rip-mobile-stub { display: none !important; }
+          .ticket-rip-edge-mobile { display: none !important; }
         }
       `}</style>
 
@@ -403,9 +406,10 @@ export default function ModeHub() {
         </div>
 
         {/* ── 2×2 Ticket grid — widescreen, height-capped to stay in viewport ── */}
+        {/* overflow:visible so hover translateY(-12px) isn't clipped at the top */}
         <div
           className="flex-1 flex items-center justify-center w-full"
-          style={{ minHeight: 0, overflow: 'hidden' }}
+          style={{ minHeight: 0, overflow: 'visible', paddingTop: '14px' }}
         >
           <div
             className="ticket-grid-inner"
@@ -416,7 +420,7 @@ export default function ModeHub() {
               columnGap:           'clamp(8px, 1.2vw, 16px)',
               rowGap:              'clamp(7px, 1.0vh, 12px)',
               width:               'min(92vw, 1600px)',
-              height:              'calc(100dvh - 4rem - 130px)',
+              height:              'calc(100dvh - 4rem - 144px)',
             }}
           >
             {CAT_ORDER.map((id, i) => {
