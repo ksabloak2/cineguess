@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { Routes, Route, Navigate, useParams, useMatch, useLocation } from 'react-router-dom';
 import Navbar, { ModeToggle } from './components/Navbar';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -251,5 +252,6 @@ export default function App() {
         </ErrorBoundary>
       </main>
     </div>
+    <Analytics />
   );
 }
