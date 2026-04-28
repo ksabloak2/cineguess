@@ -123,7 +123,7 @@ export default function RulesModal({ open, onClose }) {
             <LegendRow color="green"  label="Exact Match"   desc="Genre, director, actor, or language is identical to the target." />
             <LegendRow color="cyan"   label="Very Close"    desc="Year only: your guess is within 2 years of the target. Arrow shows direction ↑↓." />
             <LegendRow color="amber"  label="Close"         desc="Year only: your guess is within 5 years of the target. Arrow shows direction ↑↓." />
-            <LegendRow color="yellow" label="Partial Match" desc="Shared genre, or the guessed actor appears in the target film in a different role." />
+            <LegendRow color="yellow" label="Partial Match" desc="Shared genre, actor in a different role, or in Superhero: same parent universe (e.g. both Marvel) but a different sub-franchise (e.g. MCU vs Fox Universe)." />
             <LegendRow color="red"    label="No Match"      desc="Nothing in common for this attribute, or off by more than 5 years." />
           </div>
         </div>
@@ -137,10 +137,13 @@ export default function RulesModal({ open, onClose }) {
           }}
         >
           <p className="text-[10px] uppercase tracking-[0.25em] font-semibold mb-3" style={{ color: 'rgba(220,20,60,0.7)' }}>
-            🦸 Superhero — Franchise Guide
+            🦸 Superhero: Franchise Guide
           </p>
           <p className="text-[11px] text-gray-400 mb-3 leading-relaxed">
-            The Superhero category covers all major comic-book film franchises. Movies are grouped by studio/rights holder, not just brand name — so some franchises may surprise you:
+            Movies are grouped by studio/rights holder, not just brand name, so some franchises may surprise you.
+          </p>
+          <p className="text-[11px] text-gray-400 mb-3 leading-relaxed">
+            <span className="text-yellow-400 font-semibold">Yellow tile tip:</span> if your guess and the target share a parent universe (both Marvel, or both DC) but belong to different sub-franchises (e.g. MCU vs Fox Universe, or DCEU vs Nolan Batman), the franchise tile shows yellow. Green only lights up when both films are in the exact same sub-franchise.
           </p>
           <div className="space-y-2">
             {FRANCHISE_GROUPS.map(({ label, examples, color }) => (
@@ -214,11 +217,11 @@ export default function RulesModal({ open, onClose }) {
 const RULES = [
   'Guess the target movie in 7 tries or fewer. Each guess must be a real film from the chosen category.',
   'After every guess, 6 tiles light up showing how close you are: Genre, Director, Lead Actor/Actress, Supporting Actor/Actress, Year, and Language. Superhero and Animated categories use different fields tailored to those films.',
-  'Green = exact match. Cyan = year within 2. Amber = year within 5. Yellow = partial match (shared genre, or the actor appears in the target in a different role). Red = no match.',
+  'Green = exact match. Cyan = year within 2. Amber = year within 5. Yellow = partial match (shared genre, actor in a different role, or in Superhero: same parent universe but different sub-franchise). Red = no match.',
   'In Daily mode, everyone plays the same movie each day. Your streak only resets if you get a movie wrong. Skipping a day keeps your streak alive.',
   'Unlimited mode lets you play as many rounds as you want with a random target each round. Separate streaks are tracked per category.',
   'Indian Cinema gets 8 guesses (instead of 7) to match the epic scale of its films.',
-  'Progressive hints unlock as you guess. Most Popular: Logline (guess 4) → Cast Member (guess 5) → Frame (guess 6). Indian Cinema: Logline (guess 4) → Cast Member (guess 5) → Frame (guess 6) → Musical Hint (guess 7). Superhero & Animated: Logline (guess 5) → Frame (guess 6). The Logline explains the plot badly — technically accurate but intentionally misleading!',
+  'Progressive hints unlock as you guess. Most Popular: Logline (guess 4) → Cast Member (guess 5) → Frame (guess 6). Indian Cinema: Logline (guess 4) → Cast Member (guess 5) → Frame (guess 6) → Musical Hint (guess 7). Superhero & Animated: Logline (guess 5) → Frame (guess 6). The Logline explains the plot badly, technically accurate but intentionally misleading!',
   'Share your result grid with friends. Friends cannot see your current-day answers until they finish that category themselves.',
 ];
 
@@ -238,13 +241,13 @@ const HINTS = [
     icon: '💡',
     trigger: 'Guess 4 (all except Superhero/Animated)',
     label: 'The Logline',
-    detail: 'A one-sentence explanation of the plot… badly. Technically accurate but intentionally misleading — think outside the box! Superhero & Animated unlock this after guess 5.',
+    detail: 'A one-sentence explanation of the plot, badly. Technically accurate but intentionally misleading. Think outside the box! Superhero & Animated unlock this after guess 5.',
   },
   {
     icon: '🎭',
     trigger: 'Guess 5 (Most Popular & Indian Cinema)',
     label: 'A Cast Member',
-    detail: 'The name of the 3rd or 4th-credited cast member — never the lead or supporting actor already visible on the board.',
+    detail: 'The name of the 3rd or 4th-credited cast member, not the lead or supporting actor already visible on the board.',
   },
   {
     icon: '🖼️',
@@ -265,22 +268,22 @@ const FRANCHISE_GROUPS = [
   {
     label:    'MCU',
     color:    '#ef4444',
-    examples: 'All Disney/Marvel Studios films — Iron Man, Avengers, Spider-Man (Holland), Black Panther, etc.',
+    examples: 'All Disney/Marvel Studios films: Iron Man, Avengers, Spider-Man (Holland), Black Panther, etc.',
   },
   {
     label:    'Fox Universe',
     color:    '#F3CE13',
-    examples: 'Fox-era Marvel films — X-Men series, Deadpool (1 & 2), Fantastic Four (2005, 2015), Logan, and related spin-offs.',
+    examples: 'Fox-era Marvel films: X-Men series, Deadpool (1 & 2), Fantastic Four (2005, 2015), Logan, and related spin-offs.',
   },
   {
     label:    'DC / WB',
     color:    '#60a5fa',
-    examples: 'Warner Bros. DC films — Batman (Nolan/Keaton), Superman, Wonder Woman, Justice League, Aquaman, The Flash, etc.',
+    examples: 'Warner Bros. DC films: Batman (Nolan/Keaton), Superman, Wonder Woman, Justice League, Aquaman, The Flash, etc.',
   },
   {
     label:    'Sony Spider-Verse',
     color:    '#a855f7',
-    examples: 'Sony\'s Spider-Man universe — Venom, Morbius, Madame Web, and animated Spider-Verse films.',
+    examples: 'Sony\'s Spider-Man universe: Venom, Morbius, Madame Web, and animated Spider-Verse films.',
   },
   {
     label:    'Other',
