@@ -155,8 +155,7 @@ function computeAwards(allStreaks) {
   const maxBest     = Math.max(0, ...allS.map((s) => s.longest_streak  || 0));
   const maxCurrent  = Math.max(0, ...allS.map((s) => s.current_streak  || 0));
   const dailyOnly   = CATEGORIES.map((c) => allStreaks[c.id]).filter(Boolean);
-  const allDailyHave3 = dailyOnly.length === CATEGORIES.length &&
-    dailyOnly.every((s) => (s.longest_streak || 0) >= 3);
+  const allDailyHave3 = dailyOnly.filter((s) => (s.longest_streak || 0) >= 4).length >= 3;
   const totalPlayed = allS.filter((s) => (s.longest_streak || 0) > 0).length;
 
   return [
@@ -164,7 +163,7 @@ function computeAwards(allStreaks) {
     { id: 'on-a-roll',    icon: '🎯', name: 'On a Roll',    desc: 'Win 3 in a row in any category',             earned: maxBest >= 3     },
     { id: 'cinephile',    icon: '🎬', name: 'Cinephile',    desc: 'Hit a 7-game winning streak',                earned: maxBest >= 7     },
     { id: 'genre-master', icon: '🏆', name: 'Genre Master', desc: 'Reach a 10-game winning streak',             earned: maxBest >= 10    },
-    { id: 'completionist',icon: '🎭', name: 'Completionist',desc: 'Hit a 3+ streak in all 4 daily categories',  earned: allDailyHave3    },
+    { id: 'completionist',icon: '🎭', name: 'Completionist',desc: 'Hit a 4+ streak in 3 daily categories',        earned: allDailyHave3    },
     { id: 'polymath',     icon: '🌐', name: 'Polymath',     desc: 'Play in 6 or more different categories',     earned: totalPlayed >= 6 },
     { id: 'legend',       icon: '⭐', name: 'Legend',       desc: 'Achieve a 20-game winning streak',           earned: maxBest >= 20    },
     { id: 'immortal',     icon: '👑', name: 'Immortal',     desc: 'Sustain a 50-game winning streak',           earned: maxBest >= 50    },
