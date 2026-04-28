@@ -103,7 +103,7 @@ export default function ReportIssueModal({ open, onClose }) {
       }}
     >
       <div
-        className="relative w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl p-6 sm:p-7 animate-slide-up sm:animate-bounce-in"
+        className="relative w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl p-6 pb-28 sm:pb-7 sm:p-7 animate-slide-up sm:animate-bounce-in"
         style={{
           background: 'linear-gradient(180deg, rgba(20,20,28,0.97) 0%, rgba(13,13,20,0.99) 100%)',
           border:     '1px solid rgba(243,206,19,0.18)',
