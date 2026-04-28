@@ -437,20 +437,17 @@ function StreaksTab({ allStreaks, allPercentiles, loading }) {
     <>
       {/* ── Responsive mobile overrides ── */}
       <style>{`
-        /* ── Desktop: fixed 2×2 grid inside a fixed-height container ── */
+        /* ── Desktop: two stacked sections, each with a 2×2 grid ── */
         .imax-outer {
-          height: 100%;
-          display: grid;
-          grid-template-rows: 1fr 1fr;
-          gap: clamp(8px,1.3vh,14px);
+          display: flex;
+          flex-direction: column;
+          gap: clamp(16px,2vh,24px);
         }
         .imax-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          grid-template-rows: minmax(0,1fr) minmax(0,1fr);
+          grid-template-rows: auto auto;
           gap: clamp(6px,1vw,12px);
-          flex: 1;
-          min-height: 0;
         }
 
         /* ── Mobile (≤ 639px): single-column strips, full scrollable list ── */
@@ -572,7 +569,7 @@ function IMAXSection({ label, color, categories, getStreak, getPercentile, loadi
   const rgb    = isGold ? '243,206,19' : '168,85,247';
 
   return (
-    <div className="imax-section" style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+    <div className="imax-section">
       {/* Section label */}
       <div style={{
         fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase',
