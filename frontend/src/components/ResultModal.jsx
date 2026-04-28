@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { tmdbImage } from '../utils/api';
 import { buildShareString, getMaxGuesses, getTileFields } from '../utils/gameLogic';
+import { useAuth } from '../context/AuthContext';
 
 // Emoji map kept for clipboard/share text
 const EMOJI_MAP = {
@@ -42,6 +43,7 @@ export default function ResultModal({
   onClose, isUnlimited = false, onNewRound,
 }) {
   const [shareOpen, setShareOpen] = useState(false);
+  const { profile } = useAuth();
 
   useEffect(() => {
     function handler(e) { if (e.key === 'Escape') onClose(); }
@@ -52,7 +54,7 @@ export default function ResultModal({
   if (!result) return null;
 
   const score     = won ? `${guessResults.length}/${getMaxGuesses(category)}` : `X/${getMaxGuesses(category)}`;
-  const shareText = buildShareString(category, guessResults.map((g) => g.tiles), won);
+  const shareText = buildShareString(category, guessResults.map((g) => g.tiles), won, profile?.username);
   const fields    = getTileFields(category);
 
   const letterboxdUrl = `https://letterboxd.com/film/${result.title
