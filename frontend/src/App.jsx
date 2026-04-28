@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Routes, Route, Navigate, useParams, useMatch, useLocation } from 'react-router-dom';
 import Navbar, { ModeToggle } from './components/Navbar';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -253,5 +254,6 @@ export default function App() {
       </main>
     </div>
     <Analytics />
+    <SpeedInsights />
   );
 }
