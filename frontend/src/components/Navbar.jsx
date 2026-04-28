@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { Link, useLocation, useNavigate, useMatch } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { MODES, CATEGORIES, slugToCategory, categoryToSlug } from '../utils/gameLogic';
@@ -24,25 +24,6 @@ export default function Navbar() {
   const navigate                   = useNavigate();
   const { session, profile }       = useAuth();
   const [rulesOpen, setRulesOpen]  = useState(false);
-  const [headerHidden, setHeaderHidden] = useState(false);
-  const lastScrollY = useRef(0);
-
-  // Hide header on scroll-down, reveal on scroll-up — mobile only
-  useEffect(() => {
-    function onScroll() {
-      // Skip on desktop — only apply on small screens
-      if (window.innerWidth >= 640) return;
-      const y = window.scrollY;
-      if (y > lastScrollY.current && y > 60) {
-        setHeaderHidden(true);
-      } else {
-        setHeaderHidden(false);
-      }
-      lastScrollY.current = y;
-    }
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
 
   const gameMatch      = useMatch('/play/:mode/:category');
   const activeMode     = gameMatch?.params.mode
@@ -63,14 +44,12 @@ export default function Navbar() {
           TOP HEADER
       ════════════════════════════════════════════════════ */}
       <header
-        className="sticky top-0 z-50 border-b"
+        className="mobile-header sm:sticky top-0 z-50 border-b"
         style={{
           background:           'rgba(10,10,15,0.97)',
           backdropFilter:       'blur(24px) saturate(1.4)',
           WebkitBackdropFilter: 'blur(24px) saturate(1.4)',
           borderColor:          'rgba(255,255,255,0.05)',
-          transform:            headerHidden ? 'translateY(-100%)' : 'translateY(0)',
-          transition:           'transform 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
         {/* ── Flex row: logo left | toggle abs-centred | icons right ── */}
