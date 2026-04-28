@@ -128,6 +128,35 @@ export default function RulesModal({ open, onClose }) {
           </div>
         </div>
 
+        {/* Franchise groupings — Superhero category */}
+        <div
+          className="rounded-xl p-4 sm:p-5 mt-5"
+          style={{
+            background: 'rgba(220,20,60,0.04)',
+            border:     '1px solid rgba(220,20,60,0.18)',
+          }}
+        >
+          <p className="text-[10px] uppercase tracking-[0.25em] font-semibold mb-3" style={{ color: 'rgba(220,20,60,0.7)' }}>
+            🦸 Superhero — Franchise Guide
+          </p>
+          <p className="text-[11px] text-gray-400 mb-3 leading-relaxed">
+            The Superhero category covers all major comic-book film franchises. Movies are grouped by studio/rights holder, not just brand name — so some franchises may surprise you:
+          </p>
+          <div className="space-y-2">
+            {FRANCHISE_GROUPS.map(({ label, examples, color }) => (
+              <div key={label} className="flex items-start gap-2.5">
+                <span
+                  className="flex-shrink-0 mt-0.5 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
+                  style={{ background: `${color}22`, color, border: `1px solid ${color}40` }}
+                >
+                  {label}
+                </span>
+                <p className="text-[11px] text-gray-400 leading-snug">{examples}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Progressive hints */}
         <div
           className="rounded-xl p-4 sm:p-5 mt-5"
@@ -227,6 +256,35 @@ const HINTS = [
     trigger: 'After guess 6',
     label: 'Musical Hint',
     detail: 'Indian Cinema only: an iconic song title and playback singers from the film.',
+  },
+];
+
+// ── Franchise groupings for Superhero category ────────────────────────────────
+const FRANCHISE_GROUPS = [
+  {
+    label:    'MCU',
+    color:    '#ef4444',
+    examples: 'All Disney/Marvel Studios films — Iron Man, Avengers, Spider-Man (Holland), Black Panther, etc.',
+  },
+  {
+    label:    'Fox Universe',
+    color:    '#F3CE13',
+    examples: 'Fox-era Marvel films — X-Men series, Deadpool (1 & 2), Fantastic Four (2005, 2015), Logan, and related spin-offs.',
+  },
+  {
+    label:    'DC / WB',
+    color:    '#60a5fa',
+    examples: 'Warner Bros. DC films — Batman (Nolan/Keaton), Superman, Wonder Woman, Justice League, Aquaman, The Flash, etc.',
+  },
+  {
+    label:    'Sony Spider-Verse',
+    color:    '#a855f7',
+    examples: 'Sony\'s Spider-Man universe — Venom, Morbius, Madame Web, and animated Spider-Verse films.',
+  },
+  {
+    label:    'Other',
+    color:    '#6b7280',
+    examples: 'Independent superhero films, older adaptations (Blade, Punisher, Hellboy), and international titles.',
   },
 ];
 

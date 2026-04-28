@@ -18,8 +18,14 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 // Old URLs like /play/top250 or /play/unlimited get rewritten.
 function LegacyPlayRedirect() {
   const { category } = useParams();
-  if (category === 'unlimited') return <Navigate to="/play/unlimited/top250" replace />;
+  if (category === 'unlimited') return <Navigate to="/play/unlimited/mostpopular" replace />;
   return <Navigate to={`/play/daily/${category}`} replace />;
+}
+
+// Redirect /play/:mode/top250 → /play/:mode/mostpopular (cleaner URL)
+function Top250Redirect() {
+  const { mode } = useParams();
+  return <Navigate to={`/play/${mode}/mostpopular`} replace />;
 }
 
 // Minimal spinner shown while a lazy chunk is downloading.
@@ -189,6 +195,7 @@ export default function App() {
               <Route path="/daily"                   element={<ModeHub />} />
               <Route path="/unlimited"               element={<ModeHub />} />
               <Route path="/play/:mode/:category"    element={<GamePage />} />
+              <Route path="/play/:mode/top250"       element={<Top250Redirect />} />
               <Route path="/play/:category"          element={<LegacyPlayRedirect />} />
               <Route path="/auth"                    element={<AuthPage />} />
               <Route path="/friends"                 element={<FriendsPage />} />

@@ -9,25 +9,51 @@ import {
   CATEGORIES, MAX_GUESSES, evaluateTilesLocal, getHints,
   saveGuestState, loadGuestState, saveGuestStreak, loadGuestStreak,
   saveDailyState, loadDailyState, clearStaleDailyStates,
+  slugToCategory,
 } from '../utils/gameLogic';
 import MovieSearch from '../components/MovieSearch';
 import GameBoard from '../components/GameBoard';
 import HintModal from '../components/HintModal';
 import ResultModal from '../components/ResultModal';
 
-const VALID_IDS   = new Set(CATEGORIES.map((c) => c.id));
+const VALID_IDS   = new Set([
+  ...CATEGORIES.map((c) => c.id),
+  ...CATEGORIES.map((c) => c.urlSlug),
+]);
 const VALID_MODES = new Set(['daily', 'unlimited']);
 
 export default function GamePage() {
-  const { mode, category } = useParams();
-  const navigate           = useNavigate();
-  const { session }        = useAuth();
+  const { mode, category: rawCategory } = useParams();
+  // Resolve URL slug → internal category id (e.g. 'mostpopular' → 'top250')
+  const category = slugToCategory(rawCategory);
+  const navigate = useNavigate();
+  const { session } = useAuth();
 
   useEffect(() => {
-    if (!VALID_MODES.has(mode) || !VALID_IDS.has(category)) {
+    if (!VALID_MODES.has(mode) || !VALID_IDS.has(rawCategory)) {
       navigate('/', { replace: true });
     }
-  }, [mode, category, navigate]);
+  }, [mode, rawCategory, navigate]);
+
+  // Scroll-away: hide the fixed bottom mode bar when the user scrolls down
+  // in the game, revealing more board real estate on mobile.
+  useEffect(() => {
+    let lastY = window.scrollY;
+    function onScroll() {
+      const y = window.scrollY;
+      if (y > 60) {
+        document.body.classList.add('game-scrolled');
+      } else {
+        document.body.classList.remove('game-scrolled');
+      }
+      lastY = y;
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      document.body.classList.remove('game-scrolled');
+    };
+  }, []);
 
   const isUnlimited = mode === 'unlimited';
   const catMeta     = CATEGORIES.find((c) => c.id === category);

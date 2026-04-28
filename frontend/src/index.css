@@ -222,6 +222,18 @@ svg *,
   }
 }
 
+/* ── Scroll-away bottom mode bar (mobile game mode) ────────────────────────── */
+/* When the user scrolls down in a game, .mob-mode-bar slides off-screen so
+   the game board gets the full vertical space. Slides back on scroll-to-top.  */
+@media (max-width: 639px) {
+  .mob-mode-bar {
+    transition: transform 0.28s cubic-bezier(0.4,0,0.2,1) !important;
+  }
+  body.game-scrolled .mob-mode-bar {
+    transform: translateY(110%) !important;
+  }
+}
+
 /* ---- Responsive container utility ---- */
 .container-game {
   width: 100%;

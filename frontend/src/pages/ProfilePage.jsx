@@ -65,6 +65,50 @@ const TABS = [
   { id: 'awards',  label: 'Awards',  icon: '🏆' },
 ];
 
+// ── A-List badge ─────────────────────────────────────────────────────────────
+function AListBadge({ size = 'md' }) {
+  const isSmall = size === 'sm';
+  return (
+    <span
+      title="A-List: All awards and all flame tiers collected"
+      style={{
+        display:       'inline-flex',
+        alignItems:    'center',
+        gap:           isSmall ? 2 : 4,
+        padding:       isSmall ? '1px 5px' : '2px 8px',
+        borderRadius:  999,
+        background:    'linear-gradient(135deg, rgba(243,206,19,0.18) 0%, rgba(255,255,255,0.08) 100%)',
+        border:        '1px solid rgba(243,206,19,0.55)',
+        boxShadow:     '0 0 10px rgba(243,206,19,0.30), inset 0 0 8px rgba(243,206,19,0.06)',
+        flexShrink:    0,
+        animation:     'badge-glow-gold 2.8s ease-in-out infinite',
+      }}
+    >
+      <span style={{ fontSize: isSmall ? '0.6rem' : '0.7rem', lineHeight: 1 }}>⭐</span>
+      <span style={{
+        fontSize:      isSmall ? '0.47rem' : '0.55rem',
+        fontWeight:    900,
+        letterSpacing: '0.18em',
+        textTransform: 'uppercase',
+        color:         '#F3CE13',
+      }}>
+        A-List
+      </span>
+    </span>
+  );
+}
+
+// ── A-List status: earned when all awards + all flame tiers are collected ────
+// Requires: every award earned AND longest streak ≥ 500 (unlocks all 7 flames)
+function computeIsAList(awards, allStreaks) {
+  const allAwardsEarned = awards.length > 0 && awards.every((a) => a.earned);
+  const maxBest = Math.max(
+    0,
+    ...Object.values(allStreaks).map((s) => Number(s?.longest_streak || s?.best || 0))
+  );
+  return allAwardsEarned && maxBest >= 500;
+}
+
 // ── Awards list ───────────────────────────────────────────────────────────────
 function computeAwards(allStreaks) {
   const allS        = Object.values(allStreaks);
@@ -150,7 +194,8 @@ export default function ProfilePage() {
 
   if (!session) return <GuestPrompt navigate={navigate} icon="🎬" headline="Your Cinematic Record" detail="Sign in to track streaks, earn awards, and compare scores with friends." />;
 
-  const awards = computeAwards(allStreaks);
+  const awards  = computeAwards(allStreaks);
+  const isAList = computeIsAList(awards, allStreaks);
 
   return (
     <div
@@ -341,19 +386,23 @@ export default function ProfilePage() {
             🎬
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <h1 className="font-display font-black" style={{
                 fontSize: 'clamp(0.95rem,2.1vw,1.4rem)', color: '#fff', lineHeight: 1,
                 overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}>
                 @{profile?.username || '…'}
               </h1>
-              <span style={{
-                fontSize: '0.57rem', fontWeight: 700, textTransform: 'uppercase',
-                letterSpacing: '0.15em', color: 'rgba(243,206,19,0.62)', flexShrink: 0,
-              }}>
-                ◆ MEMBER
-              </span>
+              {isAList ? (
+                <AListBadge />
+              ) : (
+                <span style={{
+                  fontSize: '0.57rem', fontWeight: 700, textTransform: 'uppercase',
+                  letterSpacing: '0.15em', color: 'rgba(243,206,19,0.62)', flexShrink: 0,
+                }}>
+                  ◆ MEMBER
+                </span>
+              )}
             </div>
             <p style={{
               fontSize: '0.64rem', color: 'rgba(255,255,255,0.26)', marginTop: 3,
@@ -946,7 +995,8 @@ function FlameCollection({ allStreaks, loading }) {
 
 function AwardsTab({ awards, allStreaks, loading }) {
   const earnedCount = awards.filter((a) => a.earned).length;
-  const pct = Math.round((earnedCount / awards.length) * 100);
+  const pct         = Math.round((earnedCount / awards.length) * 100);
+  const isAList     = computeIsAList(awards, allStreaks);
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 'clamp(8px,1.2vh,12px)' }}>
@@ -984,9 +1034,12 @@ function AwardsTab({ awards, allStreaks, loading }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: '1rem' }}>🏆</span>
             <div>
-              <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#fff' }}>Total Progress</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#fff' }}>Total Progress</span>
+                {isAList && !loading && <AListBadge size="sm" />}
+              </div>
               <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.30)', marginTop: 1 }}>
-                Unlock all Cinema Awards
+                {isAList ? 'All awards & flames collected — A-List achieved! ⭐' : 'Collect all awards + all flame tiers to reach A-List'}
               </div>
             </div>
           </div>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate, useMatch } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { MODES, CATEGORIES } from '../utils/gameLogic';
+import { MODES, CATEGORIES, slugToCategory, categoryToSlug } from '../utils/gameLogic';
 import RulesModal from './RulesModal';
 
 // ── mode accent colors ────────────────────────────────────────────────────────
@@ -13,6 +13,7 @@ const MODE_ACCENT = {
 // ── category signature colors (mirrors ModeHub exactly) ──────────────────────
 const CAT_COLORS = {
   top250:       { color: '#F3CE13', rgb: '243,206,19'  },   // gold
+  mostpopular:  { color: '#F3CE13', rgb: '243,206,19'  },   // alias for top250
   superhero:    { color: '#DC143C', rgb: '220,20,60'   },   // crimson
   animated:     { color: '#00D2FF', rgb: '0,210,255'   },   // cyan
   indiancinema: { color: '#FF9933', rgb: '255,153,51'  },   // saffron
@@ -29,7 +30,10 @@ export default function Navbar() {
     || (pathname.startsWith('/unlimited') ? 'unlimited'
       : pathname.startsWith('/daily')     ? 'daily'
       : null);
-  const activeCategory = gameMatch?.params.category || null;
+  // Resolve URL slug → internal id so active-state highlighting works
+  const activeCategory = gameMatch?.params.category
+    ? slugToCategory(gameMatch.params.category)
+    : null;
   const inGame         = !!gameMatch;
 
   const toggleMode = activeMode;
@@ -184,13 +188,13 @@ export default function Navbar() {
                 WebkitBackdropFilter: 'blur(12px)',
               }}
             >
-              <nav className="container-game flex flex-wrap justify-center gap-2 py-2.5">
+              <nav className="container-game flex flex-nowrap justify-center gap-1 sm:gap-2 py-2 sm:py-2.5 overflow-x-auto scrollbar-hide">
                 {CATEGORIES.map((cat) => (
                   <CategoryPill
                     key={cat.id}
                     cat={cat}
                     isActive={cat.id === activeCategory}
-                    to={`/play/${activeMode}/${cat.id}`}
+                    to={`/play/${activeMode}/${categoryToSlug(cat.id)}`}
                   />
                 ))}
               </nav>
@@ -259,14 +263,14 @@ function CategoryPill({ cat, isActive, to }) {
         position:       'relative',
         display:        'inline-flex',
         alignItems:     'center',
-        gap:            '6px',
-        padding:        '5px 13px',
+        gap:            '4px',
+        padding:        'clamp(3px,0.6vw,5px) clamp(7px,2vw,13px)',
         borderRadius:   '999px',
-        fontSize:       '0.75rem',
+        fontSize:       'clamp(0.62rem,2.8vw,0.75rem)',
         whiteSpace:     'nowrap',
+        flexShrink:     0,
         textDecoration: 'none',
         overflow:       'hidden',
-        // GPU compositing hint — keeps transforms on their own layer
         willChange:     'transform',
         transform:      (!isActive && hovered) ? 'scale(1.05)' : 'scale(1)',
         transition:     'transform 0.2s ease-in-out, color 0.2s ease-in-out',
@@ -309,7 +313,7 @@ function ModeToggle({ toggleMode, activeMode, inGame, activeCategory, fullWidth 
   const accent        = MODE_ACCENT[toggleMode] || MODE_ACCENT.daily;
 
   function toFor(modeId) {
-    if (inGame) return `/play/${modeId}/${activeCategory}`;
+    if (inGame) return `/play/${modeId}/${categoryToSlug(activeCategory)}`;
     return `/${modeId}`;
   }
 

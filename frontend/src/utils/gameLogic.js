@@ -7,11 +7,21 @@
 // per day, server-scored) or unlimited mode (random target each round,
 // client-scored). "Unlimited" is no longer a category — it's a mode.
 export const CATEGORIES = [
-  { id: 'top250',        label: 'Most Popular',  emoji: '🏆' },
-  { id: 'superhero',     label: 'Superhero',     emoji: '🦸' },
-  { id: 'animated',      label: 'Animated',      emoji: '🎨' },
-  { id: 'indiancinema',  label: 'Indian Cinema', emoji: '🎬' },
+  { id: 'top250',       urlSlug: 'mostpopular', label: 'Most Popular',  emoji: '🏆' },
+  { id: 'superhero',    urlSlug: 'superhero',   label: 'Superhero',     emoji: '🦸' },
+  { id: 'animated',     urlSlug: 'animated',    label: 'Animated',      emoji: '🎨' },
+  { id: 'indiancinema', urlSlug: 'indiancinema',label: 'Indian Cinema', emoji: '🎬' },
 ];
+
+// Map a URL slug (e.g. 'mostpopular') → internal category id (e.g. 'top250')
+export function slugToCategory(slug) {
+  return CATEGORIES.find((c) => c.urlSlug === slug || c.id === slug)?.id ?? slug;
+}
+
+// Map an internal category id → URL slug for navigation
+export function categoryToSlug(id) {
+  return CATEGORIES.find((c) => c.id === id)?.urlSlug ?? id;
+}
 
 export const MODES = [
   { id: 'daily',     label: 'Daily',     emoji: '📅', description: 'One movie a day across all 4 categories' },

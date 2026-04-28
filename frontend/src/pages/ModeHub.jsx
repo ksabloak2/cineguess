@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, Navigate } from 'react-router-dom';
-import { MODES } from '../utils/gameLogic';
+import { MODES, categoryToSlug } from '../utils/gameLogic';
 
 // ── Signature accent colors per category ────────────────────────────────────
 const CAT_CONFIG = {
@@ -149,8 +149,9 @@ export default function ModeHub() {
           }
 
           /* Grid: fill all remaining flex-1 space; tight gap; full width */
+          /* On mobile, subtract bottom mode-bar (~68px) from grid height */
           .ticket-grid-inner {
-            height:     100% !important;
+            height:     calc(100dvh - 4rem - 68px - 125px) !important;
             width:      100% !important;
             column-gap: 10px !important;
             row-gap:    10px !important;
@@ -357,7 +358,7 @@ export default function ModeHub() {
                   key={id}
                   cfg={cfg}
                   catId={id}
-                  to={`/play/${mode}/${id}`}
+                  to={`/play/${mode}/${categoryToSlug(id)}`}
                   floatDelay={floatDelays[i]}
                   hoveredId={hoveredId}
                   setHoveredId={setHoveredId}
