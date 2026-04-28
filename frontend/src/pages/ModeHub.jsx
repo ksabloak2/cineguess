@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useLocation, Navigate } from 'react-router-dom';
+import { Link, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { MODES, categoryToSlug } from '../utils/gameLogic';
 
 // ── Signature accent colors per category ────────────────────────────────────
@@ -94,6 +94,7 @@ export default function ModeHub() {
   const mode              = pathname.replace('/', '');
   const meta              = MODES.find((m) => m.id === mode);
   const [hoveredId, setHoveredId] = useState(null);
+  const navigate = useNavigate();
 
   if (!meta) return <Navigate to="/" replace />;
 
@@ -123,6 +124,37 @@ export default function ModeHub() {
         @keyframes ticket-float {
           0%,100% { transform: translateY(0px);  }
           50%      { transform: translateY(-9px); }
+        }
+
+        /* ── Rip animation keyframes ──────────────────────────────────── */
+
+        /* Top/body half: stamp up toward the user */
+        @keyframes ticket-rip-body {
+          0%   { transform: translateY(0px) scale(1);    }
+          30%  { transform: translateY(-6px) scale(1.04); }
+          100% { transform: translateY(-6px) scale(1.04); }
+        }
+
+        /* Mobile bottom stub: tilt and fall off downward */
+        @keyframes ticket-rip-stub-fall {
+          0%   { transform: translateY(0)    rotate(0deg);   opacity: 1; }
+          20%  { transform: translateY(4px)  rotate(3deg);   opacity: 1; }
+          100% { transform: translateY(120%) rotate(14deg);  opacity: 0; }
+        }
+
+        /* Desktop left stub: tilt and slide left */
+        @keyframes ticket-rip-stub-left {
+          0%   { transform: translateX(0)     rotate(0deg);   opacity: 1; }
+          20%  { transform: translateX(-4px)  rotate(-2deg);  opacity: 1; }
+          100% { transform: translateX(-130%) rotate(-10deg); opacity: 0; }
+        }
+
+        /* Jagged tear edge flash */
+        @keyframes ticket-rip-edge {
+          0%   { opacity: 0;   }
+          15%  { opacity: 1;   }
+          70%  { opacity: 0.7; }
+          100% { opacity: 0;   }
         }
 
         /* ── Ticket notch mask — desktop: left & right bites at mid-height ── */
@@ -380,6 +412,7 @@ export default function ModeHub() {
                   floatDelay={floatDelays[i]}
                   hoveredId={hoveredId}
                   setHoveredId={setHoveredId}
+                  navigate={navigate}
                 />
               );
             })}
@@ -408,17 +441,29 @@ export default function ModeHub() {
 //     whose `opacity` goes 0→1 (also compositor-only, zero repaint).
 //   • `backdropFilter`, `background`, `boxShadow`, and `border` on the root
 //     are STATIC — they never change, so the browser never repaints them.
-function TicketCard({ cfg, catId, to, floatDelay, hoveredId, setHoveredId }) {
+function TicketCard({ cfg, catId, to, floatDelay, hoveredId, setHoveredId, navigate }) {
   const isHovered = hoveredId === catId;
   const isDimmed  = hoveredId !== null && !isHovered;
+  const [ripping, setRipping] = useState(false);
+
+  function handleClick(e) {
+    e.preventDefault();
+    if (ripping) return;
+    // Haptic feedback on mobile
+    if (navigator.vibrate) navigator.vibrate(45);
+    setHoveredId(null);
+    setRipping(true);
+    setTimeout(() => navigate(to), 420);
+  }
 
   return (
-    <Link
-      to={to}
-      onMouseEnter={() => setHoveredId(catId)}
+    <div
+      onClick={handleClick}
+      onMouseEnter={() => !ripping && setHoveredId(catId)}
       onMouseLeave={() => setHoveredId(null)}
       className="ticket-card group relative flex"
       style={{
+        cursor: ripping ? 'default' : 'pointer',
         width:  '100%',
         height: '100%',
         // ── Static base — never changes, no repaint budget ──
@@ -429,18 +474,17 @@ function TicketCard({ cfg, catId, to, floatDelay, hoveredId, setHoveredId }) {
         border:               `1px solid ${cfg.border}`,
         boxShadow:            `0 0 22px ${cfg.glowDim}, inset 0 1px 0 rgba(255,255,255,0.04)`,
         // ── GPU-composited only — no paint ──
-        transform: isHovered
-          ? 'translateY(-12px) scale(1.02)'
-          : isDimmed ? 'scale(0.97)' : 'translateY(0px) scale(1)',
-        opacity:    isDimmed ? 0.38 : 1,
-        transition: 'transform 0.20s cubic-bezier(0.34,1.4,0.64,1), opacity 0.18s ease',
+        transform: ripping ? undefined
+          : isHovered ? 'translateY(-12px) scale(1.02)'
+          : isDimmed  ? 'scale(0.97)' : 'translateY(0px) scale(1)',
+        opacity:    isDimmed && !ripping ? 0.38 : 1,
+        transition: ripping ? 'none' : 'transform 0.20s cubic-bezier(0.34,1.4,0.64,1), opacity 0.18s ease',
         willChange: 'transform',
-        // Float stops during interaction so transitions don't fight
-        animation:  isHovered || isDimmed
-          ? 'none'
+        animation:  ripping
+          ? 'ticket-rip-body 0.42s cubic-bezier(0.22,1,0.36,1) forwards'
+          : isHovered || isDimmed ? 'none'
           : `ticket-float 3s ${floatDelay} ease-in-out infinite`,
         overflow: 'hidden',
-        cursor:   'pointer',
       }}
     >
       {/* ── Hover glow overlay — opacity 0→1 only, compositor-only, zero repaint ── */}
@@ -666,7 +710,99 @@ function TicketCard({ cfg, catId, to, floatDelay, hoveredId, setHoveredId }) {
         bottom:0, left:0, right:0, height:'1px', pointerEvents:'none',
         background:`linear-gradient(90deg, transparent 8%, ${cfg.color}0a 50%, transparent 85%)`,
       }}/>
-    </Link>
+
+      {/* ── Rip animation overlays (only rendered when ripping) ── */}
+      {ripping && <>
+        {/* Mobile: bottom stub falls down */}
+        <div
+          aria-hidden="true"
+          className="ticket-rip-mobile-stub"
+          style={{
+            position:   'absolute',
+            top:        '72%',
+            left:       0,
+            right:      0,
+            bottom:     0,
+            zIndex:     20,
+            background: `linear-gradient(180deg, ${cfg.bg.replace('0.05','0.22')} 0%, rgba(5,5,12,0.95) 100%)`,
+            borderBottomLeftRadius:  '14px',
+            borderBottomRightRadius: '14px',
+            animation:  'ticket-rip-stub-fall 0.40s cubic-bezier(0.55,0,1,0.45) forwards',
+            transformOrigin: 'top center',
+          }}
+        />
+        {/* Desktop: left stub slides away */}
+        <div
+          aria-hidden="true"
+          className="ticket-rip-desktop-stub"
+          style={{
+            position:   'absolute',
+            top:        0,
+            left:       0,
+            bottom:     0,
+            width:      'clamp(56px,12%,84px)',
+            zIndex:     20,
+            background: cfg.stubBg,
+            borderTopLeftRadius:    '14px',
+            borderBottomLeftRadius: '14px',
+            animation:  'ticket-rip-stub-left 0.40s cubic-bezier(0.55,0,1,0.45) forwards',
+            transformOrigin: 'right center',
+          }}
+        />
+        {/* Mobile jagged tear edge at perforation */}
+        <svg
+          aria-hidden="true"
+          className="ticket-rip-edge-mobile"
+          style={{
+            position:   'absolute',
+            top:        'calc(72% - 4px)',
+            left:       '13px',
+            right:      '13px',
+            height:     '8px',
+            width:      'calc(100% - 26px)',
+            zIndex:     21,
+            animation:  'ticket-rip-edge 0.42s ease forwards',
+            pointerEvents: 'none',
+          }}
+          viewBox="0 0 200 8" preserveAspectRatio="none"
+        >
+          <polyline
+            points="0,4 10,1 20,7 30,1 40,7 50,1 60,7 70,1 80,7 90,1 100,7 110,1 120,7 130,1 140,7 150,1 160,7 170,1 180,7 190,1 200,4"
+            fill="none"
+            stroke="rgba(255,255,255,0.75)"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+        {/* Desktop jagged tear edge at vertical perforation */}
+        <svg
+          aria-hidden="true"
+          className="ticket-rip-edge-desktop"
+          style={{
+            position:   'absolute',
+            top:        '13px',
+            bottom:     '13px',
+            left:       'calc(clamp(56px,12%,84px) - 4px)',
+            width:      '8px',
+            height:     'calc(100% - 26px)',
+            zIndex:     21,
+            animation:  'ticket-rip-edge 0.42s ease forwards',
+            pointerEvents: 'none',
+          }}
+          viewBox="0 0 8 200" preserveAspectRatio="none"
+        >
+          <polyline
+            points="4,0 1,10 7,20 1,30 7,40 1,50 7,60 1,70 7,80 1,90 7,100 1,110 7,120 1,130 7,140 1,150 7,160 1,170 7,180 1,190 4,200"
+            fill="none"
+            stroke="rgba(255,255,255,0.75)"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </>}
+    </div>
   );
 }
 
