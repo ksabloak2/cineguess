@@ -298,6 +298,11 @@ export default function ModeHub() {
             padding:   10px 0 !important;
             font-size: 11px   !important;
           }
+
+          /* Rip animation: mobile only shows the bottom stub tearing off —
+             hide the desktop left-stub overlay and its tear edge */
+          .ticket-rip-desktop-stub  { display: none !important; }
+          .ticket-rip-edge-desktop  { display: none !important; }
         }
       `}</style>
 
@@ -480,8 +485,9 @@ function TicketCard({ cfg, catId, to, floatDelay, hoveredId, setHoveredId, navig
         opacity:    isDimmed && !ripping ? 0.38 : 1,
         transition: ripping ? 'none' : 'transform 0.20s cubic-bezier(0.34,1.4,0.64,1), opacity 0.18s ease',
         willChange: 'transform',
-        animation:  ripping
-          ? 'ticket-rip-body 0.42s cubic-bezier(0.22,1,0.36,1) forwards'
+        // Card body stays still on both mobile and desktop —
+        // only the stub tears away at the perforation line.
+        animation:  ripping ? 'none'
           : isHovered || isDimmed ? 'none'
           : `ticket-float 3s ${floatDelay} ease-in-out infinite`,
         overflow: 'hidden',
