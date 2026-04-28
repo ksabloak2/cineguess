@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Dark rounded background -->
+  <rect width="32" height="32" rx="7" fill="#0a0a0f"/>
+  <!-- Subtle inner glow ring -->
+  <rect width="32" height="32" rx="7" fill="none" stroke="#F3CE13" stroke-width="0.5" opacity="0.3"/>
+  <!-- Film strip icon (same path as Navbar FilmIcon, scaled/centered into 32x32) -->
+  <g transform="translate(4, 4)" fill="none" stroke="#F3CE13" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M7 3v18M17 3v18M2 8h5M2 13h5M17 8h5M17 13h5"/>
+  </g>
+</svg>
