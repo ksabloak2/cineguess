@@ -700,7 +700,7 @@ export default function GamePage() {
             ? 'bg-green-500/10 border border-green-500/20 text-green-400'
             : 'bg-red-500/10 border border-red-500/20 text-red-400'
         }`}>
-          {won ? `🎉 Got it in ${guessCount}/${maxGuesses}!` : `The movie was: ${result?.title || '...'}`}
+          {won ? `🎉 Got it in ${guessCount}/${maxGuesses}!` : `💀 Not this time — ${maxGuesses}/${maxGuesses} used`}
           {result && (
             <button
               onClick={() => setShowModal(true)}
