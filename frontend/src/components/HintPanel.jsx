@@ -29,6 +29,41 @@ export default function HintPanel({ hints }) {
               />
             ) : hint.type === 'clue' ? (
               <p className="text-sm text-gray-200 italic leading-relaxed">{hint.value}</p>
+            ) : hint.type === 'actor' ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                {hint.profile ? (
+                  <img
+                    src={tmdbImage(hint.profile, 'w185')}
+                    alt={hint.value}
+                    style={{
+                      width: 64,
+                      height: 80,
+                      objectFit: 'cover',
+                      borderRadius: 8,
+                      flexShrink: 0,
+                      background: 'rgba(255,255,255,0.06)',
+                    }}
+                    loading="lazy"
+                  />
+                ) : (
+                  <div style={{
+                    width: 64,
+                    height: 80,
+                    borderRadius: 8,
+                    flexShrink: 0,
+                    background: 'rgba(255,255,255,0.06)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 28,
+                  }}>
+                    🎭
+                  </div>
+                )}
+                <p className="text-sm text-gray-200" style={{ fontWeight: 600, fontSize: '1rem' }}>
+                  {hint.value}
+                </p>
+              </div>
             ) : (
               <p className="text-sm text-gray-200">{hint.value}</p>
             )}

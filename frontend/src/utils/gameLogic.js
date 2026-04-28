@@ -271,8 +271,8 @@ export function getTileDisplayValue(field, guessed) {
  * Determine which hints should be visible based on guess count (1-indexed = number of guesses submitted).
  *
  * Most Popular (top250) — 7 guesses:
- *   after guess 4 → The Logline (Movie Explained Badly)
- *   after guess 5 → A Cast Member (3rd/4th billed, never duplicates lead/supporting)
+ *   after guess 4 → A Cast Member (3rd/4th billed, with TMDb photo)
+ *   after guess 5 → The Logline (Movie Explained Badly)
  *   after guess 6 → A Frame From The Movie
  *
  * Default (Superhero / Animated) — 7 guesses:
@@ -280,30 +280,46 @@ export function getTileDisplayValue(field, guessed) {
  *   after guess 6 → A Frame From The Movie
  *
  * Indian Cinema — 8 guesses:
- *   after guess 4 → The Logline (Movie Explained Badly)
- *   after guess 5 → A Cast Member (3rd/4th billed)
+ *   after guess 4 → A Cast Member (3rd/4th billed, with TMDb photo)
+ *   after guess 5 → The Logline (Movie Explained Badly)
  *   after guess 6 → A Frame From The Movie
  *   after guess 7 → Musical Hint (iconic song + playback singers)
  */
+/**
+ * Pick the actor candidate from cast_list (3rd/4th billed, excluding lead/supp)
+ * and return { name, profile } — profile is the TMDb profile_path or null.
+ */
+function pickActorHint(target) {
+  if (!Array.isArray(target.cast_list)) return null;
+  const lead = (target.lead_actor       || '').trim().toLowerCase();
+  const supp = (target.supporting_actor || '').trim().toLowerCase();
+  const profiles = Array.isArray(target.cast_profiles) ? target.cast_profiles : [];
+  for (let i = 2; i <= 3; i++) {
+    const name = (target.cast_list[i] || '').trim();
+    if (!name) continue;
+    const n = name.toLowerCase();
+    if (n === lead || n === supp) continue;
+    return { name, profile: profiles[i] || null };
+  }
+  return null;
+}
+
 export function getHints(guessCount, target, category) {
   const hints = [];
   if (!target) return hints;
 
   if (category === 'indiancinema') {
     // ── Indian Cinema (8 guesses) ─────────────────────────────────────────
-    if (guessCount >= 4 && target.ai_hint_quote) {
-      hints.push({ type: 'clue', label: 'The Logline', value: target.ai_hint_quote });
+    // after guess 4 → A Cast Member (with photo)
+    // after guess 5 → The Logline
+    // after guess 6 → A Frame From The Movie
+    // after guess 7 → Musical Hint
+    if (guessCount >= 4) {
+      const actor = pickActorHint(target);
+      if (actor) hints.push({ type: 'actor', label: 'A Cast Member', value: actor.name, profile: actor.profile });
     }
-    if (guessCount >= 5 && Array.isArray(target.cast_list)) {
-      const lead = (target.lead_actor       || '').trim().toLowerCase();
-      const supp = (target.supporting_actor || '').trim().toLowerCase();
-      const candidates = target.cast_list.slice(2, 4).filter((name) => {
-        const n = (name || '').trim().toLowerCase();
-        return n && n !== lead && n !== supp;
-      });
-      if (candidates.length) {
-        hints.push({ type: 'actor', label: 'A Cast Member', value: candidates[0].trim() });
-      }
+    if (guessCount >= 5 && target.ai_hint_quote) {
+      hints.push({ type: 'clue', label: 'The Logline', value: target.ai_hint_quote });
     }
     if (guessCount >= 6 && Array.isArray(target.backdrop_paths) && target.backdrop_paths.length) {
       const idx = Math.abs(hashInt(target.tmdb_id || 0)) % target.backdrop_paths.length;
@@ -318,20 +334,16 @@ export function getHints(guessCount, target, category) {
       });
     }
   } else if (category === 'top250') {
-    // ── Most Popular (7 guesses) — Logline first, then Cast Member ───────
-    if (guessCount >= 4 && target.ai_hint_quote) {
-      hints.push({ type: 'clue', label: 'The Logline', value: target.ai_hint_quote });
+    // ── Most Popular (7 guesses) ─────────────────────────────────────────
+    // after guess 4 → A Cast Member (with photo)
+    // after guess 5 → The Logline
+    // after guess 6 → A Frame From The Movie
+    if (guessCount >= 4) {
+      const actor = pickActorHint(target);
+      if (actor) hints.push({ type: 'actor', label: 'A Cast Member', value: actor.name, profile: actor.profile });
     }
-    if (guessCount >= 5 && Array.isArray(target.cast_list)) {
-      const lead = (target.lead_actor       || '').trim().toLowerCase();
-      const supp = (target.supporting_actor || '').trim().toLowerCase();
-      const candidates = target.cast_list.slice(2, 4).filter((name) => {
-        const n = (name || '').trim().toLowerCase();
-        return n && n !== lead && n !== supp;
-      });
-      if (candidates.length) {
-        hints.push({ type: 'actor', label: 'A Cast Member', value: candidates[0].trim() });
-      }
+    if (guessCount >= 5 && target.ai_hint_quote) {
+      hints.push({ type: 'clue', label: 'The Logline', value: target.ai_hint_quote });
     }
     if (guessCount >= 6 && Array.isArray(target.backdrop_paths) && target.backdrop_paths.length) {
       const idx = Math.abs(hashInt(target.tmdb_id || 0)) % target.backdrop_paths.length;

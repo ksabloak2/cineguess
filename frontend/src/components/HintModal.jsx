@@ -109,10 +109,21 @@ export default function HintModal({ hints, open, onClose, latestType }) {
                     className="flex items-center gap-3"
                     style={{ animation: 'hint-text-materialize 0.9s ease both', animationDelay: textDelay }}
                   >
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0
-                                    bg-accent/10 border border-accent/25 text-lg">
-                      🎭
-                    </div>
+                    {hint.profile ? (
+                      <img
+                        src={tmdbImage(hint.profile, 'w185')}
+                        alt={hint.value}
+                        className="rounded-lg flex-shrink-0 ring-1 ring-white/10"
+                        style={{ width: 56, height: 72, objectFit: 'cover', background: 'rgba(255,255,255,0.06)' }}
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-14 rounded-lg flex items-center justify-center flex-shrink-0
+                                      bg-accent/10 border border-accent/25 text-2xl"
+                           style={{ height: 72 }}>
+                        🎭
+                      </div>
+                    )}
                     <div>
                       <p className="text-sm font-semibold text-white leading-tight">{hint.value}</p>
                       <p className="text-xs text-gray-500 mt-0.5">appears in this film</p>

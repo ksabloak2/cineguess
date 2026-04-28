@@ -100,7 +100,7 @@ async function getMoviePool(req, res) {
   try {
     const { rows } = await client.query(
       `SELECT tmdb_id, title, year, poster_path, imdb_id, genres, director,
-              primary_language, lead_actor, supporting_actor, cast_list, popular_quote,
+              primary_language, lead_actor, supporting_actor, cast_list, cast_profiles, popular_quote,
               ai_hint_quote, backdrop_paths, music_hint_song, music_hint_singers,
               animation_style, animation_studio, has_sequel, protagonist_type, is_musical,
               superhero_universe, superhero_publisher, hero_villain_focus, solo_or_team, superpower_type
