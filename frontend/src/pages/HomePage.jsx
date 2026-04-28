@@ -107,22 +107,30 @@ function ticketMask() {
 export default function HomePage() {
   return (
     <div
-      className="relative flex flex-col items-center justify-center animate-fade-in"
-      style={{
-        height:   'calc(100dvh - 4rem)',
-        overflow: 'hidden',
-      }}
+      className="homepage-outer relative flex flex-col items-center justify-center animate-fade-in"
+      style={{ overflow: 'hidden' }}
     >
       {/* ── Keyframe definitions ───────────────────────────────────────────── */}
       <style>{`
+        /* Desktop: subtract only the sticky top nav (4rem = 64px) */
+        .homepage-outer {
+          height: calc(100dvh - 4rem);
+        }
+        /* Mobile: also subtract the fixed bottom mode-bar (~68px) so nothing
+           is hidden under it, then shrink hero elements to fit */
+        @media (max-width: 639px) {
+          .homepage-outer {
+            height: calc(100dvh - 4rem - 68px);
+          }
+        }
         .hero-film-icon {
           width:  clamp(80px, 12vh, 120px);
           height: clamp(80px, 12vh, 120px);
         }
         @media (max-width: 640px) {
           .hero-film-icon {
-            width:  clamp(56px, 9vh, 80px);
-            height: clamp(56px, 9vh, 80px);
+            width:  clamp(44px, 7vh, 68px);
+            height: clamp(44px, 7vh, 68px);
           }
         }
         @keyframes dust-rise {
@@ -231,17 +239,17 @@ export default function HomePage() {
       </div>
 
       {/* ── Hero section ──────────────────────────────────────────────────────── */}
-      <div className="relative text-center z-10 px-4" style={{ marginBottom: 'clamp(18px, 3vh, 36px)' }}>
-        <div className="animate-float" style={{ marginBottom: 'clamp(10px, 2vh, 22px)' }}>
+      <div className="relative text-center z-10 px-4" style={{ marginBottom: 'clamp(10px, 2.5vh, 36px)' }}>
+        <div className="animate-float" style={{ marginBottom: 'clamp(6px, 1.5vh, 22px)' }}>
           <FilmIcon className="mx-auto text-accent hero-film-icon" />
         </div>
         <h1
           className="font-display font-black text-white tracking-tight"
           style={{
-            fontSize: 'clamp(2rem, 6.5vw, 4rem)',
+            fontSize: 'clamp(1.75rem, 6.5vw, 4rem)',
             lineHeight: 1,
             textShadow: '0 0 48px rgba(243,206,19,0.50), 0 0 16px rgba(243,206,19,0.30)',
-            marginBottom: 'clamp(6px, 1vh, 12px)',
+            marginBottom: 'clamp(4px, 0.8vh, 12px)',
           }}
         >
           Cine<span style={{ color: '#F3CE13' }}>GUESS</span>
@@ -257,7 +265,7 @@ export default function HomePage() {
         style={{
           width:    '90%',
           maxWidth: '660px',
-          gap:      'clamp(10px, 1.8vh, 20px)',
+          gap:      'clamp(8px, 1.4vh, 20px)',
         }}
       >
         {MODES.map((m, i) => (
@@ -268,7 +276,7 @@ export default function HomePage() {
       {/* ── Footer hint ────────────────────────────────────────────────────────── */}
       <p
         className="relative z-10 text-gray-700 uppercase tracking-[0.22em]"
-        style={{ fontSize: '0.58rem', marginTop: 'clamp(10px, 1.8vh, 24px)' }}
+        style={{ fontSize: '0.58rem', marginTop: 'clamp(6px, 1.2vh, 24px)' }}
       >
         4 categories &bull; daily &amp; unlimited
       </p>
@@ -309,7 +317,7 @@ function TicketCard({ mode, delay }) {
           width:       'clamp(58px, 12%, 86px)',
           background:  mode.stubBg,
           borderRight: `1.5px dashed ${mode.color}28`,
-          padding:     'clamp(18px, 3vh, 28px) 0',
+          padding:     'clamp(12px, 2.2vh, 28px) 0',
           position:    'relative',
         }}
       >
@@ -355,7 +363,7 @@ function TicketCard({ mode, delay }) {
       <div
         className="flex flex-1 items-center"
         style={{
-          padding: 'clamp(16px, 3vh, 36px) clamp(16px, 4%, 36px) clamp(16px, 3vh, 36px) clamp(14px, 3%, 28px)',
+          padding: 'clamp(10px, 2.2vh, 36px) clamp(16px, 4%, 36px) clamp(10px, 2.2vh, 36px) clamp(14px, 3%, 28px)',
           gap:     'clamp(12px, 2.5%, 24px)',
         }}
       >

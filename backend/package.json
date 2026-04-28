@@ -18,6 +18,8 @@
     "verify-hints":          "node src/scripts/verifyAiHints.js",
     "verify-hints:fix":      "node src/scripts/verifyAiHints.js --fix",
     "verify-hints:fix-only": "node src/scripts/verifyAiHints.js --fix-only",
+    "sync-frames":           "node src/scripts/syncFramesToDb.js",
+    "upload-frames":         "node src/scripts/uploadFramesToSupabase.js",
 
     "import-letterboxd": "node src/scripts/importLetterboxd.js",
     "import-animated": "node src/scripts/importAnimated.js",

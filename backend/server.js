@@ -27,6 +27,7 @@ const ALLOWED_ORIGINS = [
   process.env.FRONTEND_URL,       // e.g. https://cineguess.vercel.app
   'http://localhost:5173',        // Vite dev server
   'http://localhost:4173',        // Vite preview
+  'http://localhost:3001',        // Frame gallery (served by the backend itself)
 ].filter(Boolean);
 
 app.use(cors({
