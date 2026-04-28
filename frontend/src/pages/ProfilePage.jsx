@@ -1780,11 +1780,32 @@ function SettingsTab({ onRefresh }) {
 
 // ── Live Preview Theater ───────────────────────────────────────────────────────
 // Fully inline-styled so it renders correctly on every page (no CSS class deps).
+// Each tile entry carries both its base gradient and its colorblind pattern overlay.
 const PREVIEW_TILES_DEF = [
-  { bg: 'linear-gradient(135deg,#22c55e,#16a34a)', label: 'MATCH',  textColor: '#fff' },
-  { bg: 'linear-gradient(135deg,#00E5FF,#00bcd4)', label: '≤2 YR', textColor: 'rgba(0,0,0,0.80)' },
-  { bg: 'linear-gradient(135deg,#FFBF00,#cc9900)', label: '≤5 YR', textColor: 'rgba(0,0,0,0.82)' },
-  { bg: 'linear-gradient(135deg,#ef4444,#dc2626)', label: 'WRONG', textColor: '#fff' },
+  {
+    bg: 'linear-gradient(135deg,#22c55e,#16a34a)',
+    cbPattern: 'repeating-linear-gradient(-45deg,rgba(255,255,255,0.22) 0px,rgba(255,255,255,0.22) 3px,transparent 3px,transparent 10px)',
+    cbBgSize: 'auto',
+    label: 'MATCH', textColor: '#fff',
+  },
+  {
+    bg: 'linear-gradient(135deg,#00E5FF,#00bcd4)',
+    cbPattern: 'repeating-linear-gradient(90deg,rgba(0,0,0,0.22) 0px,rgba(0,0,0,0.22) 2px,transparent 2px,transparent 7px)',
+    cbBgSize: 'auto',
+    label: '≤2 YR', textColor: 'rgba(0,0,0,0.80)',
+  },
+  {
+    bg: 'linear-gradient(135deg,#FFBF00,#cc9900)',
+    cbPattern: 'radial-gradient(circle 1.8px at 5px 5px,rgba(255,255,255,0.38) 100%,transparent 100%)',
+    cbBgSize: '10px 10px',
+    label: '≤5 YR', textColor: 'rgba(0,0,0,0.82)',
+  },
+  {
+    bg: 'linear-gradient(135deg,#ef4444,#dc2626)',
+    cbPattern: 'repeating-linear-gradient(0deg,rgba(0,0,0,0.16) 0px,rgba(0,0,0,0.16) 2px,transparent 2px,transparent 8px)',
+    cbBgSize: 'auto',
+    label: 'WRONG', textColor: '#fff',
+  },
 ];
 
 function LivePreviewTheater({ colorblind }) {
@@ -1818,12 +1839,13 @@ function LivePreviewTheater({ colorblind }) {
       <div style={{ padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 18, minHeight: 72, flexShrink: 0 }}>
         {/* Sample guess tiles — fully inline, no CSS class dependency */}
         <div style={{ display: 'flex', gap: 6, flex: 1, minWidth: 0 }}>
-          {PREVIEW_TILES_DEF.map(({ bg, label, textColor }) => (
+          {PREVIEW_TILES_DEF.map(({ bg, cbPattern, cbBgSize, label, textColor }) => (
             <div
               key={label}
               style={{
                 height: 40, flex: '1 1 0', minWidth: 0,
-                background: bg,
+                background: colorblind ? `${cbPattern}, ${bg}` : bg,
+                backgroundSize: colorblind ? `${cbBgSize}, auto` : 'auto',
                 borderRadius: 8,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: '0.48rem', fontWeight: 700, letterSpacing: '0.06em',
