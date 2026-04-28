@@ -308,6 +308,15 @@ export default function ModeHub() {
           .ticket-rip-edge-desktop  { display: none !important; }
         }
 
+        /* Mobile ripping: clip away the bottom stub so the card body looks torn.
+           Perforation sits at 72%, so bottom 28% is clipped off.
+           Rounded top corners stay; bottom edge is sharp (fresh tear). */
+        @media (max-width: 767px) {
+          .ticket-ripping {
+            clip-path: inset(0 0 28% 0 round 14px 14px 0 0) !important;
+          }
+        }
+
         /* Desktop ripping: clip away the left stub area so the card looks
            like it no longer has that section (bottom-left is "gone").
            Sharp left edge = fresh tear; rounded right = original corners.
