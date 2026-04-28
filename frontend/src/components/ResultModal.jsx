@@ -416,35 +416,40 @@ function SharePanel({ shareText }) {
             <path d="M12.166.006c.93-.017 3.98.252 5.45 3.44.498 1.1.378 2.953.3 4.303l-.013.247c-.001.014.01.033.033.049.158.1.696.287 1.664-.024.127-.04.255-.06.379-.06.284 0 .543.09.727.253.252.22.375.533.354.88-.035.586-.52 1.01-1.265 1.197-.053.013-.11.025-.17.037-.42.086-1.054.217-1.33.73-.152.285-.137.64.044 1.052.009.02.882 2.017 2.9 2.38.185.034.317.199.303.386a.362.362 0 01-.066.194c-.439.62-1.576.936-3.38 1.144a.15.15 0 00-.125.096c-.048.122-.084.26-.123.414-.095.381-.214.854-.538 1.139-.16.14-.37.21-.603.21-.158 0-.34-.03-.54-.09a7.624 7.624 0 00-2.208-.381c-.17 0-.34.01-.505.031a6.26 6.26 0 00-1.628.498c-.474.217-.87.396-1.313.396-.069 0-.14-.005-.21-.016-.434-.064-.69-.38-.812-.659-.173-.4-.29-.871-.38-1.254-.039-.16-.075-.302-.12-.42a.157.157 0 00-.131-.101c-1.806-.21-2.94-.526-3.38-1.144a.36.36 0 01-.066-.195.383.383 0 01.303-.386c2.017-.363 2.891-2.359 2.9-2.38.18-.411.194-.765.044-1.05-.274-.515-.906-.646-1.33-.732l-.168-.037c-.748-.187-1.232-.61-1.266-1.197-.021-.347.102-.66.354-.88a1.09 1.09 0 01.727-.253c.124 0 .252.02.375.059.908.29 1.455.133 1.657.027.03-.015.047-.038.043-.058l-.012-.222c-.079-1.35-.2-3.204.296-4.31C8.088.26 11.042-.014 12 .006h.166z"/>
           </svg>}
         />
+        <button
+          onClick={copyText}
+          onMouseEnter={(e) => {
+            if (!copied) e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = copied ? 'rgba(34,197,94,0.10)' : 'rgba(255,255,255,0.04)';
+          }}
+          className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl
+                     text-xs sm:text-sm font-medium transition-all"
+          style={{
+            background: copied ? 'rgba(34,197,94,0.10)' : 'rgba(255,255,255,0.04)',
+            border: copied ? '1px solid rgba(34,197,94,0.30)' : '1px solid rgba(255,255,255,0.12)',
+            color: copied ? '#86efac' : 'rgba(255,255,255,0.75)',
+          }}
+        >
+          {copied ? (
+            <>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Copied!</span>
+            </>
+          ) : (
+            <>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              <span>Copy</span>
+            </>
+          )}
+        </button>
       </div>
-
-      <button
-        onClick={copyText}
-        className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl
-                   text-xs sm:text-sm font-medium transition-all duration-200"
-        style={{
-          background: copied ? 'rgba(34,197,94,0.10)' : 'rgba(255,255,255,0.04)',
-          border: copied ? '1px solid rgba(34,197,94,0.30)' : '1px solid rgba(255,255,255,0.08)',
-          color: copied ? '#86efac' : 'rgba(255,255,255,0.5)',
-        }}
-      >
-        {copied ? (
-          <>
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-            </svg>
-            Copied to clipboard
-          </>
-        ) : (
-          <>
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-            Copy to clipboard
-          </>
-        )}
-      </button>
     </div>
   );
 }
