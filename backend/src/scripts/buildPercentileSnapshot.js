@@ -24,8 +24,10 @@
 const pool   = require('../db/pool');
 const logger = require('../utils/logger');
 
-const SNAPSHOT_CATEGORIES = [
-  'top250', 'superhero', 'animated', 'indiancinema',
+// Daily categories have avg_guesses as a tiebreaker (lower avg = better).
+// Unlimited categories are streak-only (their guesses aren't in the daily table).
+const DAILY_CATS    = ['top250', 'superhero', 'animated', 'indiancinema'];
+const UNLIMITED_CATS = [
   'unlimited_top250', 'unlimited_superhero', 'unlimited_animated', 'unlimited_indiancinema',
 ];
 
@@ -36,9 +38,34 @@ async function buildPercentileSnapshot() {
   const done   = logger.startTimer('percentile_snapshot');
   const client = await pool.connect();
   try {
-    // Run all category queries in parallel to avoid serial round-trips.
-    const results = await Promise.all(
-      SNAPSHOT_CATEGORIES.map((cat) =>
+    // ── Daily categories: per-user (streak, avg_guesses) → distribution ──
+    // Each entry in dist is [streak, avg_guesses, count].
+    // Lower avg_guesses = better when streaks tie.
+    const dailyResults = await Promise.all(
+      DAILY_CATS.map((cat) =>
+        client.query(
+          `SELECT streak, avg_guesses, COUNT(*)::int AS cnt
+           FROM (
+             SELECT s.user_id,
+                    s.current_streak AS streak,
+                    ROUND(COALESCE(AVG(g.guesses_taken), 0)::numeric, 1) AS avg_guesses
+             FROM streaks s
+             LEFT JOIN guesses g
+               ON g.user_id = s.user_id AND g.category = s.category AND g.won = true
+             WHERE s.category = $1 AND s.current_streak > 0
+             GROUP BY s.user_id, s.current_streak
+           ) sub
+           GROUP BY streak, avg_guesses
+           ORDER BY streak DESC, avg_guesses ASC`,
+          [cat]
+        ).then(({ rows }) => ({ cat, rows }))
+      )
+    );
+
+    // ── Unlimited categories: streak-only distribution ──
+    // Each entry in dist is [streak, null, count].
+    const unlimitedResults = await Promise.all(
+      UNLIMITED_CATS.map((cat) =>
         client.query(
           `SELECT current_streak AS streak, COUNT(DISTINCT user_id)::int AS cnt
            FROM streaks
@@ -46,14 +73,23 @@ async function buildPercentileSnapshot() {
            GROUP BY current_streak
            ORDER BY current_streak DESC`,
           [cat]
-        ).then(({ rows }) => ({ cat, rows }))
+        ).then(({ rows }) => ({ cat, rows, unlimited: true }))
       )
     );
 
     const snapshotData = {};
-    for (const { cat, rows } of results) {
-      const dist  = rows.map((r) => [Number(r.streak), Number(r.cnt)]);
-      const total = dist.reduce((sum, [, cnt]) => sum + cnt, 0);
+
+    for (const { cat, rows } of dailyResults) {
+      // dist: [streak, avg_guesses, count]
+      const dist  = rows.map((r) => [Number(r.streak), Number(r.avg_guesses), Number(r.cnt)]);
+      const total = dist.reduce((sum, [,, cnt]) => sum + cnt, 0);
+      snapshotData[cat] = { total, dist };
+    }
+
+    for (const { cat, rows } of unlimitedResults) {
+      // dist: [streak, null, count]  (null signals no avg tiebreaker)
+      const dist  = rows.map((r) => [Number(r.streak), null, Number(r.cnt)]);
+      const total = dist.reduce((sum, [,, cnt]) => sum + cnt, 0);
       snapshotData[cat] = { total, dist };
     }
 

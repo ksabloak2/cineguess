@@ -318,12 +318,13 @@ async function getSentRequests(req, res) {
 }
 
 // GET /api/friends/:friend_id/percentiles
-// Returns per-category percentile strings for a friend (same CTE as getPercentiles
+// Returns per-category percentile strings for a friend (same snapshot as getPercentiles
 // but targets the friend's user_id instead of req.user.id).
 const FRIEND_STREAK_CATEGORIES = [
   'top250', 'superhero', 'animated', 'indiancinema',
   'unlimited_top250', 'unlimited_superhero', 'unlimited_animated', 'unlimited_indiancinema',
 ];
+const FRIEND_DAILY_CATS = ['top250', 'superhero', 'animated', 'indiancinema'];
 
 async function getFriendPercentiles(req, res) {
   const { friend_id } = req.params;
@@ -362,7 +363,21 @@ async function getFriendPercentiles(req, res) {
       friendStreaks[r.category] = Number(r.current_streak) || 0;
     }
 
+    // Fetch the friend's per-category avg_guesses (daily categories only) for tiebreaking.
+    const { rows: avgRows } = await client.query(
+      `SELECT category, ROUND(AVG(guesses_taken)::numeric, 1) AS avg_guesses
+       FROM guesses
+       WHERE user_id = $1 AND won = true AND category = ANY($2::text[])
+       GROUP BY category`,
+      [friend_id, FRIEND_DAILY_CATS]
+    );
+    const friendAvg = {};
+    for (const r of avgRows) {
+      friendAvg[r.category] = Number(r.avg_guesses);
+    }
+
     // Compute percentile from snapshot distribution.
+    // Ranking rule: higher streak wins; ties broken by lower avg_guesses (better).
     const result = {};
     for (const cat of FRIEND_STREAK_CATEGORIES) {
       const userStreak = friendStreaks[cat] || 0;
@@ -376,8 +391,17 @@ async function getFriendPercentiles(req, res) {
         continue;
       }
       let higher = 0;
-      for (const [s, cnt] of catSnap.dist) {
-        if (s > userStreak) higher += cnt;
+      for (const [s, distAvg, cnt] of catSnap.dist) {
+        if (s > userStreak) {
+          higher += cnt;
+        } else if (
+          s === userStreak &&
+          distAvg !== null &&
+          friendAvg[cat] !== undefined &&
+          distAvg < friendAvg[cat]
+        ) {
+          higher += cnt;
+        }
       }
       const pct = Math.max(1, Math.ceil((higher / catSnap.total) * 100));
       result[cat] = { label: `Top ${pct}% Globally`, pct };

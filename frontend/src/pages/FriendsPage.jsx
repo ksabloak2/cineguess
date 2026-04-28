@@ -391,6 +391,19 @@ export default function FriendsPage() {
           .friend-mini-poster-grid {
             grid-template-columns: repeat(2, 1fr) !important;
           }
+
+          /* Invite card — compact single-row on mobile */
+          .invite-card-mob {
+            padding: 7px 10px !important;
+            gap: 6px !important;
+            flex-direction: row !important;
+            align-items: center !important;
+          }
+          .invite-card-mob .invite-header { flex: 1; min-width: 0; }
+          .invite-card-mob .invite-subtitle { display: none !important; }
+          .invite-card-mob .invite-icon { width: 24px !important; height: 24px !important; }
+          .invite-card-mob .invite-buttons { flex-direction: row !important; flex-shrink: 0; }
+          .invite-card-mob .invite-qr-toggle { display: none !important; }
         }
       `}</style>
 
@@ -1937,6 +1950,7 @@ function TodayDots({ today }) {
 function InviteCard({ inviteUrl, linkCopied, onCopy, onShare, showQR, onToggleQR }) {
   return (
     <div
+      className="invite-card-mob"
       style={{
         background: 'rgba(245,158,11,0.04)',
         backdropFilter: 'blur(15px)',
@@ -1949,8 +1963,9 @@ function InviteCard({ inviteUrl, linkCopied, onCopy, onShare, showQR, onToggleQR
         gap: 10,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div className="invite-header" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <div
+          className="invite-icon"
           style={{
             width: 30, height: 30, borderRadius: 8, flexShrink: 0,
             background: 'rgba(245,158,11,0.12)',
@@ -1962,11 +1977,11 @@ function InviteCard({ inviteUrl, linkCopied, onCopy, onShare, showQR, onToggleQR
         </div>
         <div>
           <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#fff', lineHeight: 1.2 }}>Invite your film crew</div>
-          <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.28)', marginTop: 1 }}>Bring friends to the big screen</div>
+          <div className="invite-subtitle" style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.28)', marginTop: 1 }}>Bring friends to the big screen</div>
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 6 }}>
+      <div className="invite-buttons" style={{ display: 'flex', gap: 6 }}>
         {HAS_NATIVE_SHARE && (
           <button
             onClick={onShare}
@@ -2002,6 +2017,7 @@ function InviteCard({ inviteUrl, linkCopied, onCopy, onShare, showQR, onToggleQR
       </div>
 
       <button
+        className="invite-qr-toggle"
         onClick={onToggleQR}
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,

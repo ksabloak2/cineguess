@@ -811,6 +811,8 @@ const STREAK_CATEGORIES = [
   'unlimited_top250', 'unlimited_superhero', 'unlimited_animated', 'unlimited_indiancinema',
 ];
 
+const DAILY_PERCENTILE_CATS = ['top250', 'superhero', 'animated', 'indiancinema'];
+
 async function getPercentiles(req, res) {
   if (!req.user) return res.status(401).json({ error: 'Auth required' });
 
@@ -835,7 +837,21 @@ async function getPercentiles(req, res) {
       userStreaks[r.category] = Number(r.current_streak) || 0;
     }
 
+    // Fetch per-category avg_guesses (daily categories only) for tiebreaking.
+    const { rows: avgRows } = await client.query(
+      `SELECT category, ROUND(AVG(guesses_taken)::numeric, 1) AS avg_guesses
+       FROM guesses
+       WHERE user_id = $1 AND won = true AND category = ANY($2::text[])
+       GROUP BY category`,
+      [req.user.id, DAILY_PERCENTILE_CATS]
+    );
+    const userAvg = {};
+    for (const r of avgRows) {
+      userAvg[r.category] = Number(r.avg_guesses);
+    }
+
     // Compute percentile from snapshot distribution.
+    // Ranking rule: higher streak wins; ties broken by lower avg_guesses (better).
     const result = {};
     for (const cat of STREAK_CATEGORIES) {
       const userStreak = userStreaks[cat] || 0;
@@ -848,10 +864,20 @@ async function getPercentiles(req, res) {
         result[cat] = null;
         continue;
       }
-      // Count players with a strictly higher streak than the user.
       let higher = 0;
-      for (const [s, cnt] of catSnap.dist) {
-        if (s > userStreak) higher += cnt;
+      for (const [s, distAvg, cnt] of catSnap.dist) {
+        if (s > userStreak) {
+          // Strictly better streak
+          higher += cnt;
+        } else if (
+          s === userStreak &&
+          distAvg !== null &&
+          userAvg[cat] !== undefined &&
+          distAvg < userAvg[cat]
+        ) {
+          // Same streak but their avg is lower (fewer guesses = better)
+          higher += cnt;
+        }
       }
       const pct = Math.max(1, Math.ceil((higher / catSnap.total) * 100));
       result[cat] = `Top ${pct}% Globally`;
