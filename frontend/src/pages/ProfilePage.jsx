@@ -533,6 +533,10 @@ function StreaksTab({ allStreaks, allPercentiles, loading }) {
           display: flex;
           flex-direction: column;
           gap: clamp(16px,2vh,24px);
+          height: 100%;
+          overflow-y: auto;
+          padding-right: 2px;
+          padding-bottom: clamp(12px,2vh,20px);
         }
         .imax-grid {
           display: grid;
