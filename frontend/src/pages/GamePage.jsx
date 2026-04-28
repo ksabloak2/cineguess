@@ -6,7 +6,7 @@ import {
   submitUnlimitedResult, getStreaks,
 } from '../utils/api';
 import {
-  CATEGORIES, MAX_GUESSES, evaluateTilesLocal, getHints,
+  CATEGORIES, MAX_GUESSES, getMaxGuesses, evaluateTilesLocal, getHints,
   saveGuestState, loadGuestState, saveGuestStreak, loadGuestStreak,
   saveDailyState, loadDailyState, clearStaleDailyStates,
   slugToCategory,
@@ -348,7 +348,7 @@ export default function GamePage() {
     setGuessedIds(saved.guesses);
 
     const lastCorrect = rows.some((r) => r.correct);
-    if (lastCorrect || rows.length >= MAX_GUESSES) {
+    if (lastCorrect || rows.length >= getMaxGuesses(category)) {
       setGameOver(true);
       setWon(lastCorrect);
       setResult(target);
@@ -398,7 +398,7 @@ export default function GamePage() {
         boardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
       }, 200);
 
-      const isGameOver = correct || newGuesses.length >= MAX_GUESSES;
+      const isGameOver = correct || newGuesses.length >= getMaxGuesses(category);
 
       if (isGameOver) {
         setGameOver(true);
@@ -552,8 +552,9 @@ export default function GamePage() {
     );
   }
 
-  const guessCount = guessResults.length;
-  const guessesLeft = MAX_GUESSES - guessCount;
+  const maxGuesses  = getMaxGuesses(category);
+  const guessCount  = guessResults.length;
+  const guessesLeft = maxGuesses - guessCount;
 
   return (
     <div className="space-y-4 sm:space-y-6 lg:space-y-3 animate-fade-in">
@@ -606,7 +607,7 @@ export default function GamePage() {
         <div className="flex flex-col items-center gap-1">
           {/* Dots row */}
           <div className="flex items-center justify-center gap-1.5 sm:gap-2">
-            {Array.from({ length: MAX_GUESSES }).map((_, i) => (
+            {Array.from({ length: maxGuesses }).map((_, i) => (
               <div
                 key={i}
                 className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full transition-all duration-300 ${
@@ -623,7 +624,8 @@ export default function GamePage() {
 
           {/* Hint countdown — only shown before the first hint unlocks */}
           {(() => {
-            const firstHintAt = category === 'indiancinema' ? 4 : 5;
+            // First hint unlocks: Indian Cinema = guess 4, Most Popular = guess 4, others = guess 5
+            const firstHintAt = (category === 'indiancinema' || category === 'top250') ? 4 : 5;
             const remaining   = firstHintAt - guessCount;
             if (remaining <= 0) return null;
             return (
@@ -697,7 +699,7 @@ export default function GamePage() {
             ? 'bg-green-500/10 border border-green-500/20 text-green-400'
             : 'bg-red-500/10 border border-red-500/20 text-red-400'
         }`}>
-          {won ? `🎉 Got it in ${guessCount}/${MAX_GUESSES}!` : `The movie was: ${result?.title || '...'}`}
+          {won ? `🎉 Got it in ${guessCount}/${maxGuesses}!` : `The movie was: ${result?.title || '...'}`}
           {result && (
             <button
               onClick={() => setShowModal(true)}

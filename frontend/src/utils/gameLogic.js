@@ -28,7 +28,12 @@ export const MODES = [
   { id: 'unlimited', label: 'Unlimited', emoji: '∞',  description: 'Random target, play as many rounds as you want' },
 ];
 
-export const MAX_GUESSES = 7;
+export const MAX_GUESSES = 7; // default; Indian Cinema uses 8
+
+/** Returns the max guesses allowed for a given category. */
+export function getMaxGuesses(category) {
+  return category === 'indiancinema' ? 8 : 7;
+}
 
 export const TILE_LABELS = {
   genre:             'Genre',
@@ -263,43 +268,33 @@ export function getTileDisplayValue(field, guessed) {
 }
 
 /**
- * Determine which hints should be visible based on guess count (1-indexed = number of guesses already submitted).
+ * Determine which hints should be visible based on guess count (1-indexed = number of guesses submitted).
  *
- * Default cadence (all categories):
- *   after guess 5 → AI cryptic clue (The Logline)
- *   after guess 6 → in-movie frame (deterministic per-target so it stays stable)
+ * Most Popular (top250) — 7 guesses:
+ *   after guess 4 → The Logline (Movie Explained Badly)
+ *   after guess 5 → A Cast Member (3rd/4th billed, never duplicates lead/supporting)
+ *   after guess 6 → A Frame From The Movie
  *
- * Indian Cinema cadence:
- *   after guess 4 → AI cryptic clue (The Logline)
- *   after guess 5 → in-movie frame / TMDB backdrop
- *   after guess 6 → Musical hint (iconic song + playback singers)
+ * Default (Superhero / Animated) — 7 guesses:
+ *   after guess 5 → The Logline
+ *   after guess 6 → A Frame From The Movie
+ *
+ * Indian Cinema — 8 guesses:
+ *   after guess 4 → The Logline (Movie Explained Badly)
+ *   after guess 5 → A Cast Member (3rd/4th billed)
+ *   after guess 6 → A Frame From The Movie
+ *   after guess 7 → Musical Hint (iconic song + playback singers)
  */
 export function getHints(guessCount, target, category) {
   const hints = [];
   if (!target) return hints;
 
-  const isIndian = category === 'indiancinema';
-
-  if (isIndian) {
+  if (category === 'indiancinema') {
+    // ── Indian Cinema (8 guesses) ─────────────────────────────────────────
     if (guessCount >= 4 && target.ai_hint_quote) {
       hints.push({ type: 'clue', label: 'The Logline', value: target.ai_hint_quote });
     }
-    if (guessCount >= 5 && Array.isArray(target.backdrop_paths) && target.backdrop_paths.length) {
-      const idx = Math.abs(hashInt(target.tmdb_id || 0)) % target.backdrop_paths.length;
-      hints.push({ type: 'image', label: 'A Frame From The Movie', value: target.backdrop_paths[idx] });
-    }
-    if (guessCount >= 6 && target.music_hint_song) {
-      hints.push({
-        type: 'music',
-        label: 'Musical Hint',
-        value: `${target.music_hint_song}`,
-        singers: target.music_hint_singers || '',
-      });
-    }
-  } else {
-    // Top 250: cast-member hint after guess 4.
-    // Mirrors the backend buildHint logic exactly so unlimited mode stays in sync.
-    if (category === 'top250' && guessCount >= 4 && Array.isArray(target.cast_list)) {
+    if (guessCount >= 5 && Array.isArray(target.cast_list)) {
       const lead = (target.lead_actor       || '').trim().toLowerCase();
       const supp = (target.supporting_actor || '').trim().toLowerCase();
       const candidates = target.cast_list.slice(2, 4).filter((name) => {
@@ -310,7 +305,40 @@ export function getHints(guessCount, target, category) {
         hints.push({ type: 'actor', label: 'A Cast Member', value: candidates[0].trim() });
       }
     }
-
+    if (guessCount >= 6 && Array.isArray(target.backdrop_paths) && target.backdrop_paths.length) {
+      const idx = Math.abs(hashInt(target.tmdb_id || 0)) % target.backdrop_paths.length;
+      hints.push({ type: 'image', label: 'A Frame From The Movie', value: target.backdrop_paths[idx] });
+    }
+    if (guessCount >= 7 && target.music_hint_song) {
+      hints.push({
+        type:    'music',
+        label:   'Musical Hint',
+        value:   target.music_hint_song,
+        singers: target.music_hint_singers || '',
+      });
+    }
+  } else if (category === 'top250') {
+    // ── Most Popular (7 guesses) — Logline first, then Cast Member ───────
+    if (guessCount >= 4 && target.ai_hint_quote) {
+      hints.push({ type: 'clue', label: 'The Logline', value: target.ai_hint_quote });
+    }
+    if (guessCount >= 5 && Array.isArray(target.cast_list)) {
+      const lead = (target.lead_actor       || '').trim().toLowerCase();
+      const supp = (target.supporting_actor || '').trim().toLowerCase();
+      const candidates = target.cast_list.slice(2, 4).filter((name) => {
+        const n = (name || '').trim().toLowerCase();
+        return n && n !== lead && n !== supp;
+      });
+      if (candidates.length) {
+        hints.push({ type: 'actor', label: 'A Cast Member', value: candidates[0].trim() });
+      }
+    }
+    if (guessCount >= 6 && Array.isArray(target.backdrop_paths) && target.backdrop_paths.length) {
+      const idx = Math.abs(hashInt(target.tmdb_id || 0)) % target.backdrop_paths.length;
+      hints.push({ type: 'image', label: 'A Frame From The Movie', value: target.backdrop_paths[idx] });
+    }
+  } else {
+    // ── Default: Superhero / Animated (7 guesses) ─────────────────────────
     if (guessCount >= 5 && target.ai_hint_quote) {
       hints.push({ type: 'clue', label: 'The Logline', value: target.ai_hint_quote });
     }
@@ -334,8 +362,9 @@ function hashInt(n) {
  * Build the emoji share string (like Wordle).
  */
 export function buildShareString(category, guessResults, won) {
-  const catLabel = CATEGORIES.find((c) => c.id === category)?.label || category;
-  const score    = won ? `${guessResults.length}/${MAX_GUESSES}` : `X/${MAX_GUESSES}`;
+  const catLabel  = CATEGORIES.find((c) => c.id === category)?.label || category;
+  const maxG      = getMaxGuesses(category);
+  const score     = won ? `${guessResults.length}/${maxG}` : `X/${maxG}`;
   const today    = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
   const emojiMap = {

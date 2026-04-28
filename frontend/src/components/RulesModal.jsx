@@ -217,7 +217,8 @@ const RULES = [
   'Green = exact match. Cyan = year within 2. Amber = year within 5. Yellow = partial match (shared genre, or the actor appears in the target in a different role). Red = no match.',
   'In Daily mode, everyone plays the same movie each day. Your streak only resets if you get a movie wrong. Skipping a day keeps your streak alive.',
   'Unlimited mode lets you play as many rounds as you want with a random target each round. Separate streaks are tracked per category.',
-  'After several wrong guesses, progressive hints unlock. Most Popular: a Cast Member (guess 4), then a Logline (guess 5), then a Frame (guess 6). Indian Cinema: Logline (4), Frame (5), Musical Hint (6). All other categories: Logline (5), Frame (6). Hints provide a logline explaining the movie plot… badly. They are technically accurate but intentionally misleading, so think outside the box!',
+  'Indian Cinema gets 8 guesses (instead of 7) to match the epic scale of its films.',
+  'Progressive hints unlock as you guess. Most Popular: Logline (guess 4) → Cast Member (guess 5) → Frame (guess 6). Indian Cinema: Logline (guess 4) → Cast Member (guess 5) → Frame (guess 6) → Musical Hint (guess 7). Superhero & Animated: Logline (guess 5) → Frame (guess 6). The Logline explains the plot badly — technically accurate but intentionally misleading!',
   'Share your result grid with friends. Friends cannot see your current-day answers until they finish that category themselves.',
 ];
 
@@ -234,28 +235,28 @@ const TILE_COLUMNS = [
 // ── Progressive hints ──────────────────────────────────────────────────────
 const HINTS = [
   {
-    icon: '🎭',
-    trigger: 'After guess 4',
-    label: 'A Cast Member',
-    detail: 'Most Popular only: the name of a real cast member from the film — drawn from the 3rd or 4th-credited cast member, so it\'s never the lead or supporting actor already shown on the board.',
+    icon: '💡',
+    trigger: 'Guess 4 (all except Superhero/Animated)',
+    label: 'The Logline',
+    detail: 'A one-sentence explanation of the plot… badly. Technically accurate but intentionally misleading — think outside the box! Superhero & Animated unlock this after guess 5.',
   },
   {
-    icon: '💡',
-    trigger: 'After guess 5',
-    label: 'The Logline',
-    detail: 'A one-sentence explanation of the movie plot… badly. Technically accurate but intentionally misleading — think outside the box! (Indian Cinema: unlocks after guess 4.)',
+    icon: '🎭',
+    trigger: 'Guess 5 (Most Popular & Indian Cinema)',
+    label: 'A Cast Member',
+    detail: 'The name of the 3rd or 4th-credited cast member — never the lead or supporting actor already visible on the board.',
   },
   {
     icon: '🖼️',
-    trigger: 'After guess 6',
+    trigger: 'Guess 6',
     label: 'A Frame From The Movie',
-    detail: 'A still image from the film, deterministically chosen so it\'s the same for everyone. (Indian Cinema: unlocks after guess 5.)',
+    detail: 'A still image from the film, deterministically chosen so everyone gets the same frame for the same movie.',
   },
   {
     icon: '🎵',
-    trigger: 'After guess 6',
+    trigger: 'Guess 7 (Indian Cinema only)',
     label: 'Musical Hint',
-    detail: 'Indian Cinema only: an iconic song title and playback singers from the film.',
+    detail: 'Indian Cinema only: an iconic song title and playback singers from the film. Indian Cinema also gets 8 total guesses.',
   },
 ];
 

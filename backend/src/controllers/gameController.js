@@ -185,7 +185,7 @@ async function submitGuess(req, res) {
       const newEntry = { tmdb_id, tiles };
       const guessList = [...prevList, newEntry];
       const guessCount = guessList.length;
-      const maxGuesses = 7;
+      const maxGuesses = category === 'indiancinema' ? 8 : 7;
       const gameOver = isCorrect || guessCount >= maxGuesses;
       const won = gameOver ? isCorrect : null;
       serverGameOver = gameOver;
@@ -679,51 +679,68 @@ function compareYear(gYear, tYear) {
 
 function buildHint(target, { guessNumber, category } = {}) {
   // guessNumber = number of guesses already submitted (1-indexed).
-  // Lead actor is now a tile in every mode, so it's no longer a hint.
   //
-  // Default cadence (all categories):
-  //   after guess 5 → AI cryptic clue
-  //   after guess 6 → in-movie frame
+  // Most Popular (top250) — 7 guesses:
+  //   after guess 4 → The Logline (Movie Explained Badly)
+  //   after guess 5 → A Cast Member (3rd/4th billed)
+  //   after guess 6 → A Frame From The Movie
   //
-  // Indian Cinema cadence:
-  //   after guess 4 → AI cryptic clue (The Logline)
-  //   after guess 5 → in-movie frame / TMDB backdrop
-  //   after guess 6 → Musical hint (song + singers)
-  const isIndian = category === 'indiancinema';
+  // Default (Superhero / Animated) — 7 guesses:
+  //   after guess 5 → The Logline
+  //   after guess 6 → A Frame From The Movie
+  //
+  // Indian Cinema — 8 guesses:
+  //   after guess 4 → The Logline (Movie Explained Badly)
+  //   after guess 5 → A Cast Member (3rd/4th billed)
+  //   after guess 6 → A Frame From The Movie
+  //   after guess 7 → Musical Hint (iconic song + playback singers)
   const hint = {};
 
-  if (isIndian) {
+  if (category === 'indiancinema') {
     // Logline after guess 4
     if (guessNumber >= 4 && target.ai_hint_quote) {
       hint.ai_quote = target.ai_hint_quote;
     }
-    // Frame after guess 5
-    if (guessNumber >= 5 && Array.isArray(target.backdrop_paths) && target.backdrop_paths.length) {
-      hint.backdrop_path = pickBackdropPath(target);
-    }
-    // Music hint after guess 6
-    if (guessNumber >= 6 && target.music_hint_song) {
-      hint.music_song    = target.music_hint_song;
-      hint.music_singers = target.music_hint_singers || '';
-    }
-  } else {
-    // Top 250: cast-member hint after guess 4.
-    // Pick from cast_list positions 3-4 (1-indexed, indices 2-3), excluding lead and supporting actor
-    // so the hint never duplicates information already visible on the game board.
-    if (category === 'top250' && guessNumber >= 4) {
-      const cast  = Array.isArray(target.cast_list) ? target.cast_list : [];
-      const lead  = (target.lead_actor   || '').trim().toLowerCase();
-      const supp  = (target.supporting_actor || '').trim().toLowerCase();
-      // Indices 2-3 (positions 3-4), drop blanks and duplicates of lead/supporting.
+    // Cast member after guess 5
+    if (guessNumber >= 5) {
+      const cast = Array.isArray(target.cast_list) ? target.cast_list : [];
+      const lead = (target.lead_actor       || '').trim().toLowerCase();
+      const supp = (target.supporting_actor || '').trim().toLowerCase();
       const candidates = cast.slice(2, 4).filter((name) => {
         const n = (name || '').trim().toLowerCase();
         return n && n !== lead && n !== supp;
       });
-      if (candidates.length) {
-        hint.cast_actor = candidates[0].trim();
-      }
+      if (candidates.length) hint.cast_actor = candidates[0].trim();
     }
-
+    // Frame after guess 6
+    if (guessNumber >= 6 && Array.isArray(target.backdrop_paths) && target.backdrop_paths.length) {
+      hint.backdrop_path = pickBackdropPath(target);
+    }
+    // Music hint after guess 7
+    if (guessNumber >= 7 && target.music_hint_song) {
+      hint.music_song    = target.music_hint_song;
+      hint.music_singers = target.music_hint_singers || '';
+    }
+  } else if (category === 'top250') {
+    // Logline first (guess 4), then cast member (guess 5), then frame (guess 6)
+    if (guessNumber >= 4 && target.ai_hint_quote) {
+      hint.ai_quote = target.ai_hint_quote;
+    }
+    if (guessNumber >= 5) {
+      const cast = Array.isArray(target.cast_list) ? target.cast_list : [];
+      const lead = (target.lead_actor       || '').trim().toLowerCase();
+      const supp = (target.supporting_actor || '').trim().toLowerCase();
+      const candidates = cast.slice(2, 4).filter((name) => {
+        const n = (name || '').trim().toLowerCase();
+        return n && n !== lead && n !== supp;
+      });
+      if (candidates.length) hint.cast_actor = candidates[0].trim();
+    }
+    if (guessNumber >= 6 && Array.isArray(target.backdrop_paths) && target.backdrop_paths.length) {
+      hint.backdrop_path = pickBackdropPath(target);
+    }
+  } else {
+    // Default: Superhero / Animated
     if (guessNumber >= 5 && target.ai_hint_quote) {
       hint.ai_quote = target.ai_hint_quote;
     }
