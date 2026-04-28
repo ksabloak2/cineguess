@@ -28,15 +28,16 @@ function MobileFooterToggle() {
   const activeMode     = gameMatch?.params.mode
     || (pathname.startsWith('/unlimited') ? 'unlimited'
       : pathname.startsWith('/daily')     ? 'daily'
-      : null);
+      : 'daily');  // default for friends/profile pages
   const activeCategory = gameMatch?.params.category
     ? slugToCategory(gameMatch.params.category)
     : null;
   const inGame = !!gameMatch;
 
-  // Only show on game pages and hub pages (where mode switching is relevant)
+  // Show on game pages, hub pages, and secondary pages on mobile
   const isHub = pathname === '/daily' || pathname === '/unlimited';
-  if (!inGame && !isHub) return null;
+  const isSecondary = pathname === '/friends' || pathname === '/profile';
+  if (!inGame && !isHub && !isSecondary) return null;
 
   return (
     <div
