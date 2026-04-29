@@ -30,12 +30,12 @@ const DASH_COLOR = {
 };
 
 // Glass card style shared across panels
+// Note: no backdropFilter — the card is 95% opaque so blur adds nothing visible
+// but costs a full compositing layer on every frame. Use solid background instead.
 const glassStyle = {
-  background:              'rgba(12, 12, 20, 0.92)',
-  backdropFilter:          'blur(16px) saturate(1.2)',
-  WebkitBackdropFilter:    'blur(16px) saturate(1.2)',
-  border:                  '1px solid rgba(255, 255, 255, 0.07)',
-  boxShadow:               '0 24px 64px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)',
+  background:  'rgba(12, 12, 22, 0.97)',
+  border:      '1px solid rgba(255, 255, 255, 0.07)',
+  boxShadow:   '0 24px 64px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)',
 };
 
 export default function ResultModal({
@@ -78,7 +78,7 @@ export default function ResultModal({
     `}</style>
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center
-                 p-0 sm:p-4 bg-black/65 backdrop-blur-md animate-fade-in"
+                 p-0 sm:p-4 bg-black/70 animate-fade-in"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div

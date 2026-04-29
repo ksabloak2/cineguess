@@ -24,13 +24,13 @@ export default function HintModal({ hints, open, onClose, latestType }) {
         from { opacity: 0; transform: translateY(10px); }
         to   { opacity: 1; transform: translateY(0); }
       }
-      @keyframes hint-text-materialize {
-        from { opacity: 0; filter: blur(6px); letter-spacing: 0.04em; }
-        to   { opacity: 1; filter: blur(0px); letter-spacing: normal; }
+      @keyframes hint-text-in {
+        from { opacity: 0; transform: translateY(4px); }
+        to   { opacity: 1; transform: translateY(0); }
       }
     `}</style>
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 animate-fade-in"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="card w-full sm:max-w-md p-5 sm:p-6 animate-curtain-rise sm:animate-bounce-in relative
@@ -86,14 +86,14 @@ export default function HintModal({ hints, open, onClose, latestType }) {
                 ) : hint.type === 'clue' ? (
                   <p
                     className="text-sm text-gray-300 italic leading-relaxed"
-                    style={{ animation: 'hint-text-materialize 0.9s ease both', animationDelay: textDelay }}
+                    style={{ animation: 'hint-text-in 0.9s ease both', animationDelay: textDelay }}
                   >
                     {hint.value}
                   </p>
                 ) : hint.type === 'music' ? (
                   <div
                     className="space-y-1"
-                    style={{ animation: 'hint-text-materialize 0.9s ease both', animationDelay: textDelay }}
+                    style={{ animation: 'hint-text-in 0.9s ease both', animationDelay: textDelay }}
                   >
                     <p className="text-sm text-gray-100 font-semibold leading-snug">
                       🎵 Popular Track: <span className="text-orange-300">{hint.value}</span>
@@ -107,7 +107,7 @@ export default function HintModal({ hints, open, onClose, latestType }) {
                 ) : hint.type === 'actor' ? (
                   <div
                     className="flex items-center gap-3"
-                    style={{ animation: 'hint-text-materialize 0.9s ease both', animationDelay: textDelay }}
+                    style={{ animation: 'hint-text-in 0.9s ease both', animationDelay: textDelay }}
                   >
                     {hint.profile ? (
                       <img
@@ -138,7 +138,7 @@ export default function HintModal({ hints, open, onClose, latestType }) {
                 ) : (
                   <p
                     className="text-sm text-gray-300"
-                    style={{ animation: 'hint-text-materialize 0.9s ease both', animationDelay: textDelay }}
+                    style={{ animation: 'hint-text-in 0.9s ease both', animationDelay: textDelay }}
                   >
                     {hint.value}
                   </p>

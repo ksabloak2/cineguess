@@ -233,7 +233,6 @@ svg *,
   /* ---- Cards ---- */
   .card {
     @apply bg-surface-card rounded-2xl border border-surface-border;
-    backdrop-filter: blur(10px);
     box-shadow: 0 4px 20px rgba(0,0,0,0.3);
   }
 
