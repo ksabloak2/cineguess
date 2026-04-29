@@ -435,7 +435,11 @@ export function saveGuestStreak(category, streak) {
 // by clearStaleDailyStates() on app load.
 // ---------------------------------------------------------------
 function todayKey() {
-  return new Date().toISOString().split('T')[0];
+  // Use Eastern time to match the backend daily-pick schedule.
+  // UTC would cause a ~4–5 hour window after 8 PM ET where the UTC date
+  // has already rolled over but the backend is still on the previous day,
+  // causing late-night players to have their game saved under tomorrow's key.
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
 }
 
 export function saveDailyState(key, state) {

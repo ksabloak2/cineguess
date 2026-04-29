@@ -46,6 +46,7 @@ export default function GamePage() {
   // ── State ──────────────────────────────────────────────────────
   const [movies, setMovies]               = useState([]);
   const [targetMovie, setTargetMovie]     = useState(null);
+  const [dailyDate, setDailyDate]         = useState(null); // Eastern date from server ("2026-04-29")
   const [guessResults, setGuessResults]   = useState([]);
   const [guessedIds, setGuessedIds]       = useState([]);
   const [gameOver, setGameOver]           = useState(false);
@@ -178,26 +179,35 @@ export default function GamePage() {
         // already-hydrated board. Server state is used to fill in anything
         // local didn't have (e.g. first visit on a new device).
         const state = await getDailyState(category);
+        if (state.date) setDailyDate(state.date);
 
-        // ── Pick-change detection ─────────────────────────────────────────────
-        // If the daily pick was rerun after the user finished a game, the server
-        // returns the NEW movie's tmdb_id in state.movie while localStorage still
-        // holds the old completed game.  Detect this mismatch and wipe local
-        // state so the user sees the fresh puzzle instead of their old result.
-        if (state.movie?.tmdb_id && hadLocalHydration) {
+        // ── Stale-state detection ─────────────────────────────────────────────
+        // Two cases that make local state invalid:
+        //
+        // 1. DATE MISMATCH — server says today is a different Eastern date than
+        //    what's stored locally.  This catches late-night UTC-rollover cases
+        //    where todayKey() previously used UTC and saved the game under
+        //    tomorrow's date, making it appear as "today's" game the next day.
+        //
+        // 2. PICK CHANGE — authenticated game-over: the server's tmdb_id differs
+        //    from the locally-recorded winning movie (daily pick was re-run).
+        if (hadLocalHydration) {
           const lsSaved = loadDailyState(guestKey);
-          const winningRow = lsSaved?.rows?.find((r) => r.correct);
-          // Won a different movie than today's pick → stale local state
-          if (winningRow && winningRow.movie.tmdb_id !== state.movie.tmdb_id) {
-            saveDailyState(guestKey, { rows: [], gameOver: false, won: null, result: null, hints: [] });
+          const dateMismatch = state.date && lsSaved?.date && lsSaved.date !== state.date;
+          const winningRow   = lsSaved?.rows?.find((r) => r.correct);
+          const pickChanged  = state.movie?.tmdb_id && winningRow &&
+                               winningRow.movie.tmdb_id !== state.movie.tmdb_id;
+
+          if (dateMismatch || pickChanged) {
+            saveDailyState(guestKey, { rows: [], gameOver: false, won: null, result: null, hints: [], date: state.date });
             setGuessResults([]);
             setGuessedIds([]);
             setGameOver(false);
             setWon(null);
             setResult(null);
             setHints([]);
-            hydratedKeyRef.current = null; // allow re-init after navigation
-            return; // skip old-game restore; finally block still fires
+            hydratedKeyRef.current = null;
+            return;
           }
         }
 
@@ -229,6 +239,7 @@ export default function GamePage() {
             won:      state.won,
             result:   finalResult,
             hints:    hintSnapshot,
+            date:     state.date,
           });
         }
 
@@ -505,6 +516,7 @@ export default function GamePage() {
           won:      isGameOver ? correct : null,
           result:   isGameOver ? (postGameResult || revealedResult || null) : null,
           hints:    isGameOver ? postGameHints : [],
+          date:     dailyDate,
         });
       }
 
