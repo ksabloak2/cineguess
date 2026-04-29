@@ -100,7 +100,12 @@ export default function FriendsPage() {
   useEffect(() => {
     if (!session) { setLoading(false); return; }
     Promise.all([getFriends(), getFriendRequests(), getSentRequests()])
-      .then(([f, r, s]) => { setFriends(f); setRequests(r); setSentRequests(s); })
+      .then(([f, r, s]) => {
+        const alpha = (a, b) => (a.username || '').localeCompare(b.username || '');
+        setFriends(f);
+        setRequests([...r].sort(alpha));
+        setSentRequests([...s].sort(alpha));
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [session]);
@@ -129,7 +134,9 @@ export default function FriendsPage() {
       await sendFriendRequest(username);
       setAddMsg(`Friend request sent to @${username}!`);
       setSearchQ(''); setSearchRes([]);
-      getSentRequests().then(setSentRequests).catch(() => {});
+      getSentRequests()
+        .then((s) => setSentRequests([...s].sort((a, b) => (a.username || '').localeCompare(b.username || ''))))
+        .catch(() => {});
     } catch (err) {
       setAddMsg(err?.response?.data?.error || 'Failed to send request');
     }
