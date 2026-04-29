@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate, useMatch } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { MODES, CATEGORIES, slugToCategory, categoryToSlug } from '../utils/gameLogic';
+import { getFriendRequests } from '../utils/api';
 import RulesModal from './RulesModal';
 
 // ── mode accent colors ────────────────────────────────────────────────────────
@@ -24,6 +25,24 @@ export default function Navbar() {
   const navigate                   = useNavigate();
   const { session, profile }       = useAuth();
   const [rulesOpen, setRulesOpen]  = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+
+  // Poll for pending friend requests every 60 s while logged in.
+  // Also re-checks immediately when the user navigates away from /friends
+  // (they may have just handled requests, so clear the badge).
+  useEffect(() => {
+    if (!session) { setPendingCount(0); return; }
+    let cancelled = false;
+    const check = async () => {
+      try {
+        const reqs = await getFriendRequests();
+        if (!cancelled) setPendingCount(Array.isArray(reqs) ? reqs.length : 0);
+      } catch { /* silently ignore — badge just won't show */ }
+    };
+    check();
+    const id = setInterval(check, 60_000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [session, pathname]); // re-run when navigating (clears badge after /friends visit)
 
   const gameMatch      = useMatch('/play/:mode/:category');
   const activeMode     = gameMatch?.params.mode
@@ -105,7 +124,26 @@ export default function Navbar() {
                   label="Friends"
                   showLabel
                 >
-                  <FriendsIcon />
+                  <span className="relative inline-flex">
+                    <FriendsIcon />
+                    {pendingCount > 0 && (
+                      <>
+                        {/* Outer glow ring — pulsing */}
+                        <span
+                          className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full animate-ping"
+                          style={{ background: 'rgba(239,68,68,0.5)' }}
+                        />
+                        {/* Solid core dot */}
+                        <span
+                          className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full"
+                          style={{
+                            background: '#ef4444',
+                            boxShadow: '0 0 6px 2px rgba(239,68,68,0.65)',
+                          }}
+                        />
+                      </>
+                    )}
+                  </span>
                 </NavIconButton>
 
                 {/* Profile */}
