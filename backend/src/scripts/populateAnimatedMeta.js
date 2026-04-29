@@ -204,7 +204,8 @@ const META = {
   // =========================================================
   // ILLUMINATION — additional entries
   // =========================================================
-  'the super mario bros. movie':     { style: 'CGI/3D', studio: 'Illumination', sequel: false, protagonist: 'Human',          musical: false },
+  'the super mario bros. movie':     { style: 'CGI/3D', studio: 'Illumination', sequel: true,  protagonist: 'Human',          musical: false },
+  'the super mario galaxy movie':    { style: 'CGI/3D', studio: 'Illumination', sequel: true,  protagonist: 'Human',          musical: false },
 
   // =========================================================
   // STUDIO GHIBLI — additional entries
