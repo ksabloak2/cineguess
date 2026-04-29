@@ -221,7 +221,7 @@ const RULES = [
   'In Daily mode, everyone plays the same movie each day. Your streak only resets if you get a movie wrong. Skipping a day keeps your streak alive.',
   'Unlimited mode lets you play as many rounds as you want with a random target each round. Separate streaks are tracked per category.',
   'Indian Cinema gets 8 guesses (instead of 7) to match the epic scale of its films.',
-  'Progressive hints unlock as you guess. Most Popular: Logline (guess 4) → Cast Member (guess 5) → Frame (guess 6). Indian Cinema: Logline (guess 4) → Cast Member (guess 5) → Frame (guess 6) → Musical Hint (guess 7). Superhero & Animated: Logline (guess 5) → Frame (guess 6). The Logline explains the plot badly, technically accurate but intentionally misleading!',
+  'Progressive hints unlock as you guess. Most Popular: Cast Member (guess 4) → Logline (guess 5) → Frame (guess 6). Indian Cinema: Cast Member (guess 4) → Logline (guess 5) → Frame (guess 6) → Musical Hint (guess 7). Superhero & Animated: Logline (guess 5) → Frame (guess 6). The Logline explains the plot badly, technically accurate but intentionally misleading!',
   'Share your result grid with friends. Friends cannot see your current-day answers until they finish that category themselves.',
 ];
 
@@ -238,16 +238,16 @@ const TILE_COLUMNS = [
 // ── Progressive hints ──────────────────────────────────────────────────────
 const HINTS = [
   {
-    icon: '💡',
-    trigger: 'Guess 4 (all except Superhero/Animated)',
-    label: 'The Logline',
-    detail: 'A one-sentence explanation of the plot, badly. Technically accurate but intentionally misleading. Think outside the box! Superhero & Animated unlock this after guess 5.',
+    icon: '🎭',
+    trigger: 'Guess 4 (Most Popular & Indian Cinema)',
+    label: 'A Cast Member',
+    detail: 'A photo and name of the 3rd or 4th-credited cast member — not the lead or supporting actor already visible on the board.',
   },
   {
-    icon: '🎭',
-    trigger: 'Guess 5 (Most Popular & Indian Cinema)',
-    label: 'A Cast Member',
-    detail: 'The name of the 3rd or 4th-credited cast member, not the lead or supporting actor already visible on the board.',
+    icon: '💡',
+    trigger: 'Guess 4 (Superhero/Animated) · Guess 5 (Most Popular & Indian Cinema)',
+    label: 'The Logline',
+    detail: 'A one-sentence explanation of the plot, badly. Technically accurate but intentionally misleading. Think outside the box!',
   },
   {
     icon: '🖼️',
