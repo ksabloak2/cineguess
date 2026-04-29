@@ -157,16 +157,19 @@ function computeAwards(allStreaks) {
   const dailyOnly   = CATEGORIES.map((c) => allStreaks[c.id]).filter(Boolean);
   const allDailyHave3 = dailyOnly.filter((s) => (s.longest_streak || 0) >= 4).length >= 3;
   const totalPlayed = allS.filter((s) => (s.longest_streak || 0) > 0).length;
+  // Sum first-guess wins across all daily categories
+  const totalFirstGuessWins = dailyOnly.reduce((sum, s) => sum + (s.first_guess_wins || 0), 0);
 
   return [
-    { id: 'ignition',     icon: '🔥', name: 'Ignition',     desc: 'Start your first winning streak',            earned: maxCurrent >= 1  },
-    { id: 'on-a-roll',    icon: '🎯', name: 'On a Roll',    desc: 'Win 3 in a row in any category',             earned: maxBest >= 3     },
-    { id: 'cinephile',    icon: '🎬', name: 'Cinephile',    desc: 'Hit a 7-game winning streak',                earned: maxBest >= 7     },
-    { id: 'genre-master', icon: '🏆', name: 'Genre Master', desc: 'Reach a 10-game winning streak',             earned: maxBest >= 10    },
-    { id: 'completionist',icon: '🎭', name: 'Completionist',desc: 'Hit a 4+ streak in 3 daily categories',        earned: allDailyHave3    },
-    { id: 'polymath',     icon: '🌐', name: 'Polymath',     desc: 'Play in 6 or more different categories',     earned: totalPlayed >= 6 },
-    { id: 'legend',       icon: '⭐', name: 'Legend',       desc: 'Achieve a 20-game winning streak',           earned: maxBest >= 20    },
-    { id: 'immortal',     icon: '👑', name: 'Immortal',     desc: 'Sustain a 50-game winning streak',           earned: maxBest >= 50    },
+    { id: 'ignition',     icon: '🔥', name: 'Ignition',     desc: 'Start your first winning streak',              earned: maxCurrent >= 1          },
+    { id: 'on-a-roll',    icon: '🎯', name: 'On a Roll',    desc: 'Win 3 in a row in any category',               earned: maxBest >= 3             },
+    { id: 'cold-read',    icon: '⚡', name: 'Cold Read',    desc: 'Guess a movie correctly on the very first try', earned: totalFirstGuessWins >= 1 },
+    { id: 'cinephile',    icon: '🎬', name: 'Cinephile',    desc: 'Hit a 7-game winning streak',                  earned: maxBest >= 7             },
+    { id: 'genre-master', icon: '🏆', name: 'Genre Master', desc: 'Reach a 10-game winning streak',               earned: maxBest >= 10            },
+    { id: 'completionist',icon: '🎭', name: 'Completionist',desc: 'Hit a 4+ streak in 3 daily categories',        earned: allDailyHave3            },
+    { id: 'polymath',     icon: '🌐', name: 'Polymath',     desc: 'Play in 6 or more different categories',       earned: totalPlayed >= 6         },
+    { id: 'legend',       icon: '⭐', name: 'Legend',       desc: 'Achieve a 20-game winning streak',             earned: maxBest >= 20            },
+    { id: 'immortal',     icon: '👑', name: 'Immortal',     desc: 'Sustain a 50-game winning streak',             earned: maxBest >= 50            },
   ];
 }
 
@@ -420,9 +423,7 @@ export default function ProfilePage() {
           gap: 'clamp(10px,1.8vw,18px)',
           padding: 'clamp(9px,1.4vh,14px) clamp(14px,2vw,22px)',
           borderRadius: 16,
-          background: 'rgba(8,8,16,0.82)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
+          background: 'rgba(8,8,16,0.96)',
           border: '1px solid rgba(243,206,19,0.22)',
           animation: 'gold-header-pulse 5s ease-in-out infinite',
         }}>
@@ -722,9 +723,7 @@ function IMAXCard({ catId, emoji, label, current, best, avgGuesses, percentile, 
       className="streak-card imax-card-pad"
       style={{
         position: 'relative',
-        background: `rgba(${rgb}, 0.07)`,
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)',
+        background: `rgba(${rgb}, 0.10)`,
         border: `1px solid rgba(${rgb}, ${hasStreak ? '0.32' : '0.16'})`,
         borderRadius: 14,
         overflow: 'hidden',
@@ -889,9 +888,7 @@ function HistoryTab() {
       <div style={{
         flex: 1, minWidth: 0,
         overflowY: 'auto',
-        background: 'rgba(5,5,14,0.75)',
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)',
+        background: 'rgba(5,5,14,0.92)',
         border: '1px solid rgba(255,255,255,0.07)',
         borderRadius: 14,
         padding: 'clamp(12px,1.8vh,20px) clamp(14px,2vw,22px)',
@@ -918,9 +915,7 @@ function HistoryTab() {
       }}>
         {/* Legend panel */}
         <div style={{
-          background: 'rgba(5,5,14,0.75)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
+          background: 'rgba(5,5,14,0.92)',
           border: '1px solid rgba(255,255,255,0.07)',
           borderRadius: 14,
           padding: 'clamp(12px,1.6vh,18px) 14px',
@@ -997,9 +992,7 @@ function FlameCollection({ allStreaks, loading }) {
     <div style={{
       borderRadius: 14,
       padding: 'clamp(14px,2vh,18px) clamp(14px,2vw,18px)',
-      background: 'rgba(8,8,16,0.82)',
-      backdropFilter: 'blur(12px)',
-      WebkitBackdropFilter: 'blur(12px)',
+      background: 'rgba(8,8,16,0.96)',
       border: '1px solid rgba(243,206,19,0.16)',
     }}>
       <div style={{ marginBottom: 12 }}>
@@ -1092,9 +1085,7 @@ function AwardsTab({ awards, allStreaks, loading }) {
         flexShrink: 0,
         padding: 'clamp(12px,1.8vh,18px) clamp(16px,2vw,24px)',
         borderRadius: 14,
-        background: 'rgba(8,8,16,0.82)',
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)',
+        background: 'rgba(8,8,16,0.96)',
         border: '1px solid rgba(243,206,19,0.16)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
@@ -1183,8 +1174,6 @@ function AwardTile({ icon, name, desc, earned, loading }) {
         background: earned
           ? 'linear-gradient(135deg, rgba(243,206,19,0.12) 0%, rgba(5,5,14,0.88) 100%)'
           : 'linear-gradient(135deg, rgba(180,200,255,0.06) 0%, rgba(80,100,160,0.04) 60%, rgba(20,20,40,0.85) 100%)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
         border: earned
           ? '1px solid rgba(243,206,19,0.32)'
           : '1px solid rgba(140,160,220,0.22)',
@@ -1405,9 +1394,7 @@ function SettingsTab({ onRefresh }) {
       {/* ── Account ──────────────────────────────────────────────────── */}
       <div style={{
         borderRadius: 14, padding: 'clamp(14px,2vh,20px) clamp(14px,2vw,20px)',
-        background: 'rgba(8,8,16,0.82)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
+        background: 'rgba(8,8,16,0.96)',
         border: '1px solid rgba(243,206,19,0.18)',
         display: 'flex', flexDirection: 'column', gap: 14,
       }}>
@@ -1624,9 +1611,7 @@ function SettingsTab({ onRefresh }) {
       {/* ── Colorblind Mode ──────────────────────────────────────────── */}
       <div style={{
         borderRadius: 14, padding: 'clamp(14px,2vh,20px) clamp(14px,2vw,20px)',
-        background: 'rgba(8,8,16,0.82)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
+        background: 'rgba(8,8,16,0.96)',
         border: '1px solid rgba(96,165,250,0.20)',
         display: 'flex', flexDirection: 'column', gap: 12,
       }}>
@@ -1660,10 +1645,9 @@ function SettingsTab({ onRefresh }) {
             width: '100%', padding: '13px 0',
             borderRadius: 14, cursor: 'pointer',
             border: '1px solid rgba(239,68,68,0.30)',
-            background: 'rgba(239,68,68,0.07)',
+            background: 'rgba(239,68,68,0.10)',
             color: '#f87171',
             fontSize: '0.82rem', fontWeight: 700, letterSpacing: '0.04em',
-            backdropFilter: 'blur(10px)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             transition: 'background 0.2s, border-color 0.2s',
           }}

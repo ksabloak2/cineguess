@@ -356,6 +356,14 @@ async function getStreaks(req, res) {
     const raw = avgRows[0]?.avg_guesses;
     streak.avg_guesses = raw !== null && raw !== undefined ? parseFloat(raw) : null;
 
+    // Count first-guess wins (daily only)
+    const { rows: fgRows } = await client.query(
+      `SELECT COUNT(*)::int AS cnt
+       FROM guesses WHERE user_id=$1 AND category=$2 AND won=true AND guesses_taken=1`,
+      [req.user.id, category]
+    );
+    streak.first_guess_wins = fgRows[0]?.cnt ?? 0;
+
     res.json(streak);
   } finally {
     client.release();
