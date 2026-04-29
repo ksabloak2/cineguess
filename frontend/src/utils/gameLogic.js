@@ -217,7 +217,8 @@ function compareGenres(gGenres, tGenres) {
   const t = (tGenres || []).slice(0, 2);
   const matches = g.filter((genre) => t.includes(genre)).length;
   if (matches === 0) return 'red';
-  if (matches >= Math.min(g.length, t.length, 2)) return 'green';
+  // Green only when both movies have the exact same genre set (same length, every genre matches)
+  if (g.length === t.length && matches === g.length) return 'green';
   return 'yellow';
 }
 
