@@ -474,9 +474,12 @@ export default function GamePage() {
         });
       }
 
-      const nextHints = isUnlimited
-        ? getHints(newGuesses.length, targetMovie || null, category)
-        : (serverHint ? hintsFromServer(serverHint) : []);
+      // Always prefer the server hint when available — it has cast_actor_profile
+      // from SELECT * which the cached local pool may be missing.
+      // Fall back to local getHints only when no server hint exists (shouldn't happen).
+      const nextHints = serverHint
+        ? hintsFromServer(serverHint)
+        : getHints(newGuesses.length, targetMovie || null, category);
       // Suppress the auto-popup whenever the game just ended (correct or max guesses)
       // so the hint modal doesn't fight the result modal for screen space.
       mergeHints(nextHints, isGameOver);
