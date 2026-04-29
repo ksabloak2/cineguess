@@ -113,14 +113,20 @@ export default function HintModal({ hints, open, onClose, latestType }) {
                       <img
                         src={tmdbImage(hint.profile, 'w185')}
                         alt={hint.value}
-                        className="rounded-lg flex-shrink-0 ring-1 ring-white/10"
-                        style={{ width: 56, height: 72, objectFit: 'cover', background: 'rgba(255,255,255,0.06)' }}
+                        className="flex-shrink-0 ring-1 ring-white/10"
+                        style={{
+                          width: 36,
+                          height: 36,
+                          objectFit: 'cover',
+                          objectPosition: 'center top',
+                          borderRadius: '50%',
+                          background: 'rgba(255,255,255,0.06)',
+                        }}
                         loading="lazy"
                       />
                     ) : (
-                      <div className="w-14 rounded-lg flex items-center justify-center flex-shrink-0
-                                      bg-accent/10 border border-accent/25 text-2xl"
-                           style={{ height: 72 }}>
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0
+                                      bg-accent/10 border border-accent/25 text-lg">
                         🎭
                       </div>
                     )}
