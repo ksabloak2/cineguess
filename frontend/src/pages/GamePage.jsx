@@ -316,7 +316,7 @@ export default function GamePage() {
     saveGuestState(guestKey, { targetId: target.tmdb_id, guesses: [] });
   }
 
-  function restoreGuestSession(saved, pool) {
+  async function restoreGuestSession(saved, pool) {
     if (!saved.guesses?.length) return;
     const target = pool.find((m) => m.tmdb_id === saved.targetId);
     const rows = saved.guesses.map((id) => {
@@ -335,8 +335,13 @@ export default function GamePage() {
       setGameOver(true);
       setWon(lastCorrect);
       setResult(target);
-      // Unlock all post-game hints when restoring a finished unlimited session
-      mergeHints(getHints(99, target, category), true);
+      // Fetch post-game hints from server so cast_actor_profile is fresh
+      try {
+        const pgRes = await checkGuess(target.tmdb_id, target.tmdb_id, 99, category);
+        mergeHints(hintsFromServer(pgRes.hint || {}), true);
+      } catch {
+        mergeHints(getHints(99, target, category), true);
+      }
     } else {
       updateHints(rows.length, target);
     }
@@ -428,8 +433,14 @@ export default function GamePage() {
         if (isUnlimited) {
           setResult(targetMovie);
           postGameResult = targetMovie;
-          // Silently unlock all post-game hints from local movie data
-          postGameHints = getHints(99, targetMovie, category);
+          // Fetch post-game hints from server so cast_actor_profile is always
+          // fresh (SELECT * on the target — no stale pool cache issue).
+          try {
+            const pgRes = await checkGuess(targetMovie.tmdb_id, targetMovie.tmdb_id, 99, category);
+            postGameHints = hintsFromServer(pgRes.hint || {});
+          } catch {
+            postGameHints = getHints(99, targetMovie, category);
+          }
           mergeHints(postGameHints, true);
         } else if (revealedResult) {
           setResult(revealedResult);
@@ -474,15 +485,17 @@ export default function GamePage() {
         });
       }
 
-      // Always prefer the server hint when available — it has cast_actor_profile
-      // from SELECT * which the cached local pool may be missing.
-      // Fall back to local getHints only when no server hint exists (shouldn't happen).
-      const nextHints = serverHint
-        ? hintsFromServer(serverHint)
-        : getHints(newGuesses.length, targetMovie || null, category);
-      // Suppress the auto-popup whenever the game just ended (correct or max guesses)
-      // so the hint modal doesn't fight the result modal for screen space.
-      mergeHints(nextHints, isGameOver);
+      // Only update progressive hints during active play — when the game is over
+      // post-game hints are already set in full inside the isGameOver block above,
+      // and re-running mergeHints with the in-progress count would overwrite them.
+      if (!isGameOver) {
+        // Always prefer the server hint — it has cast_actor_profile from SELECT *,
+        // which the cached local pool may be missing.
+        const nextHints = serverHint
+          ? hintsFromServer(serverHint)
+          : getHints(newGuesses.length, targetMovie || null, category);
+        mergeHints(nextHints, false);
+      }
     } catch (err) {
       setError(err?.response?.data?.error || 'Failed to submit guess. Try again.');
     } finally {

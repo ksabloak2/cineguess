@@ -100,8 +100,8 @@ export const getMoviePool = async (category) => {
 export const getDailyState    = (category) => api.get(`/game/daily/${category}`).then(r => r.data);
 export const submitGuess      = (category, tmdb_id, guess_count) =>
   api.post('/game/guess', { category, tmdb_id, guess_count }).then(r => r.data);
-export const checkGuess       = (guessed_tmdb_id, target_tmdb_id, guess_number) =>
-  api.post('/game/guess/check', { guessed_tmdb_id, target_tmdb_id, guess_number }).then(r => r.data);
+export const checkGuess       = (guessed_tmdb_id, target_tmdb_id, guess_number, category) =>
+  api.post('/game/guess/check', { guessed_tmdb_id, target_tmdb_id, guess_number, category }).then(r => r.data);
 export const getResult        = (category) => api.get(`/game/result/${category}`).then(r => r.data);
 export const getStreaks       = (category) => api.get(`/game/streaks/${category}`).then(r => r.data);
 export const getPercentiles   = () => api.get('/game/percentiles').then(r => r.data);
