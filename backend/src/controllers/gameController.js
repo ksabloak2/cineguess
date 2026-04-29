@@ -306,7 +306,7 @@ async function getResult(req, res) {
   try {
     const { rows } = await client.query(
       `SELECT m.tmdb_id, m.title, m.year, m.poster_path, m.imdb_id,
-              m.lead_actor, m.supporting_actor, m.cast_list,
+              m.lead_actor, m.supporting_actor, m.cast_list, m.cast_profiles,
               m.ai_hint_quote, m.backdrop_paths, m.music_hint_song, m.music_hint_singers
        FROM daily_picks dp
        JOIN movies m ON m.id = dp.movie_id
@@ -681,8 +681,8 @@ function buildHint(target, { guessNumber, category } = {}) {
   // guessNumber = number of guesses already submitted (1-indexed).
   //
   // Most Popular (top250) — 7 guesses:
-  //   after guess 4 → The Logline (Movie Explained Badly)
-  //   after guess 5 → A Cast Member (3rd/4th billed)
+  //   after guess 4 → A Cast Member (with TMDb photo)
+  //   after guess 5 → The Logline (Movie Explained Badly)
   //   after guess 6 → A Frame From The Movie
   //
   // Default (Superhero / Animated) — 7 guesses:
@@ -690,27 +690,35 @@ function buildHint(target, { guessNumber, category } = {}) {
   //   after guess 6 → A Frame From The Movie
   //
   // Indian Cinema — 8 guesses:
-  //   after guess 4 → The Logline (Movie Explained Badly)
-  //   after guess 5 → A Cast Member (3rd/4th billed)
+  //   after guess 4 → A Cast Member (with TMDb photo)
+  //   after guess 5 → The Logline (Movie Explained Badly)
   //   after guess 6 → A Frame From The Movie
   //   after guess 7 → Musical Hint (iconic song + playback singers)
   const hint = {};
 
-  if (category === 'indiancinema') {
-    // Logline after guess 4
-    if (guessNumber >= 4 && target.ai_hint_quote) {
-      hint.ai_quote = target.ai_hint_quote;
+  // Helper: pick 3rd/4th-billed actor that isn't lead or supporting, + their profile path
+  function pickActor() {
+    const cast     = Array.isArray(target.cast_list)     ? target.cast_list     : [];
+    const profiles = Array.isArray(target.cast_profiles) ? target.cast_profiles : [];
+    const lead = (target.lead_actor       || '').trim().toLowerCase();
+    const supp = (target.supporting_actor || '').trim().toLowerCase();
+    for (let i = 2; i <= 3; i++) {
+      const name = (cast[i] || '').trim();
+      if (!name) continue;
+      const n = name.toLowerCase();
+      if (n === lead || n === supp) continue;
+      hint.cast_actor         = name;
+      hint.cast_actor_profile = profiles[i] || null;
+      return;
     }
-    // Cast member after guess 5
-    if (guessNumber >= 5) {
-      const cast = Array.isArray(target.cast_list) ? target.cast_list : [];
-      const lead = (target.lead_actor       || '').trim().toLowerCase();
-      const supp = (target.supporting_actor || '').trim().toLowerCase();
-      const candidates = cast.slice(2, 4).filter((name) => {
-        const n = (name || '').trim().toLowerCase();
-        return n && n !== lead && n !== supp;
-      });
-      if (candidates.length) hint.cast_actor = candidates[0].trim();
+  }
+
+  if (category === 'indiancinema') {
+    // Cast member after guess 4 (swapped — actor before logline)
+    if (guessNumber >= 4) pickActor();
+    // Logline after guess 5
+    if (guessNumber >= 5 && target.ai_hint_quote) {
+      hint.ai_quote = target.ai_hint_quote;
     }
     // Frame after guess 6
     if (guessNumber >= 6 && Array.isArray(target.backdrop_paths) && target.backdrop_paths.length) {
@@ -722,20 +730,13 @@ function buildHint(target, { guessNumber, category } = {}) {
       hint.music_singers = target.music_hint_singers || '';
     }
   } else if (category === 'top250') {
-    // Logline first (guess 4), then cast member (guess 5), then frame (guess 6)
-    if (guessNumber >= 4 && target.ai_hint_quote) {
+    // Cast member after guess 4 (swapped — actor before logline)
+    if (guessNumber >= 4) pickActor();
+    // Logline after guess 5
+    if (guessNumber >= 5 && target.ai_hint_quote) {
       hint.ai_quote = target.ai_hint_quote;
     }
-    if (guessNumber >= 5) {
-      const cast = Array.isArray(target.cast_list) ? target.cast_list : [];
-      const lead = (target.lead_actor       || '').trim().toLowerCase();
-      const supp = (target.supporting_actor || '').trim().toLowerCase();
-      const candidates = cast.slice(2, 4).filter((name) => {
-        const n = (name || '').trim().toLowerCase();
-        return n && n !== lead && n !== supp;
-      });
-      if (candidates.length) hint.cast_actor = candidates[0].trim();
-    }
+    // Frame after guess 6
     if (guessNumber >= 6 && Array.isArray(target.backdrop_paths) && target.backdrop_paths.length) {
       hint.backdrop_path = pickBackdropPath(target);
     }

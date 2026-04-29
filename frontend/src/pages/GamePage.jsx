@@ -509,17 +509,15 @@ export default function GamePage() {
 
   function hintsFromServer(serverHint) {
     const out = [];
-    // Indian Cinema: image first (guess 4), then clue (5), then music (6)
-    // Other categories: clue first (5), then image (6)
+    // top250 + indiancinema: actor first (guess 4), logline second (guess 5)
+    // Default: logline (5), frame (6)
     if (category === 'indiancinema') {
-      // Indian Cinema: logline (4), cast member (5), frame (6), music (7)
-      if (serverHint.ai_quote)      out.push({ type: 'clue',  label: 'The Logline',            value: serverHint.ai_quote });
-      if (serverHint.cast_actor)    out.push({ type: 'actor', label: 'A Cast Member',           value: serverHint.cast_actor });
-      if (serverHint.backdrop_path) out.push({ type: 'image', label: 'A Frame From The Movie', value: serverHint.backdrop_path });
-      if (serverHint.music_song)    out.push({ type: 'music', label: 'Musical Hint',           value: serverHint.music_song, singers: serverHint.music_singers || '' });
+      if (serverHint.cast_actor)    out.push({ type: 'actor', label: 'A Cast Member',           value: serverHint.cast_actor, profile: serverHint.cast_actor_profile || null });
+      if (serverHint.ai_quote)      out.push({ type: 'clue',  label: 'The Logline',             value: serverHint.ai_quote });
+      if (serverHint.backdrop_path) out.push({ type: 'image', label: 'A Frame From The Movie',  value: serverHint.backdrop_path });
+      if (serverHint.music_song)    out.push({ type: 'music', label: 'Musical Hint',            value: serverHint.music_song, singers: serverHint.music_singers || '' });
     } else {
-      // cast_actor unlocks at guess 4 (top250 only) — must come first in list
-      if (serverHint.cast_actor)    out.push({ type: 'actor', label: 'A Cast Member',           value: serverHint.cast_actor });
+      if (serverHint.cast_actor)    out.push({ type: 'actor', label: 'A Cast Member',           value: serverHint.cast_actor, profile: serverHint.cast_actor_profile || null });
       if (serverHint.ai_quote)      out.push({ type: 'clue',  label: 'The Logline',             value: serverHint.ai_quote });
       if (serverHint.backdrop_path) out.push({ type: 'image', label: 'A Frame From The Movie',  value: serverHint.backdrop_path });
     }
