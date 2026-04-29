@@ -8,6 +8,12 @@ const cron       = require('node-cron');
 
 const app = express();
 
+// Trust Railway/Vercel/reverse-proxy's X-Forwarded-For header.
+// Required for express-rate-limit v7+ to correctly identify client IPs
+// when running behind a proxy. Without this it throws ERR_ERL_UNEXPECTED_X_FORWARDED_FOR
+// on every request, causing them to hang with no response.
+app.set('trust proxy', 1);
+
 // ---------------------------------------------------------------
 // Security / middleware
 // ---------------------------------------------------------------
