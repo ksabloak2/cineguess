@@ -338,7 +338,18 @@ export default function GamePage() {
       // Fetch post-game hints from server so cast_actor_profile is fresh
       try {
         const pgRes = await checkGuess(target.tmdb_id, target.tmdb_id, 99, category);
-        mergeHints(hintsFromServer(pgRes.hint || {}), true);
+        let restoredHints = hintsFromServer(pgRes.hint || {});
+        // Augment actor hint with profile from local pool if server didn't include it
+        restoredHints = restoredHints.map((h) => {
+          if (h.type !== 'actor' || h.profile) return h;
+          const castList = Array.isArray(target.cast_list) ? target.cast_list : [];
+          const profiles = Array.isArray(target.cast_profiles) ? target.cast_profiles : [];
+          const idx = castList.findIndex(
+            (n) => (n || '').trim().toLowerCase() === (h.value || '').toLowerCase()
+          );
+          return idx >= 0 && profiles[idx] ? { ...h, profile: profiles[idx] } : h;
+        });
+        mergeHints(restoredHints, true);
       } catch {
         mergeHints(getHints(99, target, category), true);
       }
@@ -433,14 +444,26 @@ export default function GamePage() {
         if (isUnlimited) {
           setResult(targetMovie);
           postGameResult = targetMovie;
-          // Fetch post-game hints from server so cast_actor_profile is always
-          // fresh (SELECT * on the target — no stale pool cache issue).
+          // Build post-game hints: try server first (always has fresh cast_profiles
+          // via SELECT *), then fall back to local pool data.
           try {
             const pgRes = await checkGuess(targetMovie.tmdb_id, targetMovie.tmdb_id, 99, category);
             postGameHints = hintsFromServer(pgRes.hint || {});
           } catch {
             postGameHints = getHints(99, targetMovie, category);
           }
+          // Augment any actor hint that is missing a profile with data from the
+          // local pool (pool query now includes cast_profiles — covers the case
+          // where the backend hasn't yet returned cast_actor_profile).
+          postGameHints = postGameHints.map((h) => {
+            if (h.type !== 'actor' || h.profile) return h;
+            const castList = Array.isArray(targetMovie.cast_list) ? targetMovie.cast_list : [];
+            const profiles = Array.isArray(targetMovie.cast_profiles) ? targetMovie.cast_profiles : [];
+            const idx = castList.findIndex(
+              (n) => (n || '').trim().toLowerCase() === (h.value || '').toLowerCase()
+            );
+            return idx >= 0 && profiles[idx] ? { ...h, profile: profiles[idx] } : h;
+          });
           mergeHints(postGameHints, true);
         } else if (revealedResult) {
           setResult(revealedResult);
