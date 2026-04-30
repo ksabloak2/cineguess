@@ -130,11 +130,21 @@ export default function AuthPage() {
   // AuthContext tries to auto-register but Google accounts have no username in
   // user_metadata, so profile stays null.  We catch that here and send the
   // user to the username-picker step.
+  //
+  // IMPORTANT: only trigger this when we're sure the profile is genuinely
+  // absent — not when it's momentarily null because the backend was
+  // temporarily unavailable (e.g. during the midnight cron window).
+  // We rely on AuthContext caching the last-known profile, so if
+  // loadCachedProfile() has data this effect won't fire for existing users.
   useEffect(() => {
     if (
       session &&
       !authLoading &&
       !profile &&
+      // Extra guard: only switch to username-picker if there's also nothing
+      // in the local cache.  A null cache means the profile definitively
+      // doesn't exist (404 or brand-new Google user), not a network error.
+      !localStorage.getItem('cineguess_profile_cache') &&
       ![MODES.username, MODES.reset].includes(mode)
     ) {
       setMode(MODES.username);

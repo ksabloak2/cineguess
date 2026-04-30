@@ -4,9 +4,31 @@ import { getProfile, lookupEmail, registerProfile } from '../utils/api';
 
 const AuthContext = createContext(null);
 
+// ── Profile cache helpers ────────────────────────────────────────────────────
+// Persist the last-known profile in localStorage so that brief backend
+// unavailability (e.g. Railway's midnight cron restart window) never causes
+// the username to disappear and the user to be kicked to the login screen.
+const PROFILE_CACHE_KEY = 'cineguess_profile_cache';
+
+function loadCachedProfile() {
+  try {
+    const raw = localStorage.getItem(PROFILE_CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+function saveCachedProfile(prof) {
+  try {
+    if (prof) localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(prof));
+    else localStorage.removeItem(PROFILE_CACHE_KEY);
+  } catch {}
+}
+
 export function AuthProvider({ children }) {
   const [session, setSession]   = useState(null);
-  const [profile, setProfile]   = useState(null);
+  // Seed from cache so the username shows immediately on page load / token refresh,
+  // even before the async backend call completes.
+  const [profile, setProfile]   = useState(() => loadCachedProfile());
   const [loading, setLoading]   = useState(true);
 
   useEffect(() => {
@@ -14,14 +36,23 @@ export function AuthProvider({ children }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) fetchProfile(session);
-      else setLoading(false);
+      else {
+        // No session — clear any stale cache
+        saveCachedProfile(null);
+        setProfile(null);
+        setLoading(false);
+      }
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) fetchProfile(session);
-      else { setProfile(null); setLoading(false); }
+      else {
+        saveCachedProfile(null);
+        setProfile(null);
+        setLoading(false);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -31,18 +62,22 @@ export function AuthProvider({ children }) {
     try {
       const prof = await getProfile();
       setProfile(prof);
+      saveCachedProfile(prof);  // Keep cache fresh on every successful fetch
     } catch (err) {
       // Profile row doesn't exist yet — happens right after email verification.
       // Try to auto-register using:
       //   1. user_metadata.username (set at signUp — works across devices)
       //   2. localStorage pending_username (fallback for same-device flow)
       if (err?.response?.status === 404) {
+        // Profile definitively missing — clear the cache and try to auto-create.
+        saveCachedProfile(null);
         const metaUsername = session?.user?.user_metadata?.username;
         const pending = metaUsername || localStorage.getItem('pending_username');
         if (pending) {
           try {
             const prof = await registerProfile(pending);
             setProfile(prof);
+            saveCachedProfile(prof);
             localStorage.removeItem('pending_username');
             localStorage.removeItem('pending_email');
             return;
@@ -50,8 +85,12 @@ export function AuthProvider({ children }) {
             // Username taken or other error — fall through, profile stays null
           }
         }
+        setProfile(null);
       }
-      setProfile(null);
+      // For any other error (network timeout, 5xx, etc.) — DO NOT clear the
+      // profile.  Keep the cached value visible so the user isn't kicked to
+      // the login screen just because the backend was momentarily unavailable
+      // (e.g. during the midnight cron window).
     } finally {
       setLoading(false);
     }
@@ -102,6 +141,7 @@ export function AuthProvider({ children }) {
 
   async function signOut() {
     await supabase.auth.signOut();
+    saveCachedProfile(null);
     setProfile(null);
   }
 
@@ -126,8 +166,15 @@ export function AuthProvider({ children }) {
     if (error) throw error;
   }
 
+  // Exposed so consumers (e.g. AuthPage) can update profile state AND cache
+  // together without having to call saveCachedProfile manually.
+  function setProfileAndCache(prof) {
+    setProfile(prof);
+    saveCachedProfile(prof);
+  }
+
   return (
-    <AuthContext.Provider value={{ session, profile, setProfile, loading, signUp, signIn, signInWithGoogle, signOut, resetPassword, updatePassword, resendVerification }}>
+    <AuthContext.Provider value={{ session, profile, setProfile: setProfileAndCache, loading, signUp, signIn, signInWithGoogle, signOut, resetPassword, updatePassword, resendVerification }}>
       {children}
     </AuthContext.Provider>
   );
