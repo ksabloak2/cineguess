@@ -1003,37 +1003,6 @@ export default function GamePage() {
         </div>
       )}
 
-      {/* Unlimited: inline movie reveal card — stays visible until user hits New Round */}
-      {gameOver && isUnlimited && result && (
-        <div className="card p-4 animate-bounce-in">
-          <p className="text-[10px] uppercase tracking-widest font-semibold text-gray-600 mb-3 text-center">
-            The answer was
-          </p>
-          <div className="flex items-center gap-4">
-            {result.poster_path && (
-              <img
-                src={tmdbImage(result.poster_path, 'w185')}
-                alt={result.title}
-                className="w-14 h-20 sm:w-16 sm:h-24 object-cover rounded-lg ring-1 ring-white/10 flex-shrink-0"
-              />
-            )}
-            <div className="min-w-0 flex-1">
-              <p className="text-white font-bold text-base sm:text-lg leading-tight">{result.title}</p>
-              {result.year && <p className="text-gray-400 text-sm mt-0.5">{result.year}</p>}
-              {result.genres && (
-                <p className="text-gray-600 text-xs mt-1 truncate">{Array.isArray(result.genres) ? result.genres.join(', ') : result.genres}</p>
-              )}
-              <button
-                onClick={() => setShowModal(true)}
-                className="mt-2.5 inline-flex items-center gap-1 text-xs text-accent font-semibold hover:underline transition-opacity opacity-80 hover:opacity-100"
-              >
-                See full results →
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Unlimited: play another round */}
       {gameOver && isUnlimited && (
         <div className="flex justify-center">

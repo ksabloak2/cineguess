@@ -31,7 +31,7 @@ function MobileFooterToggle() {
   const activeMode     = gameMatch?.params.mode
     || (pathname.startsWith('/unlimited') ? 'unlimited'
       : pathname.startsWith('/daily')     ? 'daily'
-      : 'daily');  // default for friends/profile pages
+      : null);  // null on friends/profile — no button highlighted
   const activeCategory = gameMatch?.params.category
     ? slugToCategory(gameMatch.params.category)
     : null;
