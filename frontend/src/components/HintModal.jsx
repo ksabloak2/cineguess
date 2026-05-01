@@ -8,14 +8,33 @@ const TYPE_STYLES = {
   music: { border: 'border-orange-500/50', bg: 'bg-orange-500/5',  accent: 'text-orange-400', icon: '🎵' },
 };
 
-export default function HintModal({ hints, open, onClose, latestType }) {
+// Human-readable label for each hint type (for locked cards)
+const TYPE_NAMES = {
+  actor: 'Cast Member',
+  clue:  'Logline',
+  image: 'Frame',
+  music: 'Song',
+};
+
+export default function HintModal({
+  hints,
+  availableHints = [],
+  hintCosts = [],
+  hintsRevealedCount = 0,
+  onRevealHint,
+  open,
+  onClose,
+  latestType,
+}) {
   useEffect(() => {
     function handler(e) { if (e.key === 'Escape') onClose(); }
     if (open) window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [open, onClose]);
 
-  if (!open || !hints || hints.length === 0) return null;
+  const hasRevealed   = hints && hints.length > 0;
+  const hasAvailable  = availableHints && availableHints.length > 0;
+  if (!open || (!hasRevealed && !hasAvailable)) return null;
 
   return (
     <>
@@ -52,8 +71,58 @@ export default function HintModal({ hints, open, onClose, latestType }) {
           Loglines are technically accurate but intentionally misleading — think outside the box!
         </p>
 
+        {/* ── Available-to-unlock hint cards ── */}
+        {hasAvailable && (
+          <div className="mb-4">
+            <p className="text-[10px] uppercase tracking-widest font-semibold text-gray-600 mb-2">
+              Available to unlock
+            </p>
+            <div className="space-y-2">
+              {availableHints.map((hint, idx) => {
+                const style    = TYPE_STYLES[hint.type] || TYPE_STYLES.actor;
+                const cost     = hintCosts[hintsRevealedCount + idx] ?? '?';
+                const typeName = TYPE_NAMES[hint.type] || hint.type;
+                return (
+                  <div
+                    key={hint.type}
+                    className={`flex items-center justify-between gap-3 p-3 rounded-xl border ${style.border} ${style.bg}`}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-lg flex-shrink-0">{style.icon}</span>
+                      <div className="min-w-0">
+                        <p className={`text-xs font-semibold ${style.accent} uppercase tracking-wide`}>
+                          {typeName}
+                        </p>
+                        <p className="text-[10px] text-gray-600 mt-0.5">Tap to reveal this hint</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        if (onRevealHint) onRevealHint(hint);
+                      }}
+                      className="flex-shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
+                                 bg-purple-500/15 hover:bg-purple-500/30 border border-purple-500/35
+                                 text-purple-300 text-xs font-semibold transition-all hover:scale-[1.03]"
+                    >
+                      <span>Reveal</span>
+                      <span className="opacity-70">−{cost}pt{cost !== 1 ? 's' : ''}</span>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ── Already-revealed hints ── */}
+        {hasRevealed && hasAvailable && (
+          <p className="text-[10px] uppercase tracking-widest font-semibold text-gray-600 mb-2">
+            Revealed
+          </p>
+        )}
+
         <div className="space-y-3">
-          {hints.map((hint, i) => {
+          {(hints || []).map((hint, i) => {
             const style = TYPE_STYLES[hint.type] || TYPE_STYLES.actor;
             const isNew = hint.type === latestType;
             const cardDelay = `${0.08 + i * 0.1}s`;

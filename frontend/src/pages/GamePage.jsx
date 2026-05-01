@@ -16,6 +16,7 @@ import MovieSearch from '../components/MovieSearch';
 import GameBoard from '../components/GameBoard';
 import HintModal from '../components/HintModal';
 import ResultModal from '../components/ResultModal';
+import { ModeToggle } from '../components/Navbar';
 
 const VALID_IDS   = new Set([
   ...CATEGORIES.map((c) => c.id),
@@ -611,17 +612,21 @@ export default function GamePage() {
     }
   }
 
-  // Handle user clicking the "Reveal hint" button
-  function handleRevealHint() {
+  // Handle user clicking a specific "Reveal" button inside the HintModal.
+  // `specificHint` is the hint object the user chose; when omitted it falls back
+  // to the first unrevealed hint (legacy sequential behaviour).
+  function handleRevealHint(specificHint) {
     if (gameOver) {
       // Post-game: just open the modal showing all unlocked hints
       setShowHintModal(true);
       setNewHintAvailable(false);
       return;
     }
-    // Find the first unlocked-but-not-revealed hint
+    // Resolve which hint to reveal
     const revealedTypes = new Set(hintsRevealed.map((h) => h.type));
-    const nextHint = hintsUnlocked.find((h) => !revealedTypes.has(h.type));
+    const nextHint = specificHint && !revealedTypes.has(specificHint.type)
+      ? specificHint
+      : hintsUnlocked.find((h) => !revealedTypes.has(h.type));
     if (!nextHint) return;
 
     const newRevealed = [...hintsRevealed, nextHint];
@@ -792,12 +797,15 @@ export default function GamePage() {
         </div>
       )}
 
-      {/* Hint buttons — reveal new hint OR view already-revealed hints */}
-      <div className="flex justify-center gap-2 flex-wrap">
-        {(() => {
-          if (gameOver) {
-            // Post-game: show all unlocked hints
-            if (hintsUnlocked.length > 0) {
+      {/* Hint button — single button that opens modal with reveal-per-hint controls */}
+      {(hintsUnlocked.length > 0 || (gameOver && hintsUnlocked.length > 0)) && (
+        <div className="flex justify-center">
+          {(() => {
+            const unrevealedCount = hintsUnlocked.filter(
+              (h) => !hintsRevealed.some((r) => r.type === h.type)
+            ).length;
+
+            if (gameOver) {
               return (
                 <button
                   onClick={() => { setShowHintModal(true); setNewHintAvailable(false); }}
@@ -811,61 +819,44 @@ export default function GamePage() {
                 </button>
               );
             }
-            return null;
-          }
 
-          // During play
-          const revealedTypes  = new Set(hintsRevealed.map((h) => h.type));
-          const nextUnrevealed = hintsUnlocked.find((h) => !revealedTypes.has(h.type));
-          const costs          = HINT_COSTS_FE[category] || [1, 3, 4];
-          const labels         = HINT_NEXT_LABELS[category] || ['Hint'];
-          const nextCost       = costs[hintsRevealedCount]; // cost of the next hint to reveal
-          const nextLabel      = labels[hintsRevealedCount] || 'Hint';
+            // During play: one button that says "Hints Available (N)" with pulsing dot
+            return (
+              <button
+                onClick={() => { setShowHintModal(true); setNewHintAvailable(false); }}
+                className="relative inline-flex items-center gap-2 px-4 py-2 rounded-xl
+                           bg-purple-500/10 hover:bg-purple-500/20
+                           border border-purple-500/30 text-purple-300
+                           text-xs sm:text-sm font-medium transition-all hover:scale-[1.02]"
+                style={newHintAvailable ? { boxShadow: '0 0 18px rgba(168,85,247,0.35)', borderColor: 'rgba(168,85,247,0.55)' } : {}}
+              >
+                <span>💡</span>
+                <span>
+                  {unrevealedCount > 0
+                    ? `Hints Available (${unrevealedCount})`
+                    : `View Hints (${hintsRevealed.length})`}
+                </span>
+                {newHintAvailable && (
+                  <span className="absolute -top-1.5 -right-1.5 flex h-3.5 w-3.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-purple-500 ring-2 ring-surface-bg" />
+                  </span>
+                )}
+              </button>
+            );
+          })()}
+        </div>
+      )}
 
-          return (
-            <>
-              {/* Reveal next hint button */}
-              {nextUnrevealed && (
-                <button
-                  onClick={handleRevealHint}
-                  className="relative inline-flex items-center gap-2 px-4 py-2 rounded-xl
-                             bg-purple-500/10 hover:bg-purple-500/20
-                             border border-purple-500/30 text-purple-300
-                             text-xs sm:text-sm font-medium transition-all hover:scale-[1.02]"
-                  style={newHintAvailable ? { boxShadow: '0 0 18px rgba(168,85,247,0.35)', borderColor: 'rgba(168,85,247,0.55)' } : {}}
-                >
-                  <span>💡</span>
-                  <span>Reveal {nextLabel} −{nextCost}pt</span>
-                  {newHintAvailable && (
-                    <span className="absolute -top-1.5 -right-1.5 flex h-3.5 w-3.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-purple-500 ring-2 ring-surface-bg" />
-                    </span>
-                  )}
-                </button>
-              )}
-
-              {/* View already-revealed hints */}
-              {hintsRevealed.length > 0 && (
-                <button
-                  onClick={() => setShowHintModal(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl
-                             bg-purple-500/5 hover:bg-purple-500/10
-                             border border-purple-500/20 text-purple-400
-                             text-xs sm:text-sm font-medium transition-all hover:scale-[1.02]"
-                >
-                  <span>👁</span>
-                  <span>View revealed ({hintsRevealed.length})</span>
-                </button>
-              )}
-            </>
-          );
-        })()}
-      </div>
-
-      {/* Hint modal — shows revealed hints during play, all unlocked hints post-game */}
+      {/* Hint modal — shows revealed + available hints with per-hint reveal buttons */}
       <HintModal
         hints={gameOver ? hintsUnlocked : hintsRevealed}
+        availableHints={gameOver ? [] : hintsUnlocked.filter(
+          (h) => !hintsRevealed.some((r) => r.type === h.type)
+        )}
+        hintCosts={HINT_COSTS_FE[category] || [1, 3, 4]}
+        hintsRevealedCount={hintsRevealedCount}
+        onRevealHint={handleRevealHint}
         open={showHintModal}
         latestType={latestHintType}
         onClose={() => setShowHintModal(false)}
@@ -962,6 +953,16 @@ export default function GamePage() {
           hintsRevealedCount={hintsRevealedCount}
         />
       )}
+
+      {/* Daily / Unlimited mode toggle */}
+      <div className="flex justify-center pt-2 pb-1">
+        <ModeToggle
+          toggleMode={mode}
+          activeMode={mode}
+          inGame
+          activeCategory={category}
+        />
+      </div>
     </div>
   );
 }

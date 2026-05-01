@@ -906,7 +906,7 @@ async function getPercentiles(req, res) {
     );
     const snapshot = snapRows[0]?.data || {};
 
-    // Fetch the user's own streaks for all categories in one query.
+    // Fetch the user's own streaks + avg_score + avg_guesses for all categories.
     const { rows: streakRows } = await client.query(
       `SELECT category, current_streak
        FROM streaks
@@ -918,48 +918,58 @@ async function getPercentiles(req, res) {
       userStreaks[r.category] = Number(r.current_streak) || 0;
     }
 
-    // Fetch per-category avg_guesses (daily categories only) for tiebreaking.
+    // avg_score for Global Rating, avg_guesses for tiebreaking (daily categories only)
     const { rows: avgRows } = await client.query(
-      `SELECT category, ROUND(AVG(guesses_taken)::numeric, 1) AS avg_guesses
+      `SELECT
+         category,
+         ROUND(COALESCE(AVG(score) FILTER (WHERE won = true AND score IS NOT NULL), 0)::numeric, 1) AS avg_score,
+         ROUND(COALESCE(AVG(guesses_taken) FILTER (WHERE won = true), 0)::numeric, 2) AS avg_guesses
        FROM guesses
-       WHERE user_id = $1 AND won = true AND category = ANY($2::text[])
+       WHERE user_id = $1 AND category = ANY($2::text[])
        GROUP BY category`,
       [req.user.id, DAILY_PERCENTILE_CATS]
     );
-    const userAvg = {};
+    const userAvgScore   = {};
+    const userAvgGuesses = {};
     for (const r of avgRows) {
-      userAvg[r.category] = Number(r.avg_guesses);
+      userAvgScore[r.category]   = Number(r.avg_score);
+      userAvgGuesses[r.category] = Number(r.avg_guesses);
     }
 
     // Compute percentile from snapshot distribution.
-    // Ranking rule: higher streak wins; ties broken by lower avg_guesses (better).
+    // Daily ranking: Global Rating = (streak × 10) + avg_score.
+    // Tiebreaker: lower avg_guesses (fewer attempts = better rank).
+    // Unlimited ranking: still streak-only (snapshot stores [streak, null, cnt]).
     const result = {};
     for (const cat of STREAK_CATEGORIES) {
       const userStreak = userStreaks[cat] || 0;
-      if (userStreak === 0) {
-        result[cat] = null;
-        continue;
-      }
+      if (userStreak === 0) { result[cat] = null; continue; }
       const catSnap = snapshot[cat];
-      if (!catSnap || catSnap.total === 0) {
-        result[cat] = null;
-        continue;
-      }
+      if (!catSnap || catSnap.total === 0) { result[cat] = null; continue; }
+
+      const isUnlimitedCat = cat.startsWith('unlimited_');
       let higher = 0;
-      for (const [s, distAvg, cnt] of catSnap.dist) {
-        if (s > userStreak) {
-          // Strictly better streak
-          higher += cnt;
-        } else if (
-          s === userStreak &&
-          distAvg !== null &&
-          userAvg[cat] !== undefined &&
-          distAvg < userAvg[cat]
-        ) {
-          // Same streak but their avg is lower (fewer guesses = better)
-          higher += cnt;
+
+      if (isUnlimitedCat) {
+        // Streak-only comparison for unlimited categories
+        for (const [s,, cnt] of catSnap.dist) {
+          if (s > userStreak) higher += cnt;
+        }
+      } else {
+        // Global Rating comparison for daily categories
+        const userRating   = userStreak * 10 + (userAvgScore[cat] || 0);
+        const userGuesses  = userAvgGuesses[cat] ?? Infinity;
+        for (const [rating, distAvgGuesses, cnt] of catSnap.dist) {
+          if (rating > userRating) {
+            // Strictly higher rating
+            higher += cnt;
+          } else if (rating === userRating && distAvgGuesses !== null && distAvgGuesses < userGuesses) {
+            // Same rating, fewer average attempts = better
+            higher += cnt;
+          }
         }
       }
+
       const pct = Math.max(1, Math.ceil((higher / catSnap.total) * 100));
       result[cat] = `Top ${pct}% Globally`;
     }
@@ -1009,8 +1019,9 @@ async function getRatings(req, res) {
 
 // ---------------------------------------------------------------
 // GET /api/game/leaderboard?category=X
-// Returns top 50 users sorted by Global Rating.
+// Returns top 10 users sorted by Global Rating.
 // Global Rating = (current_streak × 10) + avg_score + (no_hint_in_streak × 5)
+// Tiebreaker: lower avg_guesses wins (fewer attempts = better)
 // ---------------------------------------------------------------
 async function getLeaderboard(req, res) {
   const category = req.query.category;
@@ -1040,6 +1051,7 @@ async function getLeaderboard(req, res) {
             ) sub
             WHERE sub.hints_count = 0
           ) AS no_hint_in_streak,
+          ROUND(COALESCE(AVG(g.guesses_taken) FILTER (WHERE g.won = true), 0)::numeric, 2) AS avg_guesses,
           ROUND((
             s.current_streak * 10
             + COALESCE(AVG(g.score) FILTER (WHERE g.won = true AND g.score IS NOT NULL), 0)
@@ -1060,8 +1072,8 @@ async function getLeaderboard(req, res) {
         LEFT JOIN guesses g ON g.user_id = u.id AND g.category = $1
         WHERE s.current_streak > 0
         GROUP BY u.id, u.username, s.current_streak, s.longest_streak
-        ORDER BY global_rating DESC
-        LIMIT 50
+        ORDER BY global_rating DESC, avg_guesses ASC
+        LIMIT 10
       `, [category]);
       rows = result.rows;
     } else {
@@ -1074,6 +1086,7 @@ async function getLeaderboard(req, res) {
             AVG(g.score) FILTER (WHERE g.won = true AND g.score IS NOT NULL),
             0
           )::numeric, 1) AS avg_score,
+          ROUND(COALESCE(AVG(g.guesses_taken) FILTER (WHERE g.won = true), 0)::numeric, 2) AS avg_guesses,
           ROUND((
             MAX(s.current_streak) * 10
             + COALESCE(AVG(g.score) FILTER (WHERE g.won = true AND g.score IS NOT NULL), 0)
@@ -1085,8 +1098,8 @@ async function getLeaderboard(req, res) {
           AND g.category = ANY(ARRAY['top250','superhero','animated','indiancinema'])
         WHERE s.current_streak > 0
         GROUP BY u.id, u.username
-        ORDER BY global_rating DESC
-        LIMIT 50
+        ORDER BY global_rating DESC, avg_guesses ASC
+        LIMIT 10
       `);
       rows = result.rows;
     }

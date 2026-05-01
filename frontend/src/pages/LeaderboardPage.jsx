@@ -3,7 +3,7 @@ import { getLeaderboard } from '../utils/api';
 
 const CATEGORY_TABS = [
   { id: null,           label: 'Global',        emoji: '🌍' },
-  { id: 'top250',       label: 'Top 250',        emoji: '🏆' },
+  { id: 'top250',       label: 'Most Popular',   emoji: '🏆' },
   { id: 'superhero',    label: 'Superheroes',    emoji: '🦸' },
   { id: 'animated',     label: 'Animated',       emoji: '🎨' },
   { id: 'indiancinema', label: 'Indian Cinema',  emoji: '🎬' },
@@ -111,7 +111,7 @@ export default function LeaderboardPage() {
           🏆 Global Standings
         </h1>
         <p className="text-gray-500 text-xs sm:text-sm mt-1">
-          Top 50 players ranked by Global Rating
+          Top 10 players ranked by Global Rating
         </p>
       </div>
 
