@@ -125,10 +125,10 @@ export default function RulesModal({ open, onClose, initialPage = 0 }) {
             <div className="rounded-xl p-4 sm:p-5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
               <p className="text-[10px] uppercase tracking-[0.25em] font-semibold text-gray-500 mb-3">Color Legend</p>
               <div className="space-y-2.5">
-                <LegendRow color="green"  label="Exact Match"   desc="Genre, director, actor, or language is identical to the target." />
+                <LegendRow color="green"  label="Exact Match"   desc="Genre, director, actor, or studio is identical to the target." />
                 <LegendRow color="cyan"   label="Very Close"    desc="Year only: your guess is within 2 years of the target. Arrow shows direction ↑↓." />
                 <LegendRow color="amber"  label="Close"         desc="Year only: your guess is within 5 years of the target. Arrow shows direction ↑↓." />
-                <LegendRow color="yellow" label="Partial Match" desc="Shared genre, actor in a different role, or in Superhero: same parent universe (e.g. both Marvel) but a different sub-franchise (e.g. MCU vs Fox Universe)." />
+                <LegendRow color="yellow" label="Partial Match" desc="Shared genre, actor in a different role, same parent studio (e.g. Warner Bros. & New Line Cinema), or in Superhero: same parent universe." />
                 <LegendRow color="red"    label="No Match"      desc="Nothing in common for this attribute, or off by more than 5 years." />
               </div>
             </div>
@@ -297,8 +297,8 @@ export default function RulesModal({ open, onClose, initialPage = 0 }) {
 // ── Rules content ──────────────────────────────────────────────────────────
 const RULES = [
   'Guess the target movie in 7 tries or fewer. Each guess must be a real film from the chosen category.',
-  'After every guess, 6 tiles light up showing how close you are: Genre, Director, Lead Actor/Actress, Supporting Actor/Actress, Year, and Language. Superhero and Animated categories use different fields tailored to those films.',
-  'Green = exact match. Cyan = year within 2. Amber = year within 5. Yellow = partial match (shared genre, actor in a different role, or in Superhero: same parent universe but different sub-franchise). Red = no match.',
+  'After every guess, 6 tiles light up showing how close you are: Genre, Director, Lead Actor/Actress, Supporting Actor/Actress, Year, and Studio. Superhero and Animated categories use different fields tailored to those films.',
+  'Green = exact match. Cyan = year within 2. Amber = year within 5. Yellow = partial match (shared genre, actor in a different role, same parent studio, or in Superhero: same parent universe but different sub-franchise). Red = no match.',
   'In Daily mode, everyone plays the same movie each day. Your streak only resets if you get a movie wrong. Skipping a day keeps your streak alive.',
   'Unlimited mode lets you play as many rounds as you want with a random target each round. Separate streaks are tracked per category.',
   'Indian Cinema gets 8 guesses (instead of 7) to match the epic scale of its films.',
@@ -313,7 +313,7 @@ const TILE_COLUMNS = [
   { icon: '⭐', label: 'Lead Actor/Actress',       detail: 'Green = exact lead match. Yellow = your lead appears in the target cast (different role).' },
   { icon: '🌟', label: 'Supporting Actor/Actress', detail: 'Second-billed cast member. Green = exact match. Yellow = appears anywhere in target film.' },
   { icon: '📅', label: 'Year',                    detail: 'Green = exact. Cyan = ≤2 yrs off. Amber = ≤5 yrs off. Red = 5+ yrs. Arrow shows which direction.' },
-  { icon: '🌐', label: 'Language',                detail: 'Original production language. Green = matches target. Red = different language.' },
+  { icon: '🎥', label: 'Studio',                  detail: 'Primary production studio. Green = same studio. Yellow = same parent company (e.g. Warner Bros. & New Line Cinema both belong to WB). Red = different.' },
 ];
 
 // ── Progressive hints ──────────────────────────────────────────────────────

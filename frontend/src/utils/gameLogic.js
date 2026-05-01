@@ -36,12 +36,12 @@ export function getMaxGuesses(category) {
 }
 
 export const TILE_LABELS = {
-  genre:             'Genre',
-  director:          'Director',
-  lead_actor:        'Lead Actor/Actress',
-  supporting_actor:  'Supporting Actor/Actress',
-  year:              'Year',
-  language:          'Language',
+  genre:              'Genre',
+  director:           'Director',
+  lead_actor:         'Lead Actor/Actress',
+  supporting_actor:   'Supporting Actor/Actress',
+  year:               'Year',
+  production_studio:  'Studio',
 };
 
 export const ANIMATED_TILE_LABELS = {
@@ -97,15 +97,15 @@ export const SUPERHERO_TILE_TOOLTIPS = {
 };
 
 export const TILE_TOOLTIPS = {
-  genre:            'Top 2 genres match the target movie',
-  director:         'Same director as the target movie',
-  lead_actor:       'Exact lead match = green. Yellow = your lead actor also appears in the target movie (but not the lead).',
-  supporting_actor: 'Exact supporting match = green. Yellow = your pick appears in the target movie in any role. Red = no match.',
-  year:             'Green: exact year. Cyan: within 2 years. Amber: within 5 years. Red: 5+ years off. ↑ = answer is later, ↓ = earlier.',
-  language:         'Original language matches the target movie',
+  genre:              'Top 2 genres match the target movie',
+  director:           'Same director as the target movie',
+  lead_actor:         'Exact lead match = green. Yellow = your lead actor also appears in the target movie (but not the lead).',
+  supporting_actor:   'Exact supporting match = green. Yellow = your pick appears in the target movie in any role. Red = no match.',
+  year:               'Green: exact year. Cyan: within 2 years. Amber: within 5 years. Red: 5+ years off. ↑ = answer is later, ↓ = earlier.',
+  production_studio:  'Green = same studio. Yellow = different studio but same parent company (e.g. Warner Bros. & New Line Cinema). Red = different.',
 };
 
-export const TILE_FIELDS             = ['genre', 'director', 'lead_actor', 'supporting_actor', 'year', 'language'];
+export const TILE_FIELDS             = ['genre', 'director', 'lead_actor', 'supporting_actor', 'year', 'production_studio'];
 export const ANIMATED_FIELDS         = ['animation_style', 'animation_studio', 'has_sequel', 'protagonist_type', 'is_musical', 'year'];
 export const SUPERHERO_FIELDS        = ['superhero_universe', 'hero_villain_focus', 'solo_or_team', 'year', 'superpower_type'];
 export const INDIAN_CINEMA_FIELDS    = ['genre', 'lead_actor', 'supporting_actor', 'director', 'year', 'language'];
@@ -151,6 +151,29 @@ export const TILE_TEXT = {
  * Evaluate tiles for a guessed vs. target movie (client-side).
  * Used for unlimited mode where both movie objects are known locally.
  */
+// Production studio parent map — mirrors backend PRODUCTION_STUDIO_PARENT.
+// Used by evaluateTilesLocal for offline/guest tile evaluation.
+const PRODUCTION_STUDIO_PARENT_FE = {
+  'Walt Disney Pictures': 'Disney', 'Pixar Animation Studios': 'Disney',
+  'Marvel Studios': 'Disney', 'Lucasfilm': 'Disney',
+  '20th Century Studios': 'Disney', 'Searchlight Pictures': 'Disney',
+  'Touchstone Pictures': 'Disney', 'Blue Sky Studios': 'Disney',
+  'Universal Pictures': 'Universal', 'Amblin Entertainment': 'Universal',
+  'DreamWorks': 'Universal', 'Working Title Films': 'Universal',
+  'Focus Features': 'Universal', 'Blumhouse Productions': 'Universal',
+  'Illumination': 'Universal',
+  'Warner Bros.': 'Warner Bros.', 'New Line Cinema': 'Warner Bros.',
+  'Castle Rock Entertainment': 'Warner Bros.', 'Village Roadshow': 'Warner Bros.',
+  'Legendary Entertainment': 'Warner Bros.',
+  'Columbia Pictures': 'Sony', 'TriStar Pictures': 'Sony',
+  'Paramount Pictures': 'Paramount',
+  'Lionsgate': 'Lionsgate',
+  'MGM': 'MGM',
+  'A24': 'A24', 'Miramax': 'Miramax',
+  'Netflix': 'Netflix', 'Amazon Studios': 'Amazon', 'Apple Original Films': 'Apple',
+  'StudioCanal': 'StudioCanal',
+};
+
 export function evaluateTilesLocal(guessed, target) {
   const eq = (a, b) => (a != null && b != null && a === b) ? 'green' : 'red';
 
@@ -165,7 +188,6 @@ export function evaluateTilesLocal(guessed, target) {
   }
 
   // Supporting actor: also yellow if guessed supporting actor is target's lead
-  // (they're in that film, just in a different billed role)
   function supportActorColor(guessedActor, targetActor) {
     if (!guessedActor || !targetActor) return 'red';
     if (guessedActor === targetActor) return 'green';
@@ -176,7 +198,7 @@ export function evaluateTilesLocal(guessed, target) {
   const leadColor    = actorColor(guessed.lead_actor, target.lead_actor);
   const supportColor = supportActorColor(guessed.supporting_actor, target.supporting_actor);
 
-  // Superhero universe: green = same universe; yellow = same publisher but different universe; red otherwise
+  // Superhero universe: green = same; yellow = same publisher; red = different
   const universeColor = (() => {
     const gu = guessed.superhero_universe;
     const tu = target.superhero_universe;
@@ -187,27 +209,39 @@ export function evaluateTilesLocal(guessed, target) {
     return 'red';
   })();
 
+  // Production studio: green = exact match; yellow = same parent; red = different
+  const studioColor = (() => {
+    const gs = guessed.production_studio;
+    const ts = target.production_studio;
+    if (!gs || !ts) return 'red';
+    if (gs === ts) return 'green';
+    if (PRODUCTION_STUDIO_PARENT_FE[gs] && PRODUCTION_STUDIO_PARENT_FE[gs] === PRODUCTION_STUDIO_PARENT_FE[ts]) return 'yellow';
+    return 'red';
+  })();
+
   const tiles = {
-    // ── Standard / Most Popular / Indian Cinema ───────────────────
-    genre:            compareGenres(guessed.genres, target.genres),
-    director:         eq(guessed.director, target.director),
-    lead_actor:       leadColor,
-    supporting_actor: supportColor,
-    language:         eq(guessed.primary_language, target.primary_language),
+    // ── Most Popular (top250) ─────────────────────────────────────
+    genre:              compareGenres(guessed.genres, target.genres),
+    director:           eq(guessed.director, target.director),
+    lead_actor:         leadColor,
+    supporting_actor:   supportColor,
+    production_studio:  studioColor,
+    // ── Indian Cinema ─────────────────────────────────────────────
+    language:           eq(guessed.primary_language, target.primary_language),
     // ── Animated ─────────────────────────────────────────────────
-    animation_style:  eq(guessed.animation_style,  target.animation_style),
-    animation_studio: eq(guessed.animation_studio, target.animation_studio),
-    has_sequel:       eq(guessed.has_sequel,        target.has_sequel),
-    protagonist_type: eq(guessed.protagonist_type,  target.protagonist_type),
-    is_musical:       eq(guessed.is_musical,        target.is_musical),
+    animation_style:    eq(guessed.animation_style,  target.animation_style),
+    animation_studio:   eq(guessed.animation_studio, target.animation_studio),
+    has_sequel:         eq(guessed.has_sequel,        target.has_sequel),
+    protagonist_type:   eq(guessed.protagonist_type,  target.protagonist_type),
+    is_musical:         eq(guessed.is_musical,        target.is_musical),
     // ── Superhero ────────────────────────────────────────────────
     superhero_universe: universeColor,
     hero_villain_focus: eq(guessed.hero_villain_focus, target.hero_villain_focus),
     solo_or_team:       eq(guessed.solo_or_team,       target.solo_or_team),
     superpower_type:    eq(guessed.superpower_type,    target.superpower_type),
     // ── Shared ───────────────────────────────────────────────────
-    year:        compareYear(guessed.year, target.year),
-    _targetYear: target.year,
+    year:               compareYear(guessed.year, target.year),
+    _targetYear:        target.year,
   };
   return tiles;
 }

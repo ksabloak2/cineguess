@@ -65,7 +65,8 @@ async function getDailyState(req, res) {
       `SELECT dp.id, m.id AS movie_id, m.tmdb_id, m.title, m.year,
               m.genres, m.director, m.primary_language,
               m.lead_actor, m.supporting_actor, m.popular_quote, m.poster_path, m.imdb_id,
-              m.ai_hint_quote, m.backdrop_paths, m.music_hint_song, m.music_hint_singers
+              m.ai_hint_quote, m.backdrop_paths, m.music_hint_song, m.music_hint_singers,
+              m.production_studio
        FROM daily_picks dp
        JOIN movies m ON m.id = dp.movie_id
        WHERE dp.category = $1 AND dp.pick_date::date = $2`,
@@ -141,7 +142,8 @@ async function getMoviePool(req, res) {
               primary_language, lead_actor, supporting_actor, cast_list, cast_profiles, popular_quote,
               ai_hint_quote, backdrop_paths, music_hint_song, music_hint_singers,
               animation_style, animation_studio, has_sequel, protagonist_type, is_musical,
-              superhero_universe, superhero_publisher, hero_villain_focus, solo_or_team, superpower_type
+              superhero_universe, superhero_publisher, hero_villain_focus, solo_or_team, superpower_type,
+              production_studio
        FROM movies
        WHERE $1 = ANY(categories)
        ORDER BY popularity DESC`,
@@ -302,6 +304,7 @@ async function submitGuess(req, res) {
         primary_language:    guessed.primary_language,
         lead_actor:          guessed.lead_actor,
         supporting_actor:    guessed.supporting_actor,
+        production_studio:   guessed.production_studio,
         // animated fields
         animation_style:     guessed.animation_style,
         animation_studio:    guessed.animation_studio,
@@ -575,6 +578,50 @@ async function getYearCalendar(req, res) {
   }
 }
 
+// ── Production studio parent-company map (for yellow "same conglomerate" logic) ─
+// Green = exact studio name match. Yellow = same parent company. Red = different.
+const PRODUCTION_STUDIO_PARENT = {
+  // Disney / Buena Vista
+  'Walt Disney Pictures':     'Disney',
+  'Pixar Animation Studios':  'Disney',
+  'Marvel Studios':           'Disney',
+  'Lucasfilm':                'Disney',
+  '20th Century Studios':     'Disney',
+  'Searchlight Pictures':     'Disney',
+  'Touchstone Pictures':      'Disney',
+  'Blue Sky Studios':         'Disney',
+  // Universal / Comcast
+  'Universal Pictures':       'Universal',
+  'Amblin Entertainment':     'Universal',
+  'DreamWorks':               'Universal',
+  'Working Title Films':      'Universal',
+  'Focus Features':           'Universal',
+  'Blumhouse Productions':    'Universal',
+  'Illumination':             'Universal',
+  // Warner Bros. / Discovery
+  'Warner Bros.':             'Warner Bros.',
+  'New Line Cinema':          'Warner Bros.',
+  'Castle Rock Entertainment':'Warner Bros.',
+  'Village Roadshow':         'Warner Bros.',
+  'Legendary Entertainment':  'Warner Bros.',
+  // Sony
+  'Columbia Pictures':        'Sony',
+  'TriStar Pictures':         'Sony',
+  // Paramount
+  'Paramount Pictures':       'Paramount',
+  // Lionsgate
+  'Lionsgate':                'Lionsgate',
+  // MGM / Amazon
+  'MGM':                      'MGM',
+  // Standalone / Indie
+  'A24':                      'A24',
+  'Miramax':                  'Miramax',
+  'Netflix':                  'Netflix',
+  'Amazon Studios':           'Amazon',
+  'Apple Original Films':     'Apple',
+  'StudioCanal':              'StudioCanal',
+};
+
 // ---------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------
@@ -583,7 +630,7 @@ function evaluateTiles(guessed, target, category) {
   if (category === 'superhero') return evaluateSuperheroTiles(guessed, target);
   if (category === 'indiancinema') return evaluateIndianCinemaTiles(guessed, target);
 
-  // Default (top250 / "Most Popular") — Genre, Director, Lead Actor, Supporting Actor, Year, Language
+  // Default (top250 / "Most Popular") — Genre, Director, Lead Actor, Supporting Actor, Year, Studio
   const tCast = Array.isArray(target.cast_list) ? target.cast_list : [];
 
   const gLead = guessed.lead_actor;
@@ -607,14 +654,26 @@ function evaluateTiles(guessed, target, category) {
     ) supportColor = 'yellow';
   }
 
+  // Studio: green = same studio, yellow = same parent conglomerate, red = different
+  const gStudio = guessed.production_studio;
+  const tStudio = target.production_studio;
+  let studioColor = 'red';
+  if (gStudio && tStudio) {
+    if (gStudio === tStudio) studioColor = 'green';
+    else if (
+      PRODUCTION_STUDIO_PARENT[gStudio] &&
+      PRODUCTION_STUDIO_PARENT[gStudio] === PRODUCTION_STUDIO_PARENT[tStudio]
+    ) studioColor = 'yellow';
+  }
+
   return {
-    genre:             compareGenres(guessed.genres, target.genres),
-    director:          guessed.director === target.director ? 'green' : 'red',
-    lead_actor:        leadColor,
-    supporting_actor:  supportColor,
-    year:              compareYear(guessed.year, target.year),
-    language:          guessed.primary_language === target.primary_language ? 'green' : 'red',
-    _targetYear:       target.year,
+    genre:              compareGenres(guessed.genres, target.genres),
+    director:           guessed.director === target.director ? 'green' : 'red',
+    lead_actor:         leadColor,
+    supporting_actor:   supportColor,
+    year:               compareYear(guessed.year, target.year),
+    production_studio:  studioColor,
+    _targetYear:        target.year,
   };
 }
 
