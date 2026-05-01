@@ -374,11 +374,26 @@ function hashInt(n) {
 /**
  * Build the emoji share string (like Wordle).
  */
+// Hint costs (mirrors backend + ResultModal)
+const SHARE_HINT_COSTS = {
+  top250:       [1, 3, 4],
+  superhero:    [3, 4],
+  animated:     [3, 4],
+  indiancinema: [1, 2, 3, 4],
+};
+
 export function buildShareString(category, guessResults, won, username, hintsRevealedCount = 0) {
   const catLabel  = CATEGORIES.find((c) => c.id === category)?.label || category;
   const maxG      = getMaxGuesses(category);
   const score     = won ? `${guessResults.length}/${maxG}` : `X/${maxG}`;
   const today     = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+  // Calculate points earned
+  const costs    = SHARE_HINT_COSTS[category] || [1, 3, 4];
+  const hintCost = costs.slice(0, hintsRevealedCount).reduce((s, c) => s + c, 0);
+  const misses   = won ? Math.max(0, guessResults.length - 1) : guessResults.length;
+  const bonus    = hintsRevealedCount === 0 && won ? 3 : 0;
+  const pts      = won ? Math.max(0, 20 - hintCost - misses + bonus) : 0;
 
   const emojiMap = {
     green:  '🟩',
@@ -405,7 +420,7 @@ export function buildShareString(category, guessResults, won, username, hintsRev
     '',
     ...rows,
     '',
-    `💡 Hints used: ${hintsRevealedCount}`,
+    won ? `⭐ ${pts}pts earned` : `💀 0pts`,
     '',
     'cineguessit.com',
   ].join('\n');

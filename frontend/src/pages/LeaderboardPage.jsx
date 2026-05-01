@@ -1,13 +1,31 @@
 import { useEffect, useState } from 'react';
 import { getLeaderboard } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 
-const CATEGORY_TABS = [
+const DAILY_TABS = [
   { id: null,           label: 'Global',        emoji: '🌍' },
   { id: 'top250',       label: 'Most Popular',   emoji: '🏆' },
   { id: 'superhero',    label: 'Superheroes',    emoji: '🦸' },
   { id: 'animated',     label: 'Animated',       emoji: '🎨' },
   { id: 'indiancinema', label: 'Indian Cinema',  emoji: '🎬' },
 ];
+
+const UNLIMITED_TABS = [
+  { id: 'unlimited_top250',       label: 'Most Popular',  emoji: '🏆' },
+  { id: 'unlimited_superhero',    label: 'Superheroes',   emoji: '🦸' },
+  { id: 'unlimited_animated',     label: 'Animated',      emoji: '🎨' },
+  { id: 'unlimited_indiancinema', label: 'Indian Cinema', emoji: '🎬' },
+];
+
+// Mask a username: show first 4 chars + "•••" for the rest.
+// If the name is ≤4 chars, show the first 2 + "•••".
+// The viewer's own username is never masked.
+function maskUsername(username, ownUsername) {
+  if (!username) return '';
+  if (ownUsername && username === ownUsername) return username; // own name always visible
+  const show = Math.min(4, Math.max(2, Math.floor(username.length * 0.5)));
+  return username.slice(0, show) + '•••';
+}
 
 function StatusBadge({ status }) {
   if (status === 'cinephile') {
@@ -26,7 +44,6 @@ function StatusBadge({ status }) {
           fontWeight:    900,
           letterSpacing: '0.14em',
           textTransform: 'uppercase',
-          background:    'linear-gradient(90deg, #c084fc, #F3CE13, #c084fc)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor:  'transparent',
           flexShrink:    0,
@@ -81,27 +98,38 @@ function RankBadge({ rank }) {
 }
 
 export default function LeaderboardPage() {
-  const [activeTab, setActiveTab] = useState(null); // null = global
-  const [rows, setRows]           = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState(null);
+  const { profile } = useAuth();
+  const ownUsername  = profile?.username || null;
+
+  const [leaderMode, setLeaderMode] = useState('daily'); // 'daily' | 'unlimited'
+  const [activeTab, setActiveTab]   = useState(null);    // null = global (daily only)
+  const [unlimitedTab, setUnlimitedTab] = useState('unlimited_top250');
+  const [rows, setRows]             = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState(null);
+
+  // Derive the actual category to fetch
+  const fetchCategory = leaderMode === 'unlimited' ? unlimitedTab : activeTab;
 
   useEffect(() => {
     setLoading(true);
     setError(null);
-    getLeaderboard(activeTab)
+    getLeaderboard(fetchCategory)
       .then((data) => {
         setRows(Array.isArray(data) ? data : []);
         setLoading(false);
       })
-      .catch((err) => {
+      .catch(() => {
         setError('Could not load leaderboard. Please try again.');
         setLoading(false);
       });
-  }, [activeTab]);
+  }, [fetchCategory]);
+
+  const isUnlimitedMode = leaderMode === 'unlimited';
+  const tabs = isUnlimitedMode ? UNLIMITED_TABS : DAILY_TABS;
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in pb-4">
       {/* Page header */}
       <div className="text-center">
         <h1
@@ -120,38 +148,53 @@ export default function LeaderboardPage() {
         className="flex gap-1 p-1 rounded-xl overflow-x-auto scrollbar-hide"
         style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
       >
-        {CATEGORY_TABS.map((tab) => (
-          <button
-            key={String(tab.id)}
-            onClick={() => setActiveTab(tab.id)}
-            className="flex-shrink-0 flex items-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all"
-            style={activeTab === tab.id ? {
-              background: 'rgba(243,206,19,0.15)',
-              color:      '#F3CE13',
-              border:     '1px solid rgba(243,206,19,0.30)',
-            } : {
-              color:  'rgba(156,163,175,1)',
-              border: '1px solid transparent',
-            }}
-          >
-            <span>{tab.emoji}</span>
-            <span>{tab.label}</span>
-          </button>
-        ))}
+        {tabs.map((tab) => {
+          const isActive = isUnlimitedMode ? unlimitedTab === tab.id : activeTab === tab.id;
+          return (
+            <button
+              key={String(tab.id)}
+              onClick={() => isUnlimitedMode ? setUnlimitedTab(tab.id) : setActiveTab(tab.id)}
+              className="flex-shrink-0 flex items-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all"
+              style={isActive ? {
+                background: isUnlimitedMode ? 'rgba(168,85,247,0.15)' : 'rgba(243,206,19,0.15)',
+                color:      isUnlimitedMode ? '#c084fc' : '#F3CE13',
+                border:     `1px solid ${isUnlimitedMode ? 'rgba(168,85,247,0.30)' : 'rgba(243,206,19,0.30)'}`,
+              } : {
+                color:  'rgba(156,163,175,1)',
+                border: '1px solid transparent',
+              }}
+            >
+              <span>{tab.emoji}</span>
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Column headers */}
       {!loading && !error && rows.length > 0 && (
-        <div
-          className="grid text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold text-gray-600 px-3 py-1"
-          style={{ gridTemplateColumns: '2.5rem 1fr 5rem 5rem 6rem' }}
-        >
-          <span className="text-center">Rank</span>
-          <span>Player</span>
-          <span className="text-center">🔥 Streak</span>
-          <span className="text-center">Avg Score</span>
-          <span className="text-center">Global Rating</span>
-        </div>
+        isUnlimitedMode ? (
+          <div
+            className="grid text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold text-gray-600 px-3 py-1"
+            style={{ gridTemplateColumns: '2.5rem 1fr 5rem 5rem' }}
+          >
+            <span className="text-center">Rank</span>
+            <span>Player</span>
+            <span className="text-center">🔥 Streak</span>
+            <span className="text-center">Best</span>
+          </div>
+        ) : (
+          <div
+            className="grid text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold text-gray-600 px-3 py-1"
+            style={{ gridTemplateColumns: '2.5rem 1fr 5rem 5rem 6rem' }}
+          >
+            <span className="text-center">Rank</span>
+            <span>Player</span>
+            <span className="text-center">🔥 Streak</span>
+            <span className="text-center">Avg Score</span>
+            <span className="text-center">Global Rating</span>
+          </div>
+        )
       )}
 
       {/* Table */}
@@ -163,13 +206,62 @@ export default function LeaderboardPage() {
         <div className="text-center py-8 text-red-400 text-sm">{error}</div>
       ) : rows.length === 0 ? (
         <div className="text-center py-12 text-gray-500 text-sm">
-          No players ranked yet — play daily games to appear here!
+          No players ranked yet — play {isUnlimitedMode ? 'unlimited' : 'daily'} games to appear here!
         </div>
       ) : (
         <div className="space-y-1.5">
           {rows.map((row, idx) => {
-            const rank = idx + 1;
-            return (
+            const rank        = idx + 1;
+            const displayName = maskUsername(row.username, ownUsername);
+            const isOwn       = ownUsername && row.username === ownUsername;
+
+            return isUnlimitedMode ? (
+              /* ── Unlimited row (streak only) ── */
+              <div
+                key={row.username}
+                className="grid items-center gap-2 px-3 py-2.5 rounded-xl transition-all"
+                style={{
+                  gridTemplateColumns: '2.5rem 1fr 5rem 5rem',
+                  background: rank <= 3
+                    ? 'rgba(168,85,247,0.06)'
+                    : 'rgba(255,255,255,0.03)',
+                  border: rank <= 3
+                    ? '1px solid rgba(168,85,247,0.18)'
+                    : '1px solid rgba(255,255,255,0.06)',
+                }}
+              >
+                <div className="flex justify-center">
+                  <RankBadge rank={rank} />
+                </div>
+                <div className="flex items-center gap-2 min-w-0">
+                  <span
+                    className="font-semibold text-sm truncate"
+                    style={{
+                      color: isOwn ? '#c084fc' : rank === 1 ? '#c084fc' : rank <= 3 ? '#e5e7eb' : 'white',
+                      fontStyle: !isOwn && displayName !== row.username ? 'normal' : 'normal',
+                    }}
+                    title={isOwn ? row.username : undefined}
+                  >
+                    {displayName}
+                    {isOwn && (
+                      <span className="ml-1 text-[9px] text-purple-400 font-normal opacity-70">you</span>
+                    )}
+                  </span>
+                  {row.status && <StatusBadge status={row.status} />}
+                </div>
+                <div className="text-center">
+                  <span className="text-sm font-bold text-purple-400">
+                    {row.current_streak ?? 0}
+                  </span>
+                </div>
+                <div className="text-center">
+                  <span className="text-sm text-gray-400">
+                    {row.longest_streak ?? 0}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              /* ── Daily row (full rating) ── */
               <div
                 key={row.username}
                 className="grid items-center gap-2 px-3 py-2.5 rounded-xl transition-all"
@@ -183,37 +275,34 @@ export default function LeaderboardPage() {
                     : '1px solid rgba(255,255,255,0.06)',
                 }}
               >
-                {/* Rank */}
                 <div className="flex justify-center">
                   <RankBadge rank={rank} />
                 </div>
-
-                {/* Username + badge */}
                 <div className="flex items-center gap-2 min-w-0">
                   <span
-                    className="font-semibold text-white text-sm truncate"
-                    style={rank === 1 ? { color: '#F3CE13' } : rank <= 3 ? { color: '#e5e7eb' } : {}}
+                    className="font-semibold text-sm truncate"
+                    style={{
+                      color: isOwn ? '#F3CE13' : rank === 1 ? '#F3CE13' : rank <= 3 ? '#e5e7eb' : 'white',
+                    }}
+                    title={isOwn ? row.username : undefined}
                   >
-                    {row.username}
+                    {displayName}
+                    {isOwn && (
+                      <span className="ml-1 text-[9px] text-accent font-normal opacity-70">you</span>
+                    )}
                   </span>
                   {row.status && <StatusBadge status={row.status} />}
                 </div>
-
-                {/* Streak */}
                 <div className="text-center">
                   <span className="text-sm font-bold text-orange-400">
                     🔥 {row.current_streak ?? 0}
                   </span>
                 </div>
-
-                {/* Avg score */}
                 <div className="text-center">
                   <span className="text-sm text-gray-300">
                     {row.avg_score != null ? Number(row.avg_score).toFixed(1) : '—'}
                   </span>
                 </div>
-
-                {/* Global rating */}
                 <div className="text-center">
                   <span
                     className="text-sm font-bold"
@@ -233,9 +322,54 @@ export default function LeaderboardPage() {
         className="rounded-xl p-3 text-center"
         style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
       >
-        <p className="text-[10px] text-gray-600 leading-relaxed">
-          Global Rating = (Streak × 10) + Avg Score + (No-hint wins in streak × 5)
-        </p>
+        {isUnlimitedMode ? (
+          <p className="text-[10px] text-gray-600 leading-relaxed">
+            Unlimited ranking = Current Streak → Best Streak (tiebreaker)
+          </p>
+        ) : (
+          <p className="text-[10px] text-gray-600 leading-relaxed">
+            Global Rating = (Streak × 10) + Avg Score + (No-hint wins in streak × 5)
+          </p>
+        )}
+      </div>
+
+      {/* Daily / Unlimited toggle — bottom (mirrors Navbar ModeToggle style) */}
+      <div className="flex justify-center pt-1">
+        <div
+          className="relative flex rounded-full w-56 sm:w-64"
+          style={{
+            background: 'rgba(255,255,255,0.05)',
+            border:     '1px solid rgba(255,255,255,0.09)',
+            padding:    '3px',
+          }}
+        >
+          {/* Sliding pill */}
+          <div
+            className="absolute inset-[3px] w-1/2 rounded-full transition-all duration-200"
+            style={{
+              transform:  leaderMode === 'unlimited' ? 'translateX(100%)' : 'translateX(0)',
+              background: leaderMode === 'unlimited' ? 'rgba(168,85,247,0.20)' : 'rgba(243,206,19,0.14)',
+              border:     `1px solid ${leaderMode === 'unlimited' ? 'rgba(168,85,247,0.40)' : 'rgba(243,206,19,0.35)'}`,
+              boxShadow:  leaderMode === 'unlimited' ? '0 0 16px rgba(168,85,247,0.20)' : '0 0 16px rgba(243,206,19,0.14)',
+            }}
+          />
+          <button
+            onClick={() => { setLeaderMode('daily'); setActiveTab(null); }}
+            className="relative z-10 flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-colors duration-200 select-none"
+            style={{ color: leaderMode === 'daily' ? '#F3CE13' : 'rgba(255,255,255,0.38)' }}
+          >
+            <span>📅</span>
+            <span>Daily</span>
+          </button>
+          <button
+            onClick={() => setLeaderMode('unlimited')}
+            className="relative z-10 flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-colors duration-200 select-none"
+            style={{ color: leaderMode === 'unlimited' ? '#c084fc' : 'rgba(255,255,255,0.38)' }}
+          >
+            <span>∞</span>
+            <span>Unlimited</span>
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ const logger = require('../utils/logger');
 // categories. The legacy value is still accepted so old clients / streaks
 // don't explode mid-deploy; new code should not send it.
 const VALID_CATEGORIES = ['top250', 'superhero', 'animated', 'indiancinema'];
+const VALID_UNLIMITED_CATEGORIES = ['unlimited_top250', 'unlimited_superhero', 'unlimited_animated', 'unlimited_indiancinema'];
 const LEGACY_UNLIMITED = 'unlimited';
 
 // ── Hint point costs per category (in unlock order) ─────────────────────────
@@ -1029,7 +1030,21 @@ async function getLeaderboard(req, res) {
 
   try {
     let rows;
-    if (category && VALID_CATEGORIES.includes(category)) {
+    if (category && VALID_UNLIMITED_CATEGORIES.includes(category)) {
+      // Unlimited per-category leaderboard — streak only (no scoring in unlimited)
+      const result = await client.query(`
+        SELECT
+          u.username,
+          s.current_streak,
+          s.longest_streak
+        FROM users u
+        JOIN streaks s ON s.user_id = u.id AND s.category = $1
+        WHERE s.current_streak > 0
+        ORDER BY s.current_streak DESC, s.longest_streak DESC
+        LIMIT 10
+      `, [category]);
+      rows = result.rows;
+    } else if (category && VALID_CATEGORIES.includes(category)) {
       // Per-category leaderboard
       const result = await client.query(`
         SELECT

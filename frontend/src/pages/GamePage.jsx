@@ -103,7 +103,7 @@ export default function GamePage() {
 
   // ── Recalculate potentialScore whenever guessResults or hintsRevealedCount changes ──
   useEffect(() => {
-    if (gameOver || isUnlimited) return;
+    if (gameOver) return;
     const costs    = HINT_COSTS_FE[category] || [1, 3, 4];
     const hintCost = costs.slice(0, hintsRevealedCount).reduce((s, c) => s + c, 0);
     const misses   = guessResults.length;
@@ -730,8 +730,8 @@ export default function GamePage() {
         </div>
       )}
 
-      {/* Potential points counter — daily non-game-over only */}
-      {!gameOver && !isUnlimited && (
+      {/* Potential points counter — any mode, non-game-over */}
+      {!gameOver && (
         <div className="flex justify-center">
           <div
             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"

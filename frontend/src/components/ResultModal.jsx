@@ -143,8 +143,8 @@ export default function ResultModal({
               >
                 {won ? 'You got it!' : 'Better luck next time'}
               </h2>
-              {/* Score breakdown toggle — only for won daily games */}
-              {won && !isUnlimited && (
+              {/* Score breakdown toggle — won games in any mode */}
+              {won && (
                 <button
                   onClick={() => setShowBreakdown((o) => !o)}
                   title="Score breakdown"
@@ -160,8 +160,8 @@ export default function ResultModal({
               {score} guesses
             </p>
 
-            {/* Point breakdown — collapsible */}
-            {won && !isUnlimited && showBreakdown && (
+            {/* Point breakdown — collapsible, both modes */}
+            {won && showBreakdown && (
               <div
                 className="mt-2 mx-auto max-w-xs rounded-xl px-3 py-2 text-xs text-center animate-fade-in"
                 style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
@@ -268,20 +268,38 @@ export default function ResultModal({
           {/* ── Action button ─────────────────────────────── */}
           <div style={{ animation: 'result-section-in 0.38s ease both', animationDelay: '0.42s' }}>
           {isUnlimited ? (
-            <button
-              onClick={() => { onClose(); onNewRound?.(); }}
-              className="w-full py-3 rounded-xl font-bold text-sm tracking-wide
-                         flex items-center justify-center gap-2 transition-all duration-300
-                         bg-purple-500/15 text-purple-300 hover:text-white
-                         border border-purple-500/25 hover:border-purple-400/40
-                         hover:bg-purple-500/25"
-              style={{ boxShadow: '0 0 0 rgba(168,85,247,0)' }}
-              onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 0 24px rgba(168,85,247,0.25)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 0 0 rgba(168,85,247,0)'; }}
-            >
-              <span className="text-base leading-none">↻</span>
-              Play again
-            </button>
+            <div className="space-y-2">
+              <button
+                onClick={() => { onClose(); onNewRound?.(); }}
+                className="w-full py-3 rounded-xl font-bold text-sm tracking-wide
+                           flex items-center justify-center gap-2 transition-all duration-300
+                           bg-purple-500/15 text-purple-300 hover:text-white
+                           border border-purple-500/25 hover:border-purple-400/40
+                           hover:bg-purple-500/25"
+                style={{ boxShadow: '0 0 0 rgba(168,85,247,0)' }}
+                onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 0 24px rgba(168,85,247,0.25)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 0 0 rgba(168,85,247,0)'; }}
+              >
+                <span className="text-base leading-none">↻</span>
+                Play again
+              </button>
+              <button
+                onClick={() => setShareOpen((o) => !o)}
+                className="w-full py-2.5 rounded-xl font-semibold text-sm tracking-wide
+                           flex items-center justify-center gap-2 transition-all duration-300
+                           text-gray-400 hover:text-white"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
+                    d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+                Share result
+              </button>
+              {shareOpen && <SharePanel shareText={shareText} />}
+            </div>
           ) : (
             <div className="space-y-2">
               <button
