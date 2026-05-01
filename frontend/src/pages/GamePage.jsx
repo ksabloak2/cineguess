@@ -4,12 +4,13 @@ import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
 import {
   getMoviePool, getDailyState, submitGuess, checkGuess, getResult,
-  submitUnlimitedResult, getStreaks,
+  submitUnlimitedResult, getStreaks, tmdbImage,
 } from '../utils/api';
 import {
   CATEGORIES, MAX_GUESSES, getMaxGuesses, evaluateTilesLocal, getHints,
   saveGuestState, loadGuestState, saveGuestStreak, loadGuestStreak,
   saveDailyState, loadDailyState, clearStaleDailyStates,
+  saveUnlimitedState, loadUnlimitedState, clearUnlimitedState,
   slugToCategory,
 } from '../utils/gameLogic';
 import MovieSearch from '../components/MovieSearch';
@@ -84,6 +85,17 @@ export default function GamePage() {
   // Daily streak — lifted here so handleGuess can update it immediately on win.
   const [dailyStreak, setDailyStreak] = useState({ current: 0, best: 0 });
 
+  // ── Eastern date for new-day detection (tab kept open overnight) ──────────
+  // When the date changes, we include it in combinedKey so the init effect
+  // re-runs and loads the fresh daily pick even without a page refresh.
+  const [currentDate, setCurrentDate] = useState(() =>
+    new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
+  );
+  // Auto-retry counter for backend cold-starts (Railway free tier).
+  // Each increment triggers a fresh init attempt without resetting other state.
+  const [reloadTrigger, setReloadTrigger] = useState(0);
+  const retryCountRef = useRef(0); // how many auto-retries have fired this session
+
   const boardRef       = useRef(null);
   // Tracks which mode+category+user combo has already been fully initialised.
   // Prevents re-init (and board-wipe) when React re-runs the effect due to
@@ -132,7 +144,7 @@ export default function GamePage() {
     // mode/category combo (e.g. tab regained focus, session refreshed), skip
     // the wipe-and-reload so the board isn't nuked.
     const userKey    = session?.user?.id || 'guest';
-    const combinedKey = `${mode}_${category}_${userKey}`;
+    const combinedKey = `${mode}_${category}_${userKey}_${currentDate}_${reloadTrigger}`;
     if (hydratedKeyRef.current === combinedKey) return;
     hydratedKeyRef.current = combinedKey;
 
@@ -204,7 +216,7 @@ export default function GamePage() {
         setMovies(pool);
 
         if (isUnlimited) {
-          const saved = loadGuestState(guestKey);
+          const saved = loadUnlimitedState(category);
           if (saved && saved.targetId) {
             const target = pool.find((m) => m.tmdb_id === saved.targetId);
             setTargetMovie(target || null);
@@ -212,7 +224,7 @@ export default function GamePage() {
           } else {
             const target = pool[Math.floor(Math.random() * pool.length)];
             setTargetMovie(target);
-            saveGuestState(guestKey, { targetId: target.tmdb_id, guesses: [] });
+            saveUnlimitedState(category, { targetId: target.tmdb_id, guesses: [], gameOver: false, won: null, hintsRevealedCount: 0, gameOverHintsRevealed: [] });
           }
           setLoading(false);
           return;
@@ -319,9 +331,22 @@ export default function GamePage() {
           setError('No daily movie selected yet. Run the daily pick script to seed today\'s game.');
         } else {
           console.error(err);
-          // If we have a hydrated board from localStorage, don't surface a
-          // scary error — just keep playing offline.
-          if (!hadLocalHydration) setError('Could not load game data. Is the backend running?');
+          // If we have a hydrated board from localStorage, keep playing offline
+          // without surfacing a scary error.
+          if (!hadLocalHydration) {
+            const MAX_AUTO_RETRIES = 2;
+            if (retryCountRef.current < MAX_AUTO_RETRIES) {
+              retryCountRef.current++;
+              setError(`Connecting to server… (attempt ${retryCountRef.current + 1}/${MAX_AUTO_RETRIES + 1})`);
+              // Schedule a retry — incrementing reloadTrigger changes combinedKey
+              // so the guard lets the init run again.
+              setTimeout(() => setReloadTrigger((n) => n + 1), 5000);
+            } else {
+              // All retries exhausted — show actionable error.
+              retryCountRef.current = 0;
+              setError('Could not reach the server. Check your connection and try again.');
+            }
+          }
         }
       } finally {
         setLoading(false);
@@ -329,16 +354,23 @@ export default function GamePage() {
     }
 
     init();
-  }, [mode, category, session]);
+  }, [mode, category, session, currentDate, reloadTrigger]);
 
-  // ── Visibility change: don't refetch when tab regains focus ────
-  // The guarded init above already short-circuits, but we also make the
-  // intent explicit so future maintainers know we rely on the ref-guard.
+  // ── Visibility change: detect new-day when tab regains focus ──────────────
+  // If the user leaves the tab open overnight, the init effect won't re-run
+  // (mode/category/session are unchanged). On visibility gain we check whether
+  // the Eastern date has rolled over. When it has, updating currentDate changes
+  // combinedKey → the guard passes → init re-runs → fresh daily pick loads.
   useEffect(() => {
     function onVisibility() {
-      // No-op on visibility regain. State is already in memory + localStorage.
-      // If the date has rolled over, the stale-sweep on next init will clean
-      // up and the daily route will re-fetch naturally.
+      if (document.visibilityState !== 'visible') return;
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+      setCurrentDate((prev) => {
+        if (prev === today) return prev; // no change — React bails out, no re-render
+        // Date rolled over: reset retry counter so new-day errors retry cleanly.
+        retryCountRef.current = 0;
+        return today;
+      });
     }
     document.addEventListener('visibilitychange', onVisibility);
     return () => document.removeEventListener('visibilitychange', onVisibility);
@@ -375,7 +407,7 @@ export default function GamePage() {
     setShowModal(false);
     setError(null);
     setLatestIndex(-1);
-    saveGuestState(guestKey, { targetId: target.tmdb_id, guesses: [] });
+    saveUnlimitedState(category, { targetId: target.tmdb_id, guesses: [], gameOver: false, won: null, hintsRevealedCount: 0, gameOverHintsRevealed: [] });
   }
 
   async function restoreGuestSession(saved, pool) {
@@ -397,6 +429,9 @@ export default function GamePage() {
       setGameOver(true);
       setWon(lastCorrect);
       setResult(target);
+      // Restore scoring snapshot — the hints the user manually revealed before game ended
+      setGameOverHintsRevealed(saved.gameOverHintsRevealed || []);
+      setHintsRevealedCount(saved.hintsRevealedCount || 0);
       // Fetch post-game hints from server so cast_actor_profile is fresh
       try {
         const pgRes = await checkGuess(target.tmdb_id, target.tmdb_id, 99, category);
@@ -416,6 +451,8 @@ export default function GamePage() {
         mergeHints(getHints(99, target, category), true);
       }
     } else {
+      // Restore hint count for in-progress unlimited game
+      if (saved.hintsRevealedCount) setHintsRevealedCount(saved.hintsRevealedCount);
       updateHints(rows.length, target);
     }
   }
@@ -562,9 +599,15 @@ export default function GamePage() {
       }
 
       if (isUnlimited) {
-        saveGuestState(guestKey, {
+        // Save full state so a page refresh or re-entry restores exactly where we left off.
+        // For game-over: capture the snapshot of user-revealed hints (same as setGameOverHintsRevealed).
+        saveUnlimitedState(category, {
           targetId: targetMovie.tmdb_id,
           guesses: newIds,
+          gameOver: isGameOver,
+          won: isGameOver ? correct : null,
+          hintsRevealedCount: hintsRevealedCount,
+          gameOverHintsRevealed: isGameOver ? [...hintsRevealed] : [],
         });
       } else {
         // Daily: snapshot the full board into localStorage so a refresh /
@@ -733,8 +776,22 @@ export default function GamePage() {
 
       {/* Error banner */}
       {error && (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-sm text-red-400">
-          {error}
+        <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-sm text-red-400 flex items-center justify-between gap-3">
+          <span>{error}</span>
+          {/* Show manual retry button once all auto-retries are exhausted */}
+          {!error.startsWith('Connecting') && (
+            <button
+              onClick={() => {
+                retryCountRef.current = 0;
+                setError(null);
+                hydratedKeyRef.current = null;
+                setReloadTrigger((n) => n + 1);
+              }}
+              className="flex-shrink-0 text-xs underline opacity-70 hover:opacity-100 transition-opacity"
+            >
+              Try again
+            </button>
+          )}
         </div>
       )}
 
@@ -943,6 +1000,37 @@ export default function GamePage() {
               See results
             </button>
           )}
+        </div>
+      )}
+
+      {/* Unlimited: inline movie reveal card — stays visible until user hits New Round */}
+      {gameOver && isUnlimited && result && (
+        <div className="card p-4 animate-bounce-in">
+          <p className="text-[10px] uppercase tracking-widest font-semibold text-gray-600 mb-3 text-center">
+            The answer was
+          </p>
+          <div className="flex items-center gap-4">
+            {result.poster_path && (
+              <img
+                src={tmdbImage(result.poster_path, 'w185')}
+                alt={result.title}
+                className="w-14 h-20 sm:w-16 sm:h-24 object-cover rounded-lg ring-1 ring-white/10 flex-shrink-0"
+              />
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="text-white font-bold text-base sm:text-lg leading-tight">{result.title}</p>
+              {result.year && <p className="text-gray-400 text-sm mt-0.5">{result.year}</p>}
+              {result.genres && (
+                <p className="text-gray-600 text-xs mt-1 truncate">{Array.isArray(result.genres) ? result.genres.join(', ') : result.genres}</p>
+              )}
+              <button
+                onClick={() => setShowModal(true)}
+                className="mt-2.5 inline-flex items-center gap-1 text-xs text-accent font-semibold hover:underline transition-opacity opacity-80 hover:opacity-100"
+              >
+                See full results →
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

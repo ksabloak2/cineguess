@@ -37,11 +37,18 @@ const ALLOWED_ORIGINS = [
   'http://localhost:3001',        // Frame gallery (served by the backend itself)
 ].filter(Boolean);
 
+// All Vercel preview/production deployments for this project follow the pattern
+// cineguess-*.vercel.app (e.g. cineguess-woad.vercel.app, cineguess-abc123-user.vercel.app).
+// Allowing these means every PR preview and the canonical Vercel domain works
+// without having to manually add each URL.
+const VERCEL_PREVIEW_RE = /^https:\/\/cineguess[a-z0-9-]*\.vercel\.app$/i;
+
 app.use(cors({
   origin(origin, callback) {
     // Requests with no Origin (server-to-server, curl, health checks) pass through.
     if (!origin) return callback(null, true);
     if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    if (VERCEL_PREVIEW_RE.test(origin)) return callback(null, true);
     // Reject anything else with a proper CORS error (not a 500).
     callback(Object.assign(new Error(`CORS: origin not allowed — ${origin}`), { status: 403 }));
   },

@@ -516,3 +516,31 @@ export function loadGuestStreak(category) {
     return { current: 0, longest: 0 };
   }
 }
+
+// ---------------------------------------------------------------
+// Unlimited-mode persistent state — permanent key (no date suffix)
+// so the completed round survives page refreshes and re-entries
+// until the user explicitly starts a new round.
+// ---------------------------------------------------------------
+const UNLIMITED_PREFIX = 'cineguess_unlimited_';
+
+export function saveUnlimitedState(category, state) {
+  try {
+    localStorage.setItem(`${UNLIMITED_PREFIX}${category}`, JSON.stringify(state));
+  } catch {}
+}
+
+export function loadUnlimitedState(category) {
+  try {
+    const raw = localStorage.getItem(`${UNLIMITED_PREFIX}${category}`);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearUnlimitedState(category) {
+  try {
+    localStorage.removeItem(`${UNLIMITED_PREFIX}${category}`);
+  } catch {}
+}
