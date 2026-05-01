@@ -283,6 +283,7 @@ export function getTileDisplayValue(field, guessed) {
       };
       return LANG_NAMES[guessed.primary_language] || guessed.primary_language?.toUpperCase() || '?';
     }
+    case 'production_studio': return guessed.production_studio || '?';
     // Actor fields
     case 'lead_actor':       return guessed.lead_actor       || '?';
     case 'supporting_actor': return guessed.supporting_actor || '?';
