@@ -172,7 +172,7 @@ export default function LeaderboardPage() {
   const tabs = isUnlimitedMode ? UNLIMITED_TABS : DAILY_TABS;
 
   return (
-    <div className="space-y-6 animate-fade-in pb-4">
+    <div className="space-y-4 animate-fade-in pb-4">
       {/* Page header */}
       <div className="text-center">
         <h1
@@ -184,6 +184,44 @@ export default function LeaderboardPage() {
         <p className="text-gray-500 text-xs sm:text-sm mt-1">
           Top 10 players ranked by Global Rating
         </p>
+      </div>
+
+      {/* Daily / Unlimited leaderboard toggle — top, controls which board you're viewing */}
+      <div className="flex justify-center">
+        <div
+          className="relative flex rounded-full w-56 sm:w-64"
+          style={{
+            background: 'rgba(255,255,255,0.05)',
+            border:     '1px solid rgba(255,255,255,0.09)',
+            padding:    '3px',
+          }}
+        >
+          <div
+            className="absolute inset-[3px] w-1/2 rounded-full transition-all duration-200"
+            style={{
+              transform:  leaderMode === 'unlimited' ? 'translateX(100%)' : 'translateX(0)',
+              background: leaderMode === 'unlimited' ? 'rgba(168,85,247,0.20)' : 'rgba(243,206,19,0.14)',
+              border:     `1px solid ${leaderMode === 'unlimited' ? 'rgba(168,85,247,0.40)' : 'rgba(243,206,19,0.35)'}`,
+              boxShadow:  leaderMode === 'unlimited' ? '0 0 16px rgba(168,85,247,0.20)' : '0 0 16px rgba(243,206,19,0.14)',
+            }}
+          />
+          <button
+            onClick={() => { setLeaderMode('daily'); setActiveTab(null); }}
+            className="relative z-10 flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-colors duration-200 select-none"
+            style={{ color: leaderMode === 'daily' ? '#F3CE13' : 'rgba(255,255,255,0.38)' }}
+          >
+            <span>📅</span>
+            <span>Daily</span>
+          </button>
+          <button
+            onClick={() => setLeaderMode('unlimited')}
+            className="relative z-10 flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-colors duration-200 select-none"
+            style={{ color: leaderMode === 'unlimited' ? '#c084fc' : 'rgba(255,255,255,0.38)' }}
+          >
+            <span>∞</span>
+            <span>Unlimited</span>
+          </button>
+        </div>
       </div>
 
       {/* Category tabs */}
@@ -372,44 +410,6 @@ export default function LeaderboardPage() {
         <p className="text-[9px] text-gray-700 mt-1">
           🔒 Tap a name to reveal · Add friends to see full usernames
         </p>
-      </div>
-
-      {/* Daily / Unlimited toggle — bottom */}
-      <div className="flex justify-center pt-1">
-        <div
-          className="relative flex rounded-full w-56 sm:w-64"
-          style={{
-            background: 'rgba(255,255,255,0.05)',
-            border:     '1px solid rgba(255,255,255,0.09)',
-            padding:    '3px',
-          }}
-        >
-          <div
-            className="absolute inset-[3px] w-1/2 rounded-full transition-all duration-200"
-            style={{
-              transform:  leaderMode === 'unlimited' ? 'translateX(100%)' : 'translateX(0)',
-              background: leaderMode === 'unlimited' ? 'rgba(168,85,247,0.20)' : 'rgba(243,206,19,0.14)',
-              border:     `1px solid ${leaderMode === 'unlimited' ? 'rgba(168,85,247,0.40)' : 'rgba(243,206,19,0.35)'}`,
-              boxShadow:  leaderMode === 'unlimited' ? '0 0 16px rgba(168,85,247,0.20)' : '0 0 16px rgba(243,206,19,0.14)',
-            }}
-          />
-          <button
-            onClick={() => { setLeaderMode('daily'); setActiveTab(null); }}
-            className="relative z-10 flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-colors duration-200 select-none"
-            style={{ color: leaderMode === 'daily' ? '#F3CE13' : 'rgba(255,255,255,0.38)' }}
-          >
-            <span>📅</span>
-            <span>Daily</span>
-          </button>
-          <button
-            onClick={() => setLeaderMode('unlimited')}
-            className="relative z-10 flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-colors duration-200 select-none"
-            style={{ color: leaderMode === 'unlimited' ? '#c084fc' : 'rgba(255,255,255,0.38)' }}
-          >
-            <span>∞</span>
-            <span>Unlimited</span>
-          </button>
-        </div>
       </div>
 
       {/* Mobile name toast */}

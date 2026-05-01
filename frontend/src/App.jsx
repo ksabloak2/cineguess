@@ -39,7 +39,7 @@ function MobileFooterToggle() {
 
   // Show on game pages, hub pages, and secondary pages on mobile
   const isHub = pathname === '/daily' || pathname === '/unlimited';
-  const isSecondary = pathname === '/friends' || pathname === '/profile';
+  const isSecondary = pathname === '/friends' || pathname === '/profile' || pathname === '/leaderboard';
   if (!inGame && !isHub && !isSecondary) return null;
 
   return (
