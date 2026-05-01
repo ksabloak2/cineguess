@@ -71,6 +71,9 @@ export default function GamePage() {
   const [showHintModal, setShowHintModal] = useState(false);
   const [latestHintType, setLatestHintType] = useState(null);
   const [newHintAvailable, setNewHintAvailable] = useState(false);
+  // Snapshot of hints the user manually revealed BEFORE the post-game auto-reveal.
+  // Used for scoring so post-game hints never inflate the deduction.
+  const [gameOverHintsRevealed, setGameOverHintsRevealed] = useState([]);
   const [showModal, setShowModal]         = useState(false);
   const [showRules, setShowRules]         = useState(false);
   const [loading, setLoading]             = useState(true);
@@ -142,6 +145,7 @@ export default function GamePage() {
     setHintsUnlocked([]);
     setHintsRevealed([]);
     setHintsRevealedCount(0);
+    setGameOverHintsRevealed([]);
     setPotentialScore(20);
     setShowHintModal(false);
     setLatestHintType(null);
@@ -363,6 +367,7 @@ export default function GamePage() {
     setHintsUnlocked([]);
     setHintsRevealed([]);
     setHintsRevealedCount(0);
+    setGameOverHintsRevealed([]);
     setPotentialScore(20);
     setShowHintModal(false);
     setLatestHintType(null);
@@ -463,6 +468,10 @@ export default function GamePage() {
       if (isGameOver) {
         setGameOver(true);
         setWon(correct);
+        // Capture ONLY the hints the user manually revealed before game end.
+        // mergeHints(suppress=true) later overwrites hintsRevealed with post-game
+        // auto-revealed hints — we must snapshot here to keep scoring correct.
+        setGameOverHintsRevealed([...hintsRevealed]);
 
         if (isUnlimited) {
           if (session) {
@@ -957,7 +966,7 @@ export default function GamePage() {
           isUnlimited={isUnlimited}
           onNewRound={startUnlimitedRound}
           hintsRevealedCount={hintsRevealedCount}
-          hintsRevealed={hintsRevealed}
+          hintsRevealed={gameOverHintsRevealed}
         />
       )}
 

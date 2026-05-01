@@ -66,13 +66,10 @@ export default function ResultModal({
 
   const score = won ? `${guessResults.length}/${getMaxGuesses(category)}` : `X/${getMaxGuesses(category)}`;
 
-  // Type-specific hint cost — cast member always 1pt, logline 3pt, etc.
+  // hintsRevealed is the pre-game-over snapshot — only what the user manually clicked.
+  // Post-game auto-revealed hints are never included here.
   const typeCosts  = HINT_TYPE_COSTS_FE[category] || {};
-  const hintCost   = hintsRevealed.length > 0
-    ? hintsRevealed.reduce((sum, h) => sum + (typeCosts[h.type] || 0), 0)
-    : (HINT_TYPE_COSTS_FE[category]
-        ? Object.values(typeCosts).slice(0, hintsRevealedCount).reduce((s, c) => s + c, 0)
-        : 0);
+  const hintCost   = hintsRevealed.reduce((sum, h) => sum + (typeCosts[h.type] || 0), 0);
   const misses     = won ? Math.max(0, guessResults.length - 1) : guessResults.length;
   const bonus      = hintsRevealedCount === 0 ? 3 : 0;
   const finalScore = Math.max(0, 20 - hintCost - misses + bonus);
