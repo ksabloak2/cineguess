@@ -16,6 +16,7 @@ import MovieSearch from '../components/MovieSearch';
 import GameBoard from '../components/GameBoard';
 import HintModal from '../components/HintModal';
 import ResultModal from '../components/ResultModal';
+import RulesModal from '../components/RulesModal';
 
 const VALID_IDS   = new Set([
   ...CATEGORIES.map((c) => c.id),
@@ -43,20 +44,13 @@ export default function GamePage() {
   const guestKey    = `${mode}_${category}`;
   const streakKey   = `${mode}_${category}`;
 
-  // ── Hint point costs (mirrors backend) ────────────────────────
-  const HINT_COSTS_FE = {
-    top250:       [1, 3, 4],
-    superhero:    [3, 4],
-    animated:     [3, 4],
-    indiancinema: [1, 2, 3, 4],
-  };
-
-  // Labels for next-hint button
-  const HINT_NEXT_LABELS = {
-    top250:       ['Cast Member', 'Logline', 'Frame'],
-    superhero:    ['Logline', 'Frame'],
-    animated:     ['Logline', 'Frame'],
-    indiancinema: ['Cast Member', 'Logline', 'Frame', 'Song'],
+  // ── Type-specific hint costs (mirrors backend HINT_TYPE_COSTS) ──
+  // actor = cast member, clue = logline, image = frame, music = song
+  const HINT_TYPE_COSTS_FE = {
+    top250:       { actor: 1, clue: 3, image: 4 },
+    superhero:    { clue: 3, image: 4 },
+    animated:     { clue: 3, image: 4 },
+    indiancinema: { actor: 1, clue: 2, image: 3, music: 4 },
   };
 
   // ── State ──────────────────────────────────────────────────────
@@ -78,6 +72,7 @@ export default function GamePage() {
   const [latestHintType, setLatestHintType] = useState(null);
   const [newHintAvailable, setNewHintAvailable] = useState(false);
   const [showModal, setShowModal]         = useState(false);
+  const [showRules, setShowRules]         = useState(false);
   const [loading, setLoading]             = useState(true);
   const [submitting, setSubmitting]       = useState(false);
   const [error, setError]                 = useState(null);
@@ -100,15 +95,17 @@ export default function GamePage() {
       .catch(() => {});
   }, [isUnlimited, category, session]);
 
-  // ── Recalculate potentialScore whenever guessResults or hintsRevealedCount changes ──
+  // ── Recalculate potentialScore whenever guesses or revealed hints change ──
+  // Uses type-specific costs so cast member is always 1pt, logline 3pt, etc.
+  // The no-hint bonus (+3) is NOT shown during play — it only applies on a win
+  // and would cause the counter to go UP after wrong guesses, which is confusing.
   useEffect(() => {
     if (gameOver) return;
-    const costs    = HINT_COSTS_FE[category] || [1, 3, 4];
-    const hintCost = costs.slice(0, hintsRevealedCount).reduce((s, c) => s + c, 0);
-    const misses   = guessResults.length;
-    const bonus    = hintsRevealedCount === 0 ? 3 : 0;
-    setPotentialScore(Math.max(0, 20 - hintCost - misses + bonus));
-  }, [guessResults.length, hintsRevealedCount, category, gameOver, isUnlimited]);
+    const typeCosts = HINT_TYPE_COSTS_FE[category] || {};
+    const hintCost  = hintsRevealed.reduce((sum, h) => sum + (typeCosts[h.type] || 0), 0);
+    const misses    = guessResults.length;
+    setPotentialScore(Math.max(0, 20 - hintCost - misses));
+  }, [guessResults.length, hintsRevealed, category, gameOver]);
 
   // ── Load / refresh unlimited streak display ────────────────────
   const refreshStreak = useCallback(() => {
@@ -436,7 +433,11 @@ export default function GamePage() {
         tiles   = evaluateTilesLocal(selectedMovie, targetMovie);
         correct = selectedMovie.tmdb_id === targetMovie.tmdb_id;
       } else {
-        const res = await submitGuess(category, selectedMovie.tmdb_id, guessResults.length + 1, hintsRevealedCount);
+        // Compute type-specific total hint cost for accurate backend scoring
+        const hintsCostFE = hintsRevealed.reduce(
+          (sum, h) => sum + ((HINT_TYPE_COSTS_FE[category] || {})[h.type] || 0), 0
+        );
+        const res = await submitGuess(category, selectedMovie.tmdb_id, guessResults.length + 1, hintsRevealedCount, hintsCostFE);
         tiles        = res.tiles;
         correct      = res.correct;
         movieForRow  = res.guessed_movie || selectedMovie;
@@ -636,12 +637,11 @@ export default function GamePage() {
     setNewHintAvailable(false);
     setShowHintModal(true);
 
-    // Recalculate potential score
-    const costs    = HINT_COSTS_FE[category] || [1, 3, 4];
-    const hintCost = costs.slice(0, newCount).reduce((s, c) => s + c, 0);
-    const misses   = guessResults.length; // guesses so far (none correct yet)
-    const bonus    = newCount === 0 ? 3 : 0;
-    setPotentialScore(Math.max(0, 20 - hintCost - misses + bonus));
+    // Recalculate potential score using type-specific costs, no bonus shown live
+    const typeCosts = HINT_TYPE_COSTS_FE[category] || {};
+    const hintCost  = newRevealed.reduce((sum, h) => sum + (typeCosts[h.type] || 0), 0);
+    const misses    = guessResults.length;
+    setPotentialScore(Math.max(0, 20 - hintCost - misses));
 
     // Persist updated hint count to localStorage
     if (!isUnlimited) {
@@ -732,8 +732,10 @@ export default function GamePage() {
       {/* Potential points counter — any mode, non-game-over */}
       {!gameOver && (
         <div className="flex justify-center">
-          <div
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
+          <button
+            onClick={() => setShowRules(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold
+                       transition-all hover:scale-[1.04] active:scale-95"
             style={{
               background: 'rgba(245,158,11,0.10)',
               border:     '1px solid rgba(245,158,11,0.25)',
@@ -742,7 +744,13 @@ export default function GamePage() {
           >
             <span>⭐</span>
             <span>Potential: {potentialScore}pts</span>
-          </div>
+            <span
+              className="ml-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-bold"
+              style={{ background: 'rgba(245,158,11,0.22)', color: '#F3CE13', lineHeight: 1 }}
+            >
+              ℹ
+            </span>
+          </button>
         </div>
       )}
 
@@ -853,8 +861,7 @@ export default function GamePage() {
         availableHints={gameOver ? [] : hintsUnlocked.filter(
           (h) => !hintsRevealed.some((r) => r.type === h.type)
         )}
-        hintCosts={HINT_COSTS_FE[category] || [1, 3, 4]}
-        hintsRevealedCount={hintsRevealedCount}
+        hintTypeCosts={HINT_TYPE_COSTS_FE[category] || {}}
         onRevealHint={handleRevealHint}
         open={showHintModal}
         latestType={latestHintType}
@@ -950,8 +957,16 @@ export default function GamePage() {
           isUnlimited={isUnlimited}
           onNewRound={startUnlimitedRound}
           hintsRevealedCount={hintsRevealedCount}
+          hintsRevealed={hintsRevealed}
         />
       )}
+
+      {/* Scoring rules — opened by tapping the potential score pill */}
+      <RulesModal
+        open={showRules}
+        onClose={() => setShowRules(false)}
+        initialPage={1}
+      />
 
     </div>
   );

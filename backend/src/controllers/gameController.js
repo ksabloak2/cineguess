@@ -9,10 +9,17 @@ const VALID_CATEGORIES = ['top250', 'superhero', 'animated', 'indiancinema'];
 const VALID_UNLIMITED_CATEGORIES = ['unlimited_top250', 'unlimited_superhero', 'unlimited_animated', 'unlimited_indiancinema'];
 const LEGACY_UNLIMITED = 'unlimited';
 
-// ── Hint point costs per category (in unlock order) ─────────────────────────
-// top250:       [actor -1, logline -3, frame -4]
-// superhero/animated: [logline -3, frame -4]  (no actor hint)
-// indiancinema: [actor -1, logline -2, frame -3, song -4]
+// ── Hint costs: type-specific (canonical) + sequential (legacy fallback) ──────
+// Type-specific: cost is fixed per hint type regardless of reveal order.
+//   actor = cast member, clue = logline, image = frame, music = song
+const HINT_TYPE_COSTS = {
+  top250:       { actor: 1, clue: 3, image: 4 },
+  superhero:    { clue: 3, image: 4 },
+  animated:     { clue: 3, image: 4 },
+  indiancinema: { actor: 1, clue: 2, image: 3, music: 4 },
+};
+
+// Sequential fallback (kept for backward compat — not used when hints_cost provided)
 const HINT_COSTS = {
   top250:       [1, 3, 4],
   superhero:    [3, 4],
@@ -22,17 +29,20 @@ const HINT_COSTS = {
 
 /**
  * Calculate the score for a completed daily game.
- * @param {string} category
- * @param {number} guessCount  — total guesses submitted (last was the correct one if won)
- * @param {number} hintsCount  — number of hints the user actively revealed
- * @param {boolean} won
+ * @param {string}      category
+ * @param {number}      guessCount  total guesses submitted (last was correct if won)
+ * @param {number}      hintsCount  number of hints revealed (used for no-hint bonus check)
+ * @param {boolean}     won
+ * @param {number|null} hintsCost   pre-computed type-specific hint cost from frontend
  */
-function calculateScore(category, guessCount, hintsCount, won) {
+function calculateScore(category, guessCount, hintsCount, won, hintsCost = null) {
   if (!won) return 0;
-  const costs = HINT_COSTS[category] || [1, 3, 4];
-  const hintCost = costs.slice(0, hintsCount).reduce((s, c) => s + c, 0);
-  const misses   = Math.max(0, guessCount - 1); // last guess was correct
-  const bonus    = hintsCount === 0 ? 3 : 0;
+  // Prefer the frontend-calculated type-specific cost; fall back to sequential
+  const hintCost = (hintsCost != null && Number.isFinite(Number(hintsCost)))
+    ? Math.max(0, Number(hintsCost))
+    : (HINT_COSTS[category] || [1, 3, 4]).slice(0, hintsCount).reduce((s, c) => s + c, 0);
+  const misses = Math.max(0, guessCount - 1);
+  const bonus  = hintsCount === 0 ? 3 : 0;
   return Math.max(0, 20 - hintCost - misses + bonus);
 }
 
@@ -154,7 +164,13 @@ async function getMoviePool(req, res) {
 // Evaluates a guess and returns comparison tiles.
 // ---------------------------------------------------------------
 async function submitGuess(req, res) {
-  const { category, tmdb_id, guess_count: clientGuessCount, hints_count: clientHintsCount } = req.body;
+  const {
+    category,
+    tmdb_id,
+    guess_count:  clientGuessCount,
+    hints_count:  clientHintsCount,
+    hints_cost:   clientHintsCost,   // pre-computed type-specific total hint cost
+  } = req.body;
   if (!VALID_CATEGORIES.includes(category) || !tmdb_id) {
     return res.status(400).json({ error: 'category and tmdb_id are required' });
   }
@@ -221,7 +237,8 @@ async function submitGuess(req, res) {
 
       // Score + hints_count only recorded when the game ends
       const hintsCount = gameOver ? Math.max(0, Number(clientHintsCount) || 0) : null;
-      const score      = gameOver ? calculateScore(category, guessCount, hintsCount || 0, isCorrect) : null;
+      const hintsCost  = clientHintsCost != null ? Number(clientHintsCost) : null;
+      const score      = gameOver ? calculateScore(category, guessCount, hintsCount || 0, isCorrect, hintsCost) : null;
 
       if (!prev) {
         await client.query(
@@ -263,7 +280,12 @@ async function submitGuess(req, res) {
 
     // Expose score in the response (only meaningful when gameOver)
     const responseScore = req.user && serverGameOver
-      ? calculateScore(category, serverGuessCount, Math.max(0, Number(clientHintsCount) || 0), isCorrect)
+      ? calculateScore(
+          category, serverGuessCount,
+          Math.max(0, Number(clientHintsCount) || 0),
+          isCorrect,
+          clientHintsCost != null ? Number(clientHintsCost) : null
+        )
       : null;
 
     res.json({

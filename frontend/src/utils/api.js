@@ -98,8 +98,8 @@ export const getMoviePool = async (category) => {
   return data;
 };
 export const getDailyState    = (category) => api.get(`/game/daily/${category}`).then(r => r.data);
-export const submitGuess      = (category, tmdb_id, guess_count, hints_count = 0) =>
-  api.post('/game/guess', { category, tmdb_id, guess_count, hints_count }).then(r => r.data);
+export const submitGuess      = (category, tmdb_id, guess_count, hints_count = 0, hints_cost = 0) =>
+  api.post('/game/guess', { category, tmdb_id, guess_count, hints_count, hints_cost }).then(r => r.data);
 export const checkGuess       = (guessed_tmdb_id, target_tmdb_id, guess_number, category) =>
   api.post('/game/guess/check', { guessed_tmdb_id, target_tmdb_id, guess_number, category }).then(r => r.data);
 export const getResult        = (category) => api.get(`/game/result/${category}`).then(r => r.data);

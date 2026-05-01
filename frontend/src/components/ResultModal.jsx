@@ -3,12 +3,12 @@ import { tmdbImage } from '../utils/api';
 import { buildShareString, getMaxGuesses, getTileFields } from '../utils/gameLogic';
 import { useAuth } from '../context/AuthContext';
 
-// Hint costs per category (mirrors backend and GamePage)
-const HINT_COSTS_FE = {
-  top250:       [1, 3, 4],
-  superhero:    [3, 4],
-  animated:     [3, 4],
-  indiancinema: [1, 2, 3, 4],
+// Type-specific hint costs — matches backend HINT_TYPE_COSTS
+const HINT_TYPE_COSTS_FE = {
+  top250:       { actor: 1, clue: 3, image: 4 },
+  superhero:    { clue: 3, image: 4 },
+  animated:     { clue: 3, image: 4 },
+  indiancinema: { actor: 1, clue: 2, image: 3, music: 4 },
 };
 
 // Emoji map kept for clipboard/share text
@@ -50,6 +50,7 @@ export default function ResultModal({
   result, category, guessResults, won,
   onClose, isUnlimited = false, onNewRound,
   hintsRevealedCount = 0,
+  hintsRevealed = [],        // array of revealed hint objects { type, ... }
 }) {
   const [shareOpen, setShareOpen]         = useState(false);
   const [showBreakdown, setShowBreakdown] = useState(false);
@@ -63,15 +64,20 @@ export default function ResultModal({
 
   if (!result) return null;
 
-  const score     = won ? `${guessResults.length}/${getMaxGuesses(category)}` : `X/${getMaxGuesses(category)}`;
-  const shareText = buildShareString(category, guessResults.map((g) => g.tiles), won, profile?.username, hintsRevealedCount);
+  const score = won ? `${guessResults.length}/${getMaxGuesses(category)}` : `X/${getMaxGuesses(category)}`;
 
-  // Point breakdown (only for won daily games)
-  const costs    = HINT_COSTS_FE[category] || [1, 3, 4];
-  const hintCost = costs.slice(0, hintsRevealedCount).reduce((s, c) => s + c, 0);
-  const misses   = won ? Math.max(0, guessResults.length - 1) : guessResults.length;
-  const bonus    = hintsRevealedCount === 0 ? 3 : 0;
+  // Type-specific hint cost — cast member always 1pt, logline 3pt, etc.
+  const typeCosts  = HINT_TYPE_COSTS_FE[category] || {};
+  const hintCost   = hintsRevealed.length > 0
+    ? hintsRevealed.reduce((sum, h) => sum + (typeCosts[h.type] || 0), 0)
+    : (HINT_TYPE_COSTS_FE[category]
+        ? Object.values(typeCosts).slice(0, hintsRevealedCount).reduce((s, c) => s + c, 0)
+        : 0);
+  const misses     = won ? Math.max(0, guessResults.length - 1) : guessResults.length;
+  const bonus      = hintsRevealedCount === 0 ? 3 : 0;
   const finalScore = Math.max(0, 20 - hintCost - misses + bonus);
+
+  const shareText = buildShareString(category, guessResults.map((g) => g.tiles), won, profile?.username, hintsRevealedCount, finalScore);
   const fields    = getTileFields(category);
 
   // Always include the year in the slug to avoid title conflicts (e.g. Smile 2022 vs 1975).

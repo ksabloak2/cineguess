@@ -4,9 +4,14 @@ import ReportIssueModal from './ReportIssueModal';
 const PAGES = ['How to Play', 'Scoring', 'Rankings'];
 
 // ── Rules modal ─────────────────────────────────────────────────────────────
-export default function RulesModal({ open, onClose }) {
+export default function RulesModal({ open, onClose, initialPage = 0 }) {
   const [reportOpen, setReportOpen] = useState(false);
-  const [page, setPage]             = useState(0);
+  const [page, setPage]             = useState(initialPage);
+
+  // Reset to initialPage each time the modal opens
+  useEffect(() => {
+    if (open) setPage(initialPage);
+  }, [open, initialPage]);
 
   useEffect(() => {
     if (!open) return;
@@ -193,8 +198,11 @@ export default function RulesModal({ open, onClose }) {
           <div className="space-y-5">
             <div className="rounded-xl p-4 sm:p-5" style={{ background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.20)' }}>
               <p className="text-[10px] uppercase tracking-[0.25em] font-semibold text-accent/80 mb-3">How Points Work</p>
-              <p className="text-sm text-gray-200 leading-relaxed mb-3">
+              <p className="text-sm text-gray-200 leading-relaxed mb-1">
                 Every daily game starts at <span className="text-accent font-bold">20 potential points</span>. Points are deducted as you guess and reveal hints. The final score is locked when the game ends.
+              </p>
+              <p className="text-[11px] text-gray-500 italic mb-3">
+                Points only matter if you care about leaderboard rankings — feel free to play however you like!
               </p>
               <div className="space-y-2">
                 <ScoreRow icon="❌" label="Incorrect guess" detail="−1 point per wrong guess" />

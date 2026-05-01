@@ -19,8 +19,7 @@ const TYPE_NAMES = {
 export default function HintModal({
   hints,
   availableHints = [],
-  hintCosts = [],
-  hintsRevealedCount = 0,
+  hintTypeCosts = {},   // { actor: 1, clue: 3, image: 4 } — type-specific, fixed costs
   onRevealHint,
   open,
   onClose,
@@ -78,9 +77,9 @@ export default function HintModal({
               Available to unlock
             </p>
             <div className="space-y-2">
-              {availableHints.map((hint, idx) => {
+              {availableHints.map((hint) => {
                 const style    = TYPE_STYLES[hint.type] || TYPE_STYLES.actor;
-                const cost     = hintCosts[hintsRevealedCount + idx] ?? '?';
+                const cost     = hintTypeCosts[hint.type] ?? '?';
                 const typeName = TYPE_NAMES[hint.type] || hint.type;
                 return (
                   <div
