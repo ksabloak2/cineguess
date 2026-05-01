@@ -114,6 +114,17 @@ export default function Navbar() {
               <RulesIcon />
             </NavIconButton>
 
+            {/* Leaderboard — always visible */}
+            <NavIconButton
+              as={Link}
+              to="/leaderboard"
+              active={pathname === '/leaderboard'}
+              label="Leaderboard"
+              showLabel
+            >
+              <TrophyIcon />
+            </NavIconButton>
+
             {session ? (
               <>
                 {/* Friends */}
@@ -479,6 +490,20 @@ function RulesIcon() {
       <path d="M4 4.5A2.5 2.5 0 016.5 2H20v18H6.5A2.5 2.5 0 014 17.5v-13z"/>
       <path d="M4 17.5A2.5 2.5 0 016.5 15H20"/>
       <path d="M8 7h8M8 11h5"/>
+    </svg>
+  );
+}
+
+function TrophyIcon() {
+  return (
+    <svg fill="none" viewBox="0 0 24 24"
+         stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"
+         className="w-full h-full">
+      <path d="M6 9H4a2 2 0 000 4h2"/>
+      <path d="M18 9h2a2 2 0 010 4h-2"/>
+      <path d="M6 2h12v7a6 6 0 01-12 0V2z"/>
+      <path d="M12 15v4"/>
+      <path d="M8 19h8"/>
     </svg>
   );
 }

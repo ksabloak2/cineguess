@@ -3,6 +3,14 @@ import { tmdbImage } from '../utils/api';
 import { buildShareString, getMaxGuesses, getTileFields } from '../utils/gameLogic';
 import { useAuth } from '../context/AuthContext';
 
+// Hint costs per category (mirrors backend and GamePage)
+const HINT_COSTS_FE = {
+  top250:       [1, 3, 4],
+  superhero:    [3, 4],
+  animated:     [3, 4],
+  indiancinema: [1, 2, 3, 4],
+};
+
 // Emoji map kept for clipboard/share text
 const EMOJI_MAP = {
   green:           '🟩',
@@ -41,8 +49,10 @@ const glassStyle = {
 export default function ResultModal({
   result, category, guessResults, won,
   onClose, isUnlimited = false, onNewRound,
+  hintsRevealedCount = 0,
 }) {
-  const [shareOpen, setShareOpen] = useState(false);
+  const [shareOpen, setShareOpen]         = useState(false);
+  const [showBreakdown, setShowBreakdown] = useState(false);
   const { profile } = useAuth();
 
   useEffect(() => {
@@ -54,7 +64,14 @@ export default function ResultModal({
   if (!result) return null;
 
   const score     = won ? `${guessResults.length}/${getMaxGuesses(category)}` : `X/${getMaxGuesses(category)}`;
-  const shareText = buildShareString(category, guessResults.map((g) => g.tiles), won, profile?.username);
+  const shareText = buildShareString(category, guessResults.map((g) => g.tiles), won, profile?.username, hintsRevealedCount);
+
+  // Point breakdown (only for won daily games)
+  const costs    = HINT_COSTS_FE[category] || [1, 3, 4];
+  const hintCost = costs.slice(0, hintsRevealedCount).reduce((s, c) => s + c, 0);
+  const misses   = won ? Math.max(0, guessResults.length - 1) : guessResults.length;
+  const bonus    = hintsRevealedCount === 0 ? 3 : 0;
+  const finalScore = Math.max(0, 20 - hintCost - misses + bonus);
   const fields    = getTileFields(category);
 
   // Always include the year in the slug to avoid title conflicts (e.g. Smile 2022 vs 1975).
@@ -119,15 +136,45 @@ export default function ResultModal({
             >
               {won ? '🎉' : '😞'}
             </div>
-            <h2
-              className="font-display text-xl sm:text-2xl font-bold"
-              style={{ color: accentColor }}
-            >
-              {won ? 'You got it!' : 'Better luck next time'}
-            </h2>
+            <div className="flex items-center justify-center gap-2">
+              <h2
+                className="font-display text-xl sm:text-2xl font-bold"
+                style={{ color: accentColor }}
+              >
+                {won ? 'You got it!' : 'Better luck next time'}
+              </h2>
+              {/* Score breakdown toggle — only for won daily games */}
+              {won && !isUnlimited && (
+                <button
+                  onClick={() => setShowBreakdown((o) => !o)}
+                  title="Score breakdown"
+                  className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold
+                             text-gray-500 hover:text-white transition-colors"
+                  style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}
+                >
+                  ℹ
+                </button>
+              )}
+            </div>
             <p className="text-gray-600 text-xs mt-1 font-mono tracking-widest uppercase">
               {score} guesses
             </p>
+
+            {/* Point breakdown — collapsible */}
+            {won && !isUnlimited && showBreakdown && (
+              <div
+                className="mt-2 mx-auto max-w-xs rounded-xl px-3 py-2 text-xs text-center animate-fade-in"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+              >
+                <p className="text-gray-400 leading-relaxed">
+                  <span className="text-gray-300 font-semibold">Base (20)</span>
+                  {hintCost > 0 && <span className="text-red-400"> − Hints ({hintCost})</span>}
+                  {misses > 0   && <span className="text-red-400"> − Misses ({misses})</span>}
+                  {bonus > 0    && <span className="text-green-400"> + Bonus ({bonus})</span>}
+                  <span className="text-accent font-bold"> = {finalScore}pts</span>
+                </p>
+              </div>
+            )}
           </div>
 
           {/* ── Movie card ────────────────────────────────── */}

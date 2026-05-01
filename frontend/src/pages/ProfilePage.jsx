@@ -139,14 +139,18 @@ function computeIsAList(awards, allStreaks) {
   return awards.length > 0 && awards.every((a) => a.earned);
 }
 
-// ── Certified Cinephile: all Cinema Awards + all 7 flame tiers (streak ≥ 500) ──
+// ── Certified Cinephile: all Cinema Awards + current_streak ≥ 1 in ALL 4 daily categories ──
 function computeIsCertifiedCinephile(awards, allStreaks) {
   if (!computeIsAList(awards, allStreaks)) return false;
-  const maxBest = Math.max(
-    0,
-    ...Object.values(allStreaks).map((s) => Number(s?.longest_streak || s?.best || 0))
-  );
-  return maxBest >= 500;
+  const dailyCats = ['top250', 'superhero', 'animated', 'indiancinema'];
+  return dailyCats.every((c) => (allStreaks[c]?.current_streak || 0) >= 1);
+}
+
+// ── Status helper (used by LeaderboardPage + any friends display) ─────────────
+export function computeStatus(awards, allStreaks) {
+  if (computeIsCertifiedCinephile(awards, allStreaks)) return 'cinephile';
+  if (computeIsAList(awards, allStreaks)) return 'alist';
+  return null;
 }
 
 // ── Awards list ───────────────────────────────────────────────────────────────

@@ -374,7 +374,7 @@ function hashInt(n) {
 /**
  * Build the emoji share string (like Wordle).
  */
-export function buildShareString(category, guessResults, won, username) {
+export function buildShareString(category, guessResults, won, username, hintsRevealedCount = 0) {
   const catLabel  = CATEGORIES.find((c) => c.id === category)?.label || category;
   const maxG      = getMaxGuesses(category);
   const score     = won ? `${guessResults.length}/${maxG}` : `X/${maxG}`;
@@ -399,7 +399,16 @@ export function buildShareString(category, guessResults, won, username) {
   });
 
   const scoreLine = username ? `@${username} · ${score}` : score;
-  return [`🎬 CineGuess — ${catLabel} (${today})`, scoreLine, '', ...rows, '', 'cineguessit.com'].join('\n');
+  return [
+    `🎬 CineGuess — ${catLabel} (${today})`,
+    scoreLine,
+    '',
+    ...rows,
+    '',
+    `💡 Hints used: ${hintsRevealedCount}`,
+    '',
+    'cineguessit.com',
+  ].join('\n');
 }
 
 // ---------------------------------------------------------------

@@ -8,6 +8,33 @@ const logger = require('../utils/logger');
 const VALID_CATEGORIES = ['top250', 'superhero', 'animated', 'indiancinema'];
 const LEGACY_UNLIMITED = 'unlimited';
 
+// ── Hint point costs per category (in unlock order) ─────────────────────────
+// top250:       [actor -1, logline -3, frame -4]
+// superhero/animated: [logline -3, frame -4]  (no actor hint)
+// indiancinema: [actor -1, logline -2, frame -3, song -4]
+const HINT_COSTS = {
+  top250:       [1, 3, 4],
+  superhero:    [3, 4],
+  animated:     [3, 4],
+  indiancinema: [1, 2, 3, 4],
+};
+
+/**
+ * Calculate the score for a completed daily game.
+ * @param {string} category
+ * @param {number} guessCount  — total guesses submitted (last was the correct one if won)
+ * @param {number} hintsCount  — number of hints the user actively revealed
+ * @param {boolean} won
+ */
+function calculateScore(category, guessCount, hintsCount, won) {
+  if (!won) return 0;
+  const costs = HINT_COSTS[category] || [1, 3, 4];
+  const hintCost = costs.slice(0, hintsCount).reduce((s, c) => s + c, 0);
+  const misses   = Math.max(0, guessCount - 1); // last guess was correct
+  const bonus    = hintsCount === 0 ? 3 : 0;
+  return Math.max(0, 20 - hintCost - misses + bonus);
+}
+
 // ---------------------------------------------------------------
 // GET /api/game/daily/:category
 // Returns the daily pick metadata (without revealing movie title yet)
@@ -126,7 +153,7 @@ async function getMoviePool(req, res) {
 // Evaluates a guess and returns comparison tiles.
 // ---------------------------------------------------------------
 async function submitGuess(req, res) {
-  const { category, tmdb_id, guess_count: clientGuessCount } = req.body;
+  const { category, tmdb_id, guess_count: clientGuessCount, hints_count: clientHintsCount } = req.body;
   if (!VALID_CATEGORIES.includes(category) || !tmdb_id) {
     return res.status(400).json({ error: 'category and tmdb_id are required' });
   }
@@ -191,19 +218,24 @@ async function submitGuess(req, res) {
       serverGameOver = gameOver;
       serverGuessCount = guessCount;
 
+      // Score + hints_count only recorded when the game ends
+      const hintsCount = gameOver ? Math.max(0, Number(clientHintsCount) || 0) : null;
+      const score      = gameOver ? calculateScore(category, guessCount, hintsCount || 0, isCorrect) : null;
+
       if (!prev) {
         await client.query(
-          `INSERT INTO guesses (user_id, category, guess_date, guess_list, guesses_taken, won, completed_at)
-           VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+          `INSERT INTO guesses (user_id, category, guess_date, guess_list, guesses_taken, won, completed_at, score, hints_count)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
           [req.user.id, category, today, JSON.stringify(guessList),
-           gameOver ? guessCount : null, won, gameOver ? new Date() : null]
+           gameOver ? guessCount : null, won, gameOver ? new Date() : null,
+           score, hintsCount]
         );
       } else {
         await client.query(
-          `UPDATE guesses SET guess_list=$1, guesses_taken=$2, won=$3, completed_at=$4
-           WHERE id=$5`,
+          `UPDATE guesses SET guess_list=$1, guesses_taken=$2, won=$3, completed_at=$4, score=$5, hints_count=$6
+           WHERE id=$7`,
           [JSON.stringify(guessList), gameOver ? guessCount : null, won,
-           gameOver ? new Date() : null, prev.id]
+           gameOver ? new Date() : null, score, hintsCount, prev.id]
         );
       }
 
@@ -228,9 +260,15 @@ async function submitGuess(req, res) {
       ? { title: target.title, poster_path: target.poster_path, imdb_id: target.imdb_id, year: target.year }
       : null;
 
+    // Expose score in the response (only meaningful when gameOver)
+    const responseScore = req.user && serverGameOver
+      ? calculateScore(category, serverGuessCount, Math.max(0, Number(clientHintsCount) || 0), isCorrect)
+      : null;
+
     res.json({
       tiles,
       correct: isCorrect,
+      score: responseScore,
       guessed_movie: {
         tmdb_id:             guessed.tmdb_id,
         title:               guessed.title,
@@ -356,6 +394,15 @@ async function getStreaks(req, res) {
     const raw = avgRows[0]?.avg_guesses;
     streak.avg_guesses = raw !== null && raw !== undefined ? parseFloat(raw) : null;
 
+    // Average score on won games where score is recorded (post-launch games)
+    const { rows: scoreRows } = await client.query(
+      `SELECT ROUND(AVG(score)::numeric, 1) AS avg_score
+       FROM guesses WHERE user_id=$1 AND category=$2 AND won=true AND score IS NOT NULL`,
+      [req.user.id, category]
+    );
+    const rawScore = scoreRows[0]?.avg_score;
+    streak.avg_score = rawScore !== null && rawScore !== undefined ? parseFloat(rawScore) : null;
+
     // Count first-guess wins (daily only)
     const { rows: fgRows } = await client.query(
       `SELECT COUNT(*)::int AS cnt
@@ -363,6 +410,30 @@ async function getStreaks(req, res) {
       [req.user.id, category]
     );
     streak.first_guess_wins = fgRows[0]?.cnt ?? 0;
+
+    // No-hint games within current active streak — count last N won games where hints_count=0
+    // N = current_streak. Each no-hint game in the streak adds +5 to Global Rating.
+    const currentStreakLen = streak.current_streak || 0;
+    if (currentStreakLen > 0 && VALID_CATEGORIES.includes(category)) {
+      const { rows: noHintRows } = await client.query(
+        `SELECT COUNT(*)::int AS cnt FROM (
+           SELECT hints_count FROM guesses
+           WHERE user_id=$1 AND category=$2 AND won=true AND score IS NOT NULL
+           ORDER BY guess_date DESC
+           LIMIT $3
+         ) sub WHERE sub.hints_count = 0`,
+        [req.user.id, category, currentStreakLen]
+      );
+      streak.no_hint_in_streak = noHintRows[0]?.cnt ?? 0;
+    } else {
+      streak.no_hint_in_streak = 0;
+    }
+
+    // Global Rating for this category: (current_streak * 10) + avg_score + (no_hint_in_streak * 5)
+    const avgScoreVal = streak.avg_score || 0;
+    streak.global_rating = Math.round(
+      (currentStreakLen * 10) + avgScoreVal + (streak.no_hint_in_streak * 5)
+    );
 
     res.json(streak);
   } finally {
@@ -936,6 +1007,99 @@ async function getRatings(req, res) {
   }
 }
 
+// ---------------------------------------------------------------
+// GET /api/game/leaderboard?category=X
+// Returns top 50 users sorted by Global Rating.
+// Global Rating = (current_streak × 10) + avg_score + (no_hint_in_streak × 5)
+// ---------------------------------------------------------------
+async function getLeaderboard(req, res) {
+  const category = req.query.category;
+  const client   = await pool.connect();
+
+  try {
+    let rows;
+    if (category && VALID_CATEGORIES.includes(category)) {
+      // Per-category leaderboard
+      const result = await client.query(`
+        SELECT
+          u.username,
+          s.current_streak,
+          s.longest_streak,
+          ROUND(COALESCE(
+            AVG(g.score) FILTER (WHERE g.won = true AND g.score IS NOT NULL),
+            0
+          )::numeric, 1) AS avg_score,
+          (
+            SELECT COUNT(*)::int FROM (
+              SELECT g2.hints_count
+              FROM guesses g2
+              WHERE g2.user_id = u.id AND g2.category = $1
+                AND g2.won = true AND g2.score IS NOT NULL
+              ORDER BY g2.guess_date DESC
+              LIMIT s.current_streak
+            ) sub
+            WHERE sub.hints_count = 0
+          ) AS no_hint_in_streak,
+          ROUND((
+            s.current_streak * 10
+            + COALESCE(AVG(g.score) FILTER (WHERE g.won = true AND g.score IS NOT NULL), 0)
+            + (
+              SELECT COUNT(*) * 5 FROM (
+                SELECT g2.hints_count
+                FROM guesses g2
+                WHERE g2.user_id = u.id AND g2.category = $1
+                  AND g2.won = true AND g2.score IS NOT NULL
+                ORDER BY g2.guess_date DESC
+                LIMIT s.current_streak
+              ) sub
+              WHERE sub.hints_count = 0
+            )
+          )::numeric, 1) AS global_rating
+        FROM users u
+        JOIN streaks s ON s.user_id = u.id AND s.category = $1
+        LEFT JOIN guesses g ON g.user_id = u.id AND g.category = $1
+        WHERE s.current_streak > 0
+        GROUP BY u.id, u.username, s.current_streak, s.longest_streak
+        ORDER BY global_rating DESC
+        LIMIT 50
+      `, [category]);
+      rows = result.rows;
+    } else {
+      // Global leaderboard: best streak across all 4 daily categories
+      const result = await client.query(`
+        SELECT
+          u.username,
+          MAX(s.current_streak) AS current_streak,
+          ROUND(COALESCE(
+            AVG(g.score) FILTER (WHERE g.won = true AND g.score IS NOT NULL),
+            0
+          )::numeric, 1) AS avg_score,
+          ROUND((
+            MAX(s.current_streak) * 10
+            + COALESCE(AVG(g.score) FILTER (WHERE g.won = true AND g.score IS NOT NULL), 0)
+          )::numeric, 1) AS global_rating
+        FROM users u
+        JOIN streaks s ON s.user_id = u.id
+          AND s.category = ANY(ARRAY['top250','superhero','animated','indiancinema'])
+        LEFT JOIN guesses g ON g.user_id = u.id
+          AND g.category = ANY(ARRAY['top250','superhero','animated','indiancinema'])
+        WHERE s.current_streak > 0
+        GROUP BY u.id, u.username
+        ORDER BY global_rating DESC
+        LIMIT 50
+      `);
+      rows = result.rows;
+    }
+
+    res.json(rows);
+  } catch (err) {
+    logger.error('getLeaderboard failed', { stack: err.stack });
+    res.status(500).json({ error: 'Could not load leaderboard data.' });
+  } finally {
+    client.release();
+  }
+}
+
 module.exports = {
   getDailyState,
   getMoviePool,
@@ -948,4 +1112,5 @@ module.exports = {
   submitUnlimitedResult,
   getRatings,
   getPercentiles,
+  getLeaderboard,
 };

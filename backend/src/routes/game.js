@@ -33,4 +33,7 @@ router.get('/calendar/:category',     requireAuth, ah(ctrl.getCalendar));
 router.get('/calendar-year',          requireAuth, ah(ctrl.getYearCalendar));
 router.post('/unlimited/result',      requireAuth, ah(ctrl.submitUnlimitedResult));
 
+// Public leaderboard
+router.get('/leaderboard',            ah(ctrl.getLeaderboard));
+
 module.exports = router;

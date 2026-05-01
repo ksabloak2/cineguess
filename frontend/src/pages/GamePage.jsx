@@ -43,6 +43,22 @@ export default function GamePage() {
   const guestKey    = `${mode}_${category}`;
   const streakKey   = `${mode}_${category}`;
 
+  // ── Hint point costs (mirrors backend) ────────────────────────
+  const HINT_COSTS_FE = {
+    top250:       [1, 3, 4],
+    superhero:    [3, 4],
+    animated:     [3, 4],
+    indiancinema: [1, 2, 3, 4],
+  };
+
+  // Labels for next-hint button
+  const HINT_NEXT_LABELS = {
+    top250:       ['Cast Member', 'Logline', 'Frame'],
+    superhero:    ['Logline', 'Frame'],
+    animated:     ['Logline', 'Frame'],
+    indiancinema: ['Cast Member', 'Logline', 'Frame', 'Song'],
+  };
+
   // ── State ──────────────────────────────────────────────────────
   const [movies, setMovies]               = useState([]);
   const [targetMovie, setTargetMovie]     = useState(null);
@@ -52,7 +68,12 @@ export default function GamePage() {
   const [gameOver, setGameOver]           = useState(false);
   const [won, setWon]                     = useState(null);
   const [result, setResult]               = useState(null);
-  const [hints, setHints]                 = useState([]);
+  // hintsUnlocked: hints available to reveal (unlocked by guess threshold, not yet revealed)
+  const [hintsUnlocked, setHintsUnlocked] = useState([]);
+  // hintsRevealed: hints the user has actively clicked to reveal
+  const [hintsRevealed, setHintsRevealed] = useState([]);
+  const [hintsRevealedCount, setHintsRevealedCount] = useState(0);
+  const [potentialScore, setPotentialScore] = useState(20);
   const [showHintModal, setShowHintModal] = useState(false);
   const [latestHintType, setLatestHintType] = useState(null);
   const [newHintAvailable, setNewHintAvailable] = useState(false);
@@ -78,6 +99,16 @@ export default function GamePage() {
       .then((s) => setDailyStreak({ current: s.current_streak ?? 0, best: s.longest_streak ?? 0 }))
       .catch(() => {});
   }, [isUnlimited, category, session]);
+
+  // ── Recalculate potentialScore whenever guessResults or hintsRevealedCount changes ──
+  useEffect(() => {
+    if (gameOver || isUnlimited) return;
+    const costs    = HINT_COSTS_FE[category] || [1, 3, 4];
+    const hintCost = costs.slice(0, hintsRevealedCount).reduce((s, c) => s + c, 0);
+    const misses   = guessResults.length;
+    const bonus    = hintsRevealedCount === 0 ? 3 : 0;
+    setPotentialScore(Math.max(0, 20 - hintCost - misses + bonus));
+  }, [guessResults.length, hintsRevealedCount, category, gameOver, isUnlimited]);
 
   // ── Load / refresh unlimited streak display ────────────────────
   const refreshStreak = useCallback(() => {
@@ -111,7 +142,10 @@ export default function GamePage() {
     // ── Always reset per-round transient state when switching categories ──────
     // This must happen BEFORE local hydration so the previous category's hints,
     // result, and game-over flags never bleed into the next one.
-    setHints([]);
+    setHintsUnlocked([]);
+    setHintsRevealed([]);
+    setHintsRevealedCount(0);
+    setPotentialScore(20);
     setShowHintModal(false);
     setLatestHintType(null);
     setNewHintAvailable(false);
@@ -135,10 +169,18 @@ export default function GamePage() {
           else setResult(null);
           // Restore hints immediately so the button appears before the server round-trip.
           if (saved.hints?.length) mergeHints(saved.hints, true);
+          // Restore hint count and potential score
+          const savedHintCount = saved.hintsRevealedCount || 0;
+          setHintsRevealedCount(savedHintCount);
         } else {
           setGameOver(false);
           setWon(null);
           setResult(null);
+          // Restore hint count for in-progress game
+          const savedHintCount = saved.hintsRevealedCount || 0;
+          if (savedHintCount > 0) {
+            setHintsRevealedCount(savedHintCount);
+          }
         }
         hadLocalHydration = true;
       }
@@ -205,7 +247,10 @@ export default function GamePage() {
             setGameOver(false);
             setWon(null);
             setResult(null);
-            setHints([]);
+            setHintsUnlocked([]);
+            setHintsRevealed([]);
+            setHintsRevealedCount(0);
+            setPotentialScore(20);
             hydratedKeyRef.current = null;
             return;
           }
@@ -234,12 +279,13 @@ export default function GamePage() {
             ? hintsFromServer(finalResult.hint)
             : [];
           saveDailyState(guestKey, {
-            rows:     restored,
-            gameOver: state.won !== null,
-            won:      state.won,
-            result:   finalResult,
-            hints:    hintSnapshot,
-            date:     state.date,
+            rows:               restored,
+            gameOver:           state.won !== null,
+            won:                state.won,
+            result:             finalResult,
+            hints:              hintSnapshot,
+            hintsRevealedCount: 0, // server restoration can't know how many hints were revealed
+            date:               state.date,
           });
         }
 
@@ -317,7 +363,10 @@ export default function GamePage() {
     setGameOver(false);
     setWon(null);
     setResult(null);
-    setHints([]);
+    setHintsUnlocked([]);
+    setHintsRevealed([]);
+    setHintsRevealedCount(0);
+    setPotentialScore(20);
     setShowHintModal(false);
     setLatestHintType(null);
     setNewHintAvailable(false);
@@ -387,7 +436,7 @@ export default function GamePage() {
         tiles   = evaluateTilesLocal(selectedMovie, targetMovie);
         correct = selectedMovie.tmdb_id === targetMovie.tmdb_id;
       } else {
-        const res = await submitGuess(category, selectedMovie.tmdb_id, guessResults.length + 1);
+        const res = await submitGuess(category, selectedMovie.tmdb_id, guessResults.length + 1, hintsRevealedCount);
         tiles        = res.tiles;
         correct      = res.correct;
         movieForRow  = res.guessed_movie || selectedMovie;
@@ -511,12 +560,13 @@ export default function GamePage() {
         // Daily: snapshot the full board into localStorage so a refresh /
         // tab-switch / network blip doesn't wipe progress.
         saveDailyState(guestKey, {
-          rows:     newGuesses,
-          gameOver: isGameOver,
-          won:      isGameOver ? correct : null,
-          result:   isGameOver ? (postGameResult || revealedResult || null) : null,
-          hints:    isGameOver ? postGameHints : [],
-          date:     dailyDate,
+          rows:               newGuesses,
+          gameOver:           isGameOver,
+          won:                isGameOver ? correct : null,
+          result:             isGameOver ? (postGameResult || revealedResult || null) : null,
+          hints:              isGameOver ? postGameHints : [],
+          hintsRevealedCount: hintsRevealedCount,
+          date:               dailyDate,
         });
       }
 
@@ -543,19 +593,59 @@ export default function GamePage() {
     mergeHints(getHints(guessCount, target, category));
   }
 
-  // suppress=true when game is already decided (correct guess / max guesses hit)
-  // so no hint notification fights the result modal for screen space.
-  // Hints are delivered silently — a pulsing dot on the button alerts the player.
+  // suppress=true when game is already decided (correct guess / max guesses hit).
+  // When suppress=true (post-game): unlock AND reveal hints for free.
+  // When suppress=false (during play): only unlock hints; user must click to reveal.
   function mergeHints(nextHints, suppress = false) {
-    setHints((prev) => {
+    setHintsUnlocked((prev) => {
       const prevTypes = new Set(prev.map((h) => h.type));
       const added = nextHints.filter((h) => !prevTypes.has(h.type));
       if (added.length > 0 && !suppress) {
-        setLatestHintType(added[added.length - 1].type);
-        setNewHintAvailable(true); // silent notification — no auto-popup
+        setNewHintAvailable(true); // silent notification — pulsing button
       }
       return nextHints;
     });
+    if (suppress) {
+      // Post-game: reveal all hints for free (score already recorded)
+      setHintsRevealed(() => nextHints);
+    }
+  }
+
+  // Handle user clicking the "Reveal hint" button
+  function handleRevealHint() {
+    if (gameOver) {
+      // Post-game: just open the modal showing all unlocked hints
+      setShowHintModal(true);
+      setNewHintAvailable(false);
+      return;
+    }
+    // Find the first unlocked-but-not-revealed hint
+    const revealedTypes = new Set(hintsRevealed.map((h) => h.type));
+    const nextHint = hintsUnlocked.find((h) => !revealedTypes.has(h.type));
+    if (!nextHint) return;
+
+    const newRevealed = [...hintsRevealed, nextHint];
+    const newCount    = hintsRevealedCount + 1;
+    setHintsRevealed(newRevealed);
+    setHintsRevealedCount(newCount);
+    setLatestHintType(nextHint.type);
+    setNewHintAvailable(false);
+    setShowHintModal(true);
+
+    // Recalculate potential score
+    const costs    = HINT_COSTS_FE[category] || [1, 3, 4];
+    const hintCost = costs.slice(0, newCount).reduce((s, c) => s + c, 0);
+    const misses   = guessResults.length; // guesses so far (none correct yet)
+    const bonus    = newCount === 0 ? 3 : 0;
+    setPotentialScore(Math.max(0, 20 - hintCost - misses + bonus));
+
+    // Persist updated hint count to localStorage
+    if (!isUnlimited) {
+      const saved = loadDailyState(guestKey);
+      if (saved) {
+        saveDailyState(guestKey, { ...saved, hintsRevealedCount: newCount });
+      }
+    }
   }
 
   function hintsFromServer(serverHint) {
@@ -635,6 +725,23 @@ export default function GamePage() {
         </div>
       )}
 
+      {/* Potential points counter — daily non-game-over only */}
+      {!gameOver && !isUnlimited && (
+        <div className="flex justify-center">
+          <div
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
+            style={{
+              background: 'rgba(245,158,11,0.10)',
+              border:     '1px solid rgba(245,158,11,0.25)',
+              color:      '#F3CE13',
+            }}
+          >
+            <span>⭐</span>
+            <span>Potential: {potentialScore}pts</span>
+          </div>
+        </div>
+      )}
+
       {/* Guess counter — progress dots + hint countdown */}
       {!gameOver && (
         <div className="flex flex-col items-center gap-1">
@@ -685,32 +792,80 @@ export default function GamePage() {
         </div>
       )}
 
-      {/* Hint button — shows during play when hints unlock, and after game over to reveal all hints */}
-      {hints.length > 0 && (
-        <div className="flex justify-center">
-          <button
-            onClick={() => { setLatestHintType(null); setShowHintModal(true); setNewHintAvailable(false); }}
-            className="relative inline-flex items-center gap-2 px-4 py-2 rounded-xl
-                       bg-purple-500/10 hover:bg-purple-500/20
-                       border border-purple-500/30 text-purple-300
-                       text-xs sm:text-sm font-medium transition-all hover:scale-[1.02]"
-            style={newHintAvailable ? { boxShadow: '0 0 18px rgba(168,85,247,0.35)', borderColor: 'rgba(168,85,247,0.55)' } : {}}
-          >
-            <span>💡</span>
-            <span>{gameOver ? `Post-game hints (${hints.length})` : `View hints (${hints.length})`}</span>
-            {newHintAvailable && (
-              <span className="absolute -top-1.5 -right-1.5 flex h-3.5 w-3.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-purple-500 ring-2 ring-surface-bg" />
-              </span>
-            )}
-          </button>
-        </div>
-      )}
+      {/* Hint buttons — reveal new hint OR view already-revealed hints */}
+      <div className="flex justify-center gap-2 flex-wrap">
+        {(() => {
+          if (gameOver) {
+            // Post-game: show all unlocked hints
+            if (hintsUnlocked.length > 0) {
+              return (
+                <button
+                  onClick={() => { setShowHintModal(true); setNewHintAvailable(false); }}
+                  className="relative inline-flex items-center gap-2 px-4 py-2 rounded-xl
+                             bg-purple-500/10 hover:bg-purple-500/20
+                             border border-purple-500/30 text-purple-300
+                             text-xs sm:text-sm font-medium transition-all hover:scale-[1.02]"
+                >
+                  <span>💡</span>
+                  <span>Post-game hints ({hintsUnlocked.length})</span>
+                </button>
+              );
+            }
+            return null;
+          }
 
-      {/* Hint modal */}
+          // During play
+          const revealedTypes  = new Set(hintsRevealed.map((h) => h.type));
+          const nextUnrevealed = hintsUnlocked.find((h) => !revealedTypes.has(h.type));
+          const costs          = HINT_COSTS_FE[category] || [1, 3, 4];
+          const labels         = HINT_NEXT_LABELS[category] || ['Hint'];
+          const nextCost       = costs[hintsRevealedCount]; // cost of the next hint to reveal
+          const nextLabel      = labels[hintsRevealedCount] || 'Hint';
+
+          return (
+            <>
+              {/* Reveal next hint button */}
+              {nextUnrevealed && (
+                <button
+                  onClick={handleRevealHint}
+                  className="relative inline-flex items-center gap-2 px-4 py-2 rounded-xl
+                             bg-purple-500/10 hover:bg-purple-500/20
+                             border border-purple-500/30 text-purple-300
+                             text-xs sm:text-sm font-medium transition-all hover:scale-[1.02]"
+                  style={newHintAvailable ? { boxShadow: '0 0 18px rgba(168,85,247,0.35)', borderColor: 'rgba(168,85,247,0.55)' } : {}}
+                >
+                  <span>💡</span>
+                  <span>Reveal {nextLabel} −{nextCost}pt</span>
+                  {newHintAvailable && (
+                    <span className="absolute -top-1.5 -right-1.5 flex h-3.5 w-3.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-purple-500 ring-2 ring-surface-bg" />
+                    </span>
+                  )}
+                </button>
+              )}
+
+              {/* View already-revealed hints */}
+              {hintsRevealed.length > 0 && (
+                <button
+                  onClick={() => setShowHintModal(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl
+                             bg-purple-500/5 hover:bg-purple-500/10
+                             border border-purple-500/20 text-purple-400
+                             text-xs sm:text-sm font-medium transition-all hover:scale-[1.02]"
+                >
+                  <span>👁</span>
+                  <span>View revealed ({hintsRevealed.length})</span>
+                </button>
+              )}
+            </>
+          );
+        })()}
+      </div>
+
+      {/* Hint modal — shows revealed hints during play, all unlocked hints post-game */}
       <HintModal
-        hints={hints}
+        hints={gameOver ? hintsUnlocked : hintsRevealed}
         open={showHintModal}
         latestType={latestHintType}
         onClose={() => setShowHintModal(false)}
@@ -804,6 +959,7 @@ export default function GamePage() {
           onClose={() => setShowModal(false)}
           isUnlimited={isUnlimited}
           onNewRound={startUnlimitedRound}
+          hintsRevealedCount={hintsRevealedCount}
         />
       )}
     </div>

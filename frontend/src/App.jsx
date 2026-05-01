@@ -14,9 +14,10 @@ import GamePage from './pages/GamePage';
 
 // Non-critical — code-split into separate chunks loaded on demand.
 // This keeps the initial JS bundle lean for users who just want to play.
-const AuthPage    = lazy(() => import('./pages/AuthPage'));
-const FriendsPage = lazy(() => import('./pages/FriendsPage'));
-const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const AuthPage       = lazy(() => import('./pages/AuthPage'));
+const FriendsPage    = lazy(() => import('./pages/FriendsPage'));
+const ProfilePage    = lazy(() => import('./pages/ProfilePage'));
+const LeaderboardPage = lazy(() => import('./pages/LeaderboardPage'));
 
 // ── Mobile footer toggle ─────────────────────────────────────────────────────
 // Rendered as a normal document-flow element at the bottom of <main>.
@@ -246,6 +247,7 @@ export default function App() {
                   <Route path="/auth"                    element={<AuthPage />} />
                   <Route path="/friends"                 element={<FriendsPage />} />
                   <Route path="/profile"                 element={<ProfilePage />} />
+                  <Route path="/leaderboard"             element={<LeaderboardPage />} />
                   <Route path="*"                        element={<Navigate to="/" replace />} />
                 </Routes>
               </div>
