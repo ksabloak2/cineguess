@@ -639,7 +639,7 @@ export default function GamePage() {
     } finally {
       setSubmitting(false);
     }
-  }, [gameOver, submitting, guessedIds, guessResults, mode, category, targetMovie, isUnlimited, guestKey, streakKey, session, refreshStreak]);
+  }, [gameOver, submitting, guessedIds, guessResults, mode, category, targetMovie, isUnlimited, guestKey, streakKey, session, refreshStreak, hintsRevealed, hintsRevealedCount]);
 
   function updateHints(guessCount, target) {
     if (!target) return;
