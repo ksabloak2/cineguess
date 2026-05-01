@@ -16,7 +16,6 @@ import MovieSearch from '../components/MovieSearch';
 import GameBoard from '../components/GameBoard';
 import HintModal from '../components/HintModal';
 import ResultModal from '../components/ResultModal';
-import { ModeToggle } from '../components/Navbar';
 
 const VALID_IDS   = new Set([
   ...CATEGORIES.map((c) => c.id),
@@ -954,15 +953,6 @@ export default function GamePage() {
         />
       )}
 
-      {/* Daily / Unlimited mode toggle */}
-      <div className="flex justify-center pt-2 pb-1">
-        <ModeToggle
-          toggleMode={mode}
-          activeMode={mode}
-          inGame
-          activeCategory={category}
-        />
-      </div>
     </div>
   );
 }
