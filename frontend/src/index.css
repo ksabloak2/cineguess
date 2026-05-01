@@ -223,6 +223,9 @@ svg *,
     @apply w-full bg-surface-input border border-surface-border rounded-xl px-4 py-3
            text-white placeholder-gray-600 focus:outline-none
            transition-all duration-200 text-sm;
+    /* 16px minimum prevents iOS Safari from auto-zooming on focus.
+       Users can still pinch-zoom manually. */
+    font-size: max(16px, 0.875rem);
     box-shadow: 0 2px 10px rgba(0,0,0,0.2);
   }
   .input-field:focus {
