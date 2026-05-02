@@ -23,14 +23,19 @@ api.interceptors.request.use(async (config) => {
 // Tier 1: in-memory Map (same tab session, instant).
 // Tier 2: localStorage with 24-hour TTL (across page reloads).
 //
+// POOL_CACHE_VERSION: bump this whenever the movie schema gains new fields
+// (e.g. production_studio) so all clients automatically discard stale
+// cached pools and re-fetch with the new columns populated.
+//
 // All of this is transparent — callers still use getMoviePool(category)
 // exactly as before.
 // ---------------------------------------------------------------
+const POOL_CACHE_VERSION = 2;              // bump when schema changes
 const POOL_CACHE_TTL  = 24 * 60 * 60 * 1000; // 24 hours in ms
 const poolMemoryCache = new Map(); // category → data array
 
 function lsKey(category) {
-  return `cg_pool_${category}`;
+  return `cg_pool_v${POOL_CACHE_VERSION}_${category}`;
 }
 
 function lsRead(category) {
