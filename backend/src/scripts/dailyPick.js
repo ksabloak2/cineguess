@@ -113,14 +113,15 @@ async function runDailyPick(dateStr) {
   }
 }
 
-// Allow CLI override of date — defaults to today in Eastern time
-const targetDate = process.argv[2] || new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
-
-runDailyPick(targetDate)
-  .then(() => process.exit(0))
-  .catch((err) => {
-    console.error('Daily pick failed:', err);
-    process.exit(1);
-  });
-
 module.exports = { runDailyPick };
+
+// Only auto-run when called directly (not when required by another script)
+if (require.main === module) {
+  const targetDate = process.argv[2] || new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+  runDailyPick(targetDate)
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.error('Daily pick failed:', err);
+      process.exit(1);
+    });
+}
