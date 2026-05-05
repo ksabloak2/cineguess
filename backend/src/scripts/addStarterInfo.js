@@ -5,8 +5,8 @@
  * for every movie in the top250 category.
  *
  * Data sources:
- *   - Franchise : TMDB belongs_to_collection
- *   - Oscars    : Wikidata SPARQL (free, no API key needed)
+ *   - Franchise : TMDB  belongs_to_collection
+ *   - Oscars    : OMDb  Awards string  (fast, reliable, free — 1000 req/day)
  *
  * Usage:
  *   node src/scripts/addStarterInfo.js           # skip already-populated rows
@@ -18,13 +18,15 @@ const axios = require('axios');
 const pool  = require('../db/pool');
 
 const TMDB_KEY = process.env.TMDB_API_KEY;
+const OMDB_KEY = process.env.OMDB_API_KEY;
+
 if (!TMDB_KEY) { console.error('TMDB_API_KEY missing'); process.exit(1); }
+if (!OMDB_KEY) { console.error('OMDB_API_KEY missing — get a free key at https://www.omdbapi.com/apikey.aspx'); process.exit(1); }
 
 const FORCE = process.argv.includes('--force');
-
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-// ── TMDB: franchise (belongs_to_collection) ──────────────────────────────────
+// ── TMDB: franchise name ─────────────────────────────────────────────────────
 async function fetchFranchise(tmdbId) {
   const res = await axios.get(`https://api.themoviedb.org/3/movie/${tmdbId}`, {
     params: { api_key: TMDB_KEY },
@@ -34,53 +36,34 @@ async function fetchFranchise(tmdbId) {
   return col ? col.name : null;
 }
 
-// ── Wikidata SPARQL: Oscar nominations by IMDB ID ────────────────────────────
-// Retries up to MAX_RETRIES times on timeout/error before giving up.
-const MAX_RETRIES = 3;
+// ── OMDb: parse Oscar nominations from Awards string ─────────────────────────
+// OMDb returns e.g. "Won 4 Oscars. Another 10 wins & 19 nominations."
+//                   "Nominated for 13 Oscars. Another 102 wins & 174 nominations."
+//                   "N/A"
+function parseOscars(awardsStr) {
+  if (!awardsStr || awardsStr === 'N/A') return 0;
 
-async function fetchOscarNominations(imdbId) {
-  if (!imdbId) return [];
+  // "Won X Oscar(s)"
+  const wonMatch = awardsStr.match(/Won (\d+) Oscar/i);
+  if (wonMatch) return parseInt(wonMatch[1], 10);
 
-  const sparql = `
-    SELECT DISTINCT ?awardLabel WHERE {
-      ?film wdt:P345 "${imdbId}" .
-      {
-        ?film p:P1411 ?stmt .
-        ?stmt ps:P1411 ?award .
-      } UNION {
-        ?film p:P166 ?stmt .
-        ?stmt ps:P166 ?award .
-      }
-      ?award wdt:P31 wd:Q19020 .
-      SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
-    }
-  `;
+  // "Nominated for X Oscar(s)"
+  const nomMatch = awardsStr.match(/Nominated for (\d+) Oscar/i);
+  if (nomMatch) return parseInt(nomMatch[1], 10);
 
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    try {
-      const res = await axios.get('https://query.wikidata.org/sparql', {
-        params:  { format: 'json', query: sparql },
-        headers: { 'User-Agent': 'CineGuess/1.0 (https://cineguess.app)' },
-        timeout: 25000,
-      });
-
-      return res.data.results.bindings
-        .map(b => b.awardLabel?.value || '')
-        .filter(Boolean)
-        .map(label => label.replace(/^Academy Award for /, '').trim())
-        .filter(label => !label.match(/^Q\d+$/));
-    } catch (err) {
-      if (attempt < MAX_RETRIES) {
-        const delay = attempt * 3000; // 3s, 6s between retries
-        console.warn(`  ↻ Wikidata timeout for ${imdbId}, retry ${attempt}/${MAX_RETRIES - 1} in ${delay / 1000}s…`);
-        await sleep(delay);
-      } else {
-        throw err; // bubble up after all retries exhausted
-      }
-    }
-  }
+  return 0;
 }
 
+async function fetchOmdb(imdbId) {
+  if (!imdbId) return 0;
+  const res = await axios.get('https://www.omdbapi.com/', {
+    params: { i: imdbId, apikey: OMDB_KEY },
+    timeout: 8000,
+  });
+  return parseOscars(res.data?.Awards);
+}
+
+// ── Main ─────────────────────────────────────────────────────────────────────
 async function run() {
   const where = FORCE
     ? `WHERE 'top250' = ANY(categories)`
@@ -92,53 +75,37 @@ async function run() {
 
   console.log(`\nFound ${rows.length} top250 movies to process${FORCE ? ' (--force)' : ''}.\n`);
 
-  let ok = 0, skipped = 0;
+  let ok = 0, failed = 0;
 
   for (const row of rows) {
-    // ── Franchise (TMDB) ──
-    let franchise = null;
     try {
-      franchise = await fetchFranchise(row.tmdb_id);
-    } catch (err) {
-      console.warn(`  ⚠ TMDB franchise failed for ${row.title}: ${err.message}`);
-    }
+      const [franchise, oscarCount] = await Promise.all([
+        fetchFranchise(row.tmdb_id),
+        fetchOmdb(row.imdb_id),
+      ]);
 
-    // ── Oscar nominations (Wikidata) — non-fatal ──
-    let oscars = [];
-    try {
-      oscars = await fetchOscarNominations(row.imdb_id);
-    } catch (err) {
-      console.warn(`  ⚠ Wikidata failed for ${row.title} after ${MAX_RETRIES} retries — storing 0 noms (re-run --force to retry)`);
-      skipped++;
-    }
-
-    // Always write what we have — franchise may succeed even if Wikidata fails
-    try {
       await pool.query(
         `UPDATE movies
          SET franchise_name              = $1,
              oscar_nominations           = $2,
              oscar_nomination_categories = $3
          WHERE tmdb_id = $4`,
-        [franchise, oscars.length, oscars, row.tmdb_id]
+        [franchise, oscarCount, [], row.tmdb_id]
       );
 
       const franchiseStr = franchise ? franchise.replace(/ Collection$/, ' series') : 'standalone';
-      console.log(
-        `✓ ${row.title.padEnd(45)} franchise=${franchiseStr.padEnd(28)} oscars=${oscars.length}`
-        + (oscars.length ? ` [${oscars.slice(0, 2).join(', ')}${oscars.length > 2 ? '…' : ''}]` : '')
-      );
+      console.log(`✓ ${row.title.padEnd(45)} franchise=${franchiseStr.padEnd(28)} oscars=${oscarCount}`);
       ok++;
     } catch (err) {
-      console.error(`✗ DB write failed for ${row.title}:`, err.message);
+      console.error(`✗ ${row.title} (${row.tmdb_id}):`, err.message);
+      failed++;
+      await sleep(500);
     }
 
-    // Polite delay between movies
-    await sleep(800);
+    await sleep(300); // OMDb free tier is generous — 300ms is plenty
   }
 
-  console.log(`\nDone. ${ok} written, ${skipped} had Wikidata failures (oscar_nominations stored as 0).`);
-  if (skipped > 0) console.log('Re-run with --force to retry the Wikidata failures.');
+  console.log(`\nDone. ${ok} updated, ${failed} failed.`);
   await pool.end();
 }
 
