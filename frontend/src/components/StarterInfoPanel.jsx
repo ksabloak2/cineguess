@@ -65,9 +65,7 @@ export default function StarterInfoPanel({ starterInfo }) {
           </span>
         </div>
         {cleanFranchise ? (
-          <p className="text-sm text-blue-200">
-            Part of the <span className="font-semibold">{cleanFranchise}</span>
-          </p>
+          <p className="text-sm text-blue-200 font-semibold">Part of a franchise</p>
         ) : (
           <p className="text-sm text-gray-400">Standalone film</p>
         )}
