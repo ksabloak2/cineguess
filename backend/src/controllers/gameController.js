@@ -66,7 +66,8 @@ async function getDailyState(req, res) {
               m.genres, m.director, m.primary_language,
               m.lead_actor, m.supporting_actor, m.popular_quote, m.poster_path, m.imdb_id,
               m.ai_hint_quote, m.backdrop_paths, m.music_hint_song, m.music_hint_singers,
-              m.production_studio
+              m.production_studio,
+              m.oscar_nominations, m.oscar_nomination_categories, m.franchise_name
        FROM daily_picks dp
        JOIN movies m ON m.id = dp.movie_id
        WHERE dp.category = $1 AND dp.pick_date::date = $2`,
@@ -94,14 +95,20 @@ async function getDailyState(req, res) {
       }
     }
 
-    // Build response — only reveal movie details if game is over
+    // Build response — only reveal movie details if game is over.
+    // Starter info (oscar/franchise) is always sent — it's intentionally visible
+    // from round start and does not reveal the movie title.
     const safeMovie = pick
       ? {
-          tmdb_id: gameOver ? pick.tmdb_id : undefined,
-          title: gameOver ? pick.title : undefined,
-          year: gameOver ? pick.year : undefined,
-          poster_path: gameOver ? pick.poster_path : undefined,
-          imdb_id: gameOver ? pick.imdb_id : undefined,
+          tmdb_id:    gameOver ? pick.tmdb_id    : undefined,
+          title:      gameOver ? pick.title       : undefined,
+          year:       gameOver ? pick.year        : undefined,
+          poster_path:gameOver ? pick.poster_path : undefined,
+          imdb_id:    gameOver ? pick.imdb_id     : undefined,
+          // Starter info — always visible
+          oscar_nominations:           pick.oscar_nominations,
+          oscar_nomination_categories: pick.oscar_nomination_categories,
+          franchise_name:              pick.franchise_name,
         }
       : null;
 
@@ -143,7 +150,8 @@ async function getMoviePool(req, res) {
               ai_hint_quote, backdrop_paths, music_hint_song, music_hint_singers,
               animation_style, animation_studio, has_sequel, protagonist_type, is_musical,
               superhero_universe, superhero_publisher, hero_villain_focus, solo_or_team, superpower_type,
-              production_studio
+              production_studio,
+              oscar_nominations, oscar_nomination_categories, franchise_name
        FROM movies
        WHERE $1 = ANY(categories)
        ORDER BY popularity DESC`,

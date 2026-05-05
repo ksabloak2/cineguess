@@ -18,6 +18,7 @@ import GameBoard from '../components/GameBoard';
 import HintModal from '../components/HintModal';
 import ResultModal from '../components/ResultModal';
 import RulesModal from '../components/RulesModal';
+import StarterInfoPanel from '../components/StarterInfoPanel';
 
 const VALID_IDS   = new Set([
   ...CATEGORIES.map((c) => c.id),
@@ -57,6 +58,9 @@ export default function GamePage() {
   // ── State ──────────────────────────────────────────────────────
   const [movies, setMovies]               = useState([]);
   const [targetMovie, setTargetMovie]     = useState(null);
+  // Starter info (top250 only) — Oscar nominations + franchise, shown before hints unlock
+  const [starterInfo, setStarterInfo]     = useState(null);
+  const [showStarterModal, setShowStarterModal] = useState(false);
   const [dailyDate, setDailyDate]         = useState(null); // Eastern date from server ("2026-04-29")
   const [guessResults, setGuessResults]   = useState([]);
   const [guessedIds, setGuessedIds]       = useState([]);
@@ -166,6 +170,8 @@ export default function GamePage() {
     setError(null);
     setLatestIndex(-1);
     setTargetMovie(null);
+    setStarterInfo(null);
+    setShowStarterModal(false);
 
     // Phase 1 — SYNCHRONOUS hydrate from localStorage so the board is visible
     // on first paint, even before the movie pool / server state resolves.
@@ -217,14 +223,22 @@ export default function GamePage() {
 
         if (isUnlimited) {
           const saved = loadUnlimitedState(category);
+          let target;
           if (saved && saved.targetId) {
-            const target = pool.find((m) => m.tmdb_id === saved.targetId);
+            target = pool.find((m) => m.tmdb_id === saved.targetId);
             setTargetMovie(target || null);
             restoreGuestSession(saved, pool);
           } else {
-            const target = pool[Math.floor(Math.random() * pool.length)];
+            target = pool[Math.floor(Math.random() * pool.length)];
             setTargetMovie(target);
             saveUnlimitedState(category, { targetId: target.tmdb_id, guesses: [], gameOver: false, won: null, hintsRevealedCount: 0, gameOverHintsRevealed: [] });
+          }
+          if (category === 'top250' && target) {
+            setStarterInfo({
+              oscar_nominations:           target.oscar_nominations,
+              oscar_nomination_categories: target.oscar_nomination_categories,
+              franchise_name:              target.franchise_name,
+            });
           }
           setLoading(false);
           return;
@@ -235,6 +249,15 @@ export default function GamePage() {
         // local didn't have (e.g. first visit on a new device).
         const state = await getDailyState(category);
         if (state.date) setDailyDate(state.date);
+
+        // Set starter info for top250 daily — always available from round start
+        if (category === 'top250' && state.movie) {
+          setStarterInfo({
+            oscar_nominations:           state.movie.oscar_nominations,
+            oscar_nomination_categories: state.movie.oscar_nomination_categories,
+            franchise_name:              state.movie.franchise_name,
+          });
+        }
 
         // ── Stale-state detection ─────────────────────────────────────────────
         // Two cases that make local state invalid:
@@ -407,6 +430,14 @@ export default function GamePage() {
     setShowModal(false);
     setError(null);
     setLatestIndex(-1);
+    setShowStarterModal(false);
+    if (category === 'top250') {
+      setStarterInfo({
+        oscar_nominations:           target.oscar_nominations,
+        oscar_nomination_categories: target.oscar_nomination_categories,
+        franchise_name:              target.franchise_name,
+      });
+    }
     saveUnlimitedState(category, { targetId: target.tmdb_id, guesses: [], gameOver: false, won: null, hintsRevealedCount: 0, gameOverHintsRevealed: [] });
   }
 
@@ -870,7 +901,50 @@ export default function GamePage() {
         </div>
       )}
 
-      {/* Hint button — single button that opens modal with reveal-per-hint controls */}
+      {/* ── Starter info button (top250 only, before hints unlock) ── */}
+      {category === 'top250' && !gameOver && hintsUnlocked.length === 0 && starterInfo && (
+        <div className="flex justify-center">
+          <button
+            onClick={() => setShowStarterModal(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl
+                       bg-amber-500/10 hover:bg-amber-500/20
+                       border border-amber-500/30 text-amber-300
+                       text-xs sm:text-sm font-medium transition-all hover:scale-[1.02]"
+          >
+            <span>ℹ️</span>
+            <span>Starter Info</span>
+          </button>
+        </div>
+      )}
+
+      {/* ── Starter info standalone modal (before hints unlock) ── */}
+      {showStarterModal && hintsUnlocked.length === 0 && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 animate-fade-in"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowStarterModal(false); }}
+        >
+          <div className="card w-full sm:max-w-md p-5 sm:p-6 animate-curtain-rise sm:animate-bounce-in relative
+                          rounded-t-3xl sm:rounded-2xl max-h-[85dvh] overflow-y-auto">
+            <button
+              onClick={() => setShowStarterModal(false)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-surface-input flex items-center justify-center
+                         text-gray-500 hover:text-white hover:bg-surface-border transition-all"
+              aria-label="Close"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <h2 className="font-display text-lg font-bold text-white mb-3">ℹ️ Starter Info</h2>
+            <StarterInfoPanel starterInfo={starterInfo} />
+            <button onClick={() => setShowStarterModal(false)} className="btn-primary w-full mt-5 text-sm">
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Hints button (appears after hints unlock, replaces starter info button) ── */}
       {(hintsUnlocked.length > 0 || (gameOver && hintsUnlocked.length > 0)) && (
         <div className="flex justify-center">
           {(() => {
@@ -893,7 +967,6 @@ export default function GamePage() {
               );
             }
 
-            // During play: one button that says "Hints Available (N)" with pulsing dot
             return (
               <button
                 onClick={() => { setShowHintModal(true); setNewHintAvailable(false); }}
@@ -921,7 +994,7 @@ export default function GamePage() {
         </div>
       )}
 
-      {/* Hint modal — shows revealed + available hints with per-hint reveal buttons */}
+      {/* Hint modal — starter info at top, then hints below */}
       <HintModal
         hints={gameOver ? hintsUnlocked : hintsRevealed}
         availableHints={gameOver ? [] : hintsUnlocked.filter(
@@ -932,6 +1005,7 @@ export default function GamePage() {
         open={showHintModal}
         latestType={latestHintType}
         onClose={() => setShowHintModal(false)}
+        starterInfo={category === 'top250' ? starterInfo : null}
       />
 
       {/* Colorblind legend — only shown when colorblind mode is active */}
