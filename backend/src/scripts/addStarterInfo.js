@@ -5,8 +5,9 @@
  * for every movie in the top250 category.
  *
  * Data sources:
- *   - Franchise : TMDB  belongs_to_collection
- *   - Oscars    : OMDb  Awards string  (fast, reliable, free — 1000 req/day)
+ *   - Franchise   : TMDB  belongs_to_collection
+ *   - Oscar count : OMDb  Awards string  (fast, reliable, free — 1000 req/day)
+ *   - Oscar cats  : Wikidata SPARQL  (best-effort — skipped on timeout/error)
  *
  * Usage:
  *   node src/scripts/addStarterInfo.js           # skip already-populated rows
@@ -63,6 +64,37 @@ async function fetchOmdb(imdbId) {
   return parseOscars(res.data?.Awards);
 }
 
+// ── Wikidata: Oscar nomination category names (best-effort) ──────────────────
+// Uses a simple label-filter query instead of expensive transitive subclass
+// lookup — much faster and less likely to time out.
+async function fetchWikidataCategories(imdbId) {
+  if (!imdbId) return [];
+
+  const sparql = `
+    SELECT DISTINCT ?awardLabel WHERE {
+      ?film wdt:P345 "${imdbId}" .
+      ?film p:P1411 ?stmt .
+      ?stmt ps:P1411 ?award .
+      ?award rdfs:label ?awardLabel .
+      FILTER(LANG(?awardLabel) = "en")
+      FILTER(CONTAINS(LCASE(?awardLabel), "academy award"))
+    }
+  `;
+
+  const res = await axios.get('https://query.wikidata.org/sparql', {
+    params: { query: sparql, format: 'json' },
+    headers: { 'User-Agent': 'CineGuess/1.0 (movie trivia app; mailto:admin@cineguess.com)' },
+    timeout: 15000,
+  });
+
+  const bindings = res.data?.results?.bindings || [];
+  return bindings
+    .map(b => b.awardLabel?.value)
+    .filter(Boolean)
+    // Clean up: "Academy Award for Best Picture" → "Best Picture"
+    .map(label => label.replace(/^Academy Award for /i, '').trim());
+}
+
 // ── Main ─────────────────────────────────────────────────────────────────────
 async function run() {
   const where = FORCE
@@ -75,14 +107,28 @@ async function run() {
 
   console.log(`\nFound ${rows.length} top250 movies to process${FORCE ? ' (--force)' : ''}.\n`);
 
-  let ok = 0, failed = 0;
+  let ok = 0, failed = 0, wikiFailed = 0;
 
   for (const row of rows) {
     try {
+      // Step 1: TMDB (franchise) + OMDb (count) — both fast and reliable
       const [franchise, oscarCount] = await Promise.all([
         fetchFranchise(row.tmdb_id),
         fetchOmdb(row.imdb_id),
       ]);
+
+      // Step 2: Wikidata (category names) — best-effort, skip on failure
+      let categories = [];
+      if (oscarCount > 0) {
+        try {
+          categories = await fetchWikidataCategories(row.imdb_id);
+        } catch (wikiErr) {
+          wikiFailed++;
+          process.stdout.write('  ⚠ Wikidata skipped: ' + wikiErr.message + '\n');
+        }
+        // Small delay to be polite to Wikidata
+        await sleep(500);
+      }
 
       await pool.query(
         `UPDATE movies
@@ -90,11 +136,12 @@ async function run() {
              oscar_nominations           = $2,
              oscar_nomination_categories = $3
          WHERE tmdb_id = $4`,
-        [franchise, oscarCount, [], row.tmdb_id]
+        [franchise, oscarCount, categories, row.tmdb_id]
       );
 
       const franchiseStr = franchise ? franchise.replace(/ Collection$/, ' series') : 'standalone';
-      console.log(`✓ ${row.title.padEnd(45)} franchise=${franchiseStr.padEnd(28)} oscars=${oscarCount}`);
+      const catStr = categories.length > 0 ? `[${categories.slice(0, 2).join(', ')}${categories.length > 2 ? '…' : ''}]` : '[]';
+      console.log(`✓ ${row.title.padEnd(45)} franchise=${franchiseStr.padEnd(28)} oscars=${String(oscarCount).padEnd(3)} cats=${catStr}`);
       ok++;
     } catch (err) {
       console.error(`✗ ${row.title} (${row.tmdb_id}):`, err.message);
@@ -102,10 +149,10 @@ async function run() {
       await sleep(500);
     }
 
-    await sleep(300); // OMDb free tier is generous — 300ms is plenty
+    await sleep(300); // OMDb free tier: 300ms between requests
   }
 
-  console.log(`\nDone. ${ok} updated, ${failed} failed.`);
+  console.log(`\nDone. ${ok} updated, ${failed} failed, ${wikiFailed} Wikidata skips (count still saved).`);
   await pool.end();
 }
 
