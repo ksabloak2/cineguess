@@ -102,7 +102,10 @@ const fetchWikidataWinCategories = (imdbId) => fetchWikidataAwardCategories(imdb
 async function run() {
   const where = FORCE
     ? `WHERE 'top250' = ANY(categories)`
-    : `WHERE 'top250' = ANY(categories) AND oscar_wins IS NULL`;
+    : `WHERE 'top250' = ANY(categories)
+       AND (oscar_wins IS NULL
+            OR oscar_win_categories IS NULL
+            OR oscar_win_categories = '[]'::jsonb)`;
 
   const { rows } = await pool.query(
     `SELECT tmdb_id, title, imdb_id,
