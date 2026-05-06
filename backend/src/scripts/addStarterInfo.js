@@ -149,7 +149,6 @@ async function run() {
         `UPDATE movies
          SET franchise_name              = $1,
              oscar_wins                  = $2,
-             -- Only update nomination categories if they were empty (never overwrite curated data)
              oscar_nomination_categories = CASE
                WHEN oscar_nomination_categories IS NULL OR oscar_nomination_categories = '[]'::jsonb
                THEN $3::jsonb
