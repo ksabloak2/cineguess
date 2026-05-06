@@ -105,7 +105,9 @@ async function run() {
     : `WHERE 'top250' = ANY(categories) AND oscar_wins IS NULL`;
 
   const { rows } = await pool.query(
-    `SELECT tmdb_id, title, imdb_id FROM movies ${where} ORDER BY popularity DESC`
+    `SELECT tmdb_id, title, imdb_id,
+            oscar_nomination_categories
+     FROM movies ${where} ORDER BY popularity DESC`
   );
 
   console.log(`\nFound ${rows.length} top250 movies to process${FORCE ? ' (--force)' : ''}.\n`);
@@ -120,15 +122,21 @@ async function run() {
         fetchOmdb(row.imdb_id),
       ]);
 
-      // Step 2: Wikidata (nomination + win category names) — best-effort, skip on failure
-      let categories = [];
+      // Step 2: Wikidata (win categories always; nomination categories only if not already set)
+      // Never overwrite nomination categories that were manually curated.
+      const existingNomCats = Array.isArray(row.oscar_nomination_categories)
+        ? row.oscar_nomination_categories
+        : [];
+      const nomCatsAlreadySet = existingNomCats.length > 0;
+
+      let categories = existingNomCats; // preserve existing by default
       let winCategories = [];
       if (oscarCount > 0) {
         try {
-          [categories, winCategories] = await Promise.all([
-            fetchWikidataCategories(row.imdb_id),
-            fetchWikidataWinCategories(row.imdb_id),
-          ]);
+          const toFetch = nomCatsAlreadySet
+            ? [Promise.resolve(existingNomCats), fetchWikidataWinCategories(row.imdb_id)]
+            : [fetchWikidataCategories(row.imdb_id), fetchWikidataWinCategories(row.imdb_id)];
+          [categories, winCategories] = await Promise.all(toFetch);
         } catch (wikiErr) {
           wikiFailed++;
           process.stdout.write('  ⚠ Wikidata skipped: ' + wikiErr.message + '\n');
@@ -141,14 +149,20 @@ async function run() {
         `UPDATE movies
          SET franchise_name              = $1,
              oscar_wins                  = $2,
-             oscar_nomination_categories = $3,
+             -- Only update nomination categories if they were empty (never overwrite curated data)
+             oscar_nomination_categories = CASE
+               WHEN oscar_nomination_categories IS NULL OR oscar_nomination_categories = '[]'::jsonb
+               THEN $3::jsonb
+               ELSE oscar_nomination_categories
+             END,
              oscar_win_categories        = $4
          WHERE tmdb_id = $5`,
-        [franchise, oscarCount, categories, winCategories, row.tmdb_id]
+        [franchise, oscarCount, JSON.stringify(categories), winCategories, row.tmdb_id]
       );
 
-      const franchiseStr = franchise ? franchise.replace(/ Collection$/, ' series') : 'standalone';
-      const nomStr = categories.length > 0 ? `noms=[${categories.slice(0, 2).join(', ')}${categories.length > 2 ? '…' : ''}]` : 'noms=[]';
+      const nomStr = categories.length > 0
+        ? `noms=[${categories.slice(0, 2).join(', ')}${categories.length > 2 ? '…' : ''}]${nomCatsAlreadySet ? '(kept)' : ''}`
+        : 'noms=[]';
       const winStr = winCategories.length > 0 ? `wins=[${winCategories.slice(0, 2).join(', ')}${winCategories.length > 2 ? '…' : ''}]` : 'wins=[]';
       console.log(`✓ ${row.title.padEnd(45)} oscars=${String(oscarCount).padEnd(3)} ${nomStr} ${winStr}`);
       ok++;
