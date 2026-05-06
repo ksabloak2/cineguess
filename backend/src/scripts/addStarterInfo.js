@@ -99,7 +99,7 @@ async function fetchWikidataCategories(imdbId) {
 async function run() {
   const where = FORCE
     ? `WHERE 'top250' = ANY(categories)`
-    : `WHERE 'top250' = ANY(categories) AND oscar_nominations IS NULL`;
+    : `WHERE 'top250' = ANY(categories) AND oscar_wins IS NULL`;
 
   const { rows } = await pool.query(
     `SELECT tmdb_id, title, imdb_id FROM movies ${where} ORDER BY popularity DESC`
@@ -133,10 +133,12 @@ async function run() {
       await pool.query(
         `UPDATE movies
          SET franchise_name              = $1,
-             oscar_nominations           = $2,
+             oscar_wins                  = $2,
              oscar_nomination_categories = $3
          WHERE tmdb_id = $4`,
         [franchise, oscarCount, categories, row.tmdb_id]
+        // oscar_wins = OMDb win count (fallback when no Wikidata)
+        // oscar_nomination_categories = Wikidata nominations (categories.length = true nomination count)
       );
 
       const franchiseStr = franchise ? franchise.replace(/ Collection$/, ' series') : 'standalone';
