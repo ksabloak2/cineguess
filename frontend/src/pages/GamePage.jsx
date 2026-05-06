@@ -687,14 +687,17 @@ export default function GamePage() {
           hintsRevealedCount: hintsRevealedCount,
           gameOverHintsRevealed: isGameOver ? [...hintsRevealed] : [],
         });
-        // Authenticated: sync to server so other devices see the same state.
-        if (session) {
+        // Authenticated: sync in-progress state to server so other devices stay current.
+        // We do NOT save when the game ends — startUnlimitedRound is the only writer
+        // for a new round, so there is no race condition where a slow game-over save
+        // overwrites the new round on the server.
+        if (session && !isGameOver) {
           saveUnlimitedSession(category, {
-            target_tmdb_id:     targetMovie.tmdb_id,
-            guesses:            newIds,
-            game_over:          isGameOver,
-            won:                isGameOver ? correct : null,
-            hints_revealed:     isGameOver ? [...hintsRevealed] : [],
+            target_tmdb_id:      targetMovie.tmdb_id,
+            guesses:             newIds,
+            game_over:           false,
+            won:                 null,
+            hints_revealed:      [],
             hints_revealed_count: hintsRevealedCount,
           }).catch(() => {});
         }
