@@ -112,6 +112,10 @@ export const getStreaks       = (category) => api.get(`/game/streaks/${category}
 export const getPercentiles   = () => api.get('/game/percentiles').then(r => r.data);
 export const submitUnlimitedResult = (category, won) =>
   api.post('/game/unlimited/result', { category, won }).then(r => r.data);
+export const getUnlimitedSession  = (category) =>
+  api.get(`/game/unlimited/current/${category}`).then(r => r.data);
+export const saveUnlimitedSession = (category, data) =>
+  api.put(`/game/unlimited/current/${category}`, data).then(r => r.data);
 export const getCalendar      = (category) => api.get(`/game/calendar/${category}`).then(r => r.data);
 export const getYearCalendar  = (year) => api.get('/game/calendar-year', { params: { year } }).then(r => r.data);
 export const getRatings       = (tmdb_id) => api.get(`/game/ratings/${tmdb_id}`).then(r => r.data);

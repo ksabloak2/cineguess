@@ -1218,6 +1218,71 @@ async function getLeaderboard(req, res) {
   }
 }
 
+// ---------------------------------------------------------------
+// GET /api/game/unlimited/current/:category
+// Returns the authenticated user's current unlimited session so
+// it can be restored on any device/browser.
+// ---------------------------------------------------------------
+async function getUnlimitedSession(req, res) {
+  const { category } = req.params;
+  if (!VALID_CATEGORIES.includes(category)) {
+    return res.status(400).json({ error: 'Invalid category' });
+  }
+  const client = await pool.connect();
+  try {
+    const { rows } = await client.query(
+      `SELECT target_tmdb_id, guesses, game_over, won, hints_revealed, hints_revealed_count
+       FROM unlimited_sessions
+       WHERE user_id = $1 AND category = $2`,
+      [req.user.id, category]
+    );
+    if (!rows.length) return res.json(null);
+    res.json(rows[0]);
+  } finally {
+    client.release();
+  }
+}
+
+// ---------------------------------------------------------------
+// PUT /api/game/unlimited/current/:category
+// Upserts the authenticated user's current unlimited session.
+// Body: { target_tmdb_id, guesses, game_over, won, hints_revealed, hints_revealed_count }
+// ---------------------------------------------------------------
+async function saveUnlimitedSession(req, res) {
+  const { category } = req.params;
+  if (!VALID_CATEGORIES.includes(category)) {
+    return res.status(400).json({ error: 'Invalid category' });
+  }
+  const { target_tmdb_id, guesses = [], game_over = false, won = null,
+          hints_revealed = [], hints_revealed_count = 0 } = req.body;
+  if (!target_tmdb_id) return res.status(400).json({ error: 'target_tmdb_id required' });
+
+  const client = await pool.connect();
+  try {
+    await client.query(
+      `INSERT INTO unlimited_sessions
+         (user_id, category, target_tmdb_id, guesses, game_over, won, hints_revealed, hints_revealed_count, started_at, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW(),NOW())
+       ON CONFLICT (user_id, category) DO UPDATE SET
+         target_tmdb_id      = EXCLUDED.target_tmdb_id,
+         guesses             = EXCLUDED.guesses,
+         game_over           = EXCLUDED.game_over,
+         won                 = EXCLUDED.won,
+         hints_revealed      = EXCLUDED.hints_revealed,
+         hints_revealed_count= EXCLUDED.hints_revealed_count,
+         started_at          = CASE WHEN unlimited_sessions.target_tmdb_id != EXCLUDED.target_tmdb_id
+                                    THEN NOW() ELSE unlimited_sessions.started_at END,
+         updated_at          = NOW()`,
+      [req.user.id, category, target_tmdb_id,
+       JSON.stringify(guesses), game_over, won,
+       JSON.stringify(hints_revealed), hints_revealed_count]
+    );
+    res.json({ ok: true });
+  } finally {
+    client.release();
+  }
+}
+
 module.exports = {
   getDailyState,
   getMoviePool,
@@ -1228,6 +1293,8 @@ module.exports = {
   getCalendar,
   getYearCalendar,
   submitUnlimitedResult,
+  getUnlimitedSession,
+  saveUnlimitedSession,
   getRatings,
   getPercentiles,
   getLeaderboard,

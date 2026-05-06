@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
 import {
   getMoviePool, getDailyState, submitGuess, checkGuess, getResult,
-  submitUnlimitedResult, getStreaks, tmdbImage,
+  submitUnlimitedResult, getStreaks, tmdbImage, getUnlimitedSession, saveUnlimitedSession,
 } from '../utils/api';
 import {
   CATEGORIES, MAX_GUESSES, getMaxGuesses, evaluateTilesLocal, getHints,
@@ -222,17 +222,55 @@ export default function GamePage() {
         setMovies(pool);
 
         if (isUnlimited) {
-          const saved = loadUnlimitedState(category);
           let target;
-          if (saved && saved.targetId) {
-            target = pool.find((m) => m.tmdb_id === saved.targetId);
-            setTargetMovie(target || null);
-            restoreGuestSession(saved, pool);
-          } else {
-            target = pool[Math.floor(Math.random() * pool.length)];
-            setTargetMovie(target);
-            saveUnlimitedState(category, { targetId: target.tmdb_id, guesses: [], gameOver: false, won: null, hintsRevealedCount: 0, gameOverHintsRevealed: [] });
+
+          if (session) {
+            // Authenticated: server is source of truth for cross-device sync.
+            try {
+              const serverSession = await getUnlimitedSession(category);
+              if (serverSession && serverSession.target_tmdb_id) {
+                target = pool.find((m) => m.tmdb_id === serverSession.target_tmdb_id);
+                if (target) {
+                  const adapted = {
+                    targetId:             serverSession.target_tmdb_id,
+                    guesses:              Array.isArray(serverSession.guesses) ? serverSession.guesses : [],
+                    gameOver:             serverSession.game_over,
+                    won:                  serverSession.won,
+                    hintsRevealedCount:   serverSession.hints_revealed_count,
+                    gameOverHintsRevealed: Array.isArray(serverSession.hints_revealed) ? serverSession.hints_revealed : [],
+                  };
+                  // Sync back to localStorage so offline fallback stays current
+                  saveUnlimitedState(category, adapted);
+                  setTargetMovie(target);
+                  await restoreGuestSession(adapted, pool);
+                }
+              }
+            } catch {
+              // Server unreachable — fall through to localStorage below
+            }
           }
+
+          if (!target) {
+            // Guest or server had no session: fall back to localStorage
+            const saved = loadUnlimitedState(category);
+            if (saved && saved.targetId) {
+              target = pool.find((m) => m.tmdb_id === saved.targetId);
+              setTargetMovie(target || null);
+              await restoreGuestSession(saved, pool);
+            } else {
+              target = pool[Math.floor(Math.random() * pool.length)];
+              setTargetMovie(target);
+              const freshState = { targetId: target.tmdb_id, guesses: [], gameOver: false, won: null, hintsRevealedCount: 0, gameOverHintsRevealed: [] };
+              saveUnlimitedState(category, freshState);
+              if (session) {
+                saveUnlimitedSession(category, {
+                  target_tmdb_id: target.tmdb_id, guesses: [], game_over: false,
+                  won: null, hints_revealed: [], hints_revealed_count: 0,
+                }).catch(() => {});
+              }
+            }
+          }
+
           if (category === 'top250' && target) {
             setStarterInfo({
               oscar_wins:           target.oscar_wins,
@@ -439,6 +477,13 @@ export default function GamePage() {
       });
     }
     saveUnlimitedState(category, { targetId: target.tmdb_id, guesses: [], gameOver: false, won: null, hintsRevealedCount: 0, gameOverHintsRevealed: [] });
+    // Sync new round to server so other devices pick up the same movie.
+    if (session) {
+      saveUnlimitedSession(category, {
+        target_tmdb_id: target.tmdb_id, guesses: [], game_over: false,
+        won: null, hints_revealed: [], hints_revealed_count: 0,
+      }).catch(() => {});
+    }
   }
 
   async function restoreGuestSession(saved, pool) {
@@ -640,6 +685,17 @@ export default function GamePage() {
           hintsRevealedCount: hintsRevealedCount,
           gameOverHintsRevealed: isGameOver ? [...hintsRevealed] : [],
         });
+        // Authenticated: sync to server so other devices see the same state.
+        if (session) {
+          saveUnlimitedSession(category, {
+            target_tmdb_id:     targetMovie.tmdb_id,
+            guesses:            newIds,
+            game_over:          isGameOver,
+            won:                isGameOver ? correct : null,
+            hints_revealed:     isGameOver ? [...hintsRevealed] : [],
+            hints_revealed_count: hintsRevealedCount,
+          }).catch(() => {});
+        }
       } else {
         // Daily: snapshot the full board into localStorage so a refresh /
         // tab-switch / network blip doesn't wipe progress.
