@@ -2,7 +2,7 @@
 -- Allows the game state to be restored on any device/browser.
 CREATE TABLE IF NOT EXISTS unlimited_sessions (
   id                   SERIAL PRIMARY KEY,
-  user_id              INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id              UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   category             TEXT NOT NULL,
   target_tmdb_id       INTEGER NOT NULL,
   guesses              JSONB DEFAULT '[]',
