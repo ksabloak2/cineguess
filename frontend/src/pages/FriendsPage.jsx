@@ -7,7 +7,7 @@ import {
   unfriend, cancelSentRequest, searchUsers, getFriendYearCalendar,
   getFriendPercentiles, getFriendFriends,
 } from '../utils/api';
-import { CATEGORIES } from '../utils/gameLogic';
+import { CATEGORIES, getMaxGuesses } from '../utils/gameLogic';
 import YearCalendar from '../components/YearCalendar';
 import { FlameSVG, getRankBadge, getFlameConfig, FLAME_TIERS } from '../components/FlameIndicator';
 
@@ -1868,7 +1868,7 @@ function MiniPoster({ cat, catRgb, g, streak, won, lost, avgGuesses }) {
               ✓ Won
             </div>
             <div style={{ fontSize: '0.54rem', color: 'rgba(255,255,255,0.30)', marginTop: 2 }}>
-              {g.guesses_taken}/7 guesses
+              {g.guesses_taken}/{getMaxGuesses(cat.id)} guesses
             </div>
             {avgGuesses !== null && avgGuesses !== undefined && (
               <div style={{ fontSize: '0.52rem', color: `rgba(${catRgb},0.60)`, marginTop: 2, fontWeight: 700 }}>

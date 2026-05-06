@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { getYearCalendar } from '../utils/api';
-import { CATEGORIES } from '../utils/gameLogic';
+import { CATEGORIES, getMaxGuesses } from '../utils/gameLogic';
 
 const DAILY_CATS = CATEGORIES.filter((c) => c.id !== 'unlimited');
 
@@ -249,7 +249,7 @@ function DayModal({ dateKey, entry, onClose }) {
                 {r ? (
                   <div className="text-right">
                     <p className={`text-xs font-semibold ${r.won ? 'text-green-400' : 'text-red-400'}`}>
-                      {r.won ? `Won ${r.guesses_taken}/7` : 'Lost'}
+                      {r.won ? `Won ${r.guesses_taken}/${getMaxGuesses(cat.id)}` : 'Lost'}
                     </p>
                     {r.movie_title && (
                       <p className="text-[10px] text-gray-600">
