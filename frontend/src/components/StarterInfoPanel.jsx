@@ -15,7 +15,7 @@ export default function StarterInfoPanel({ starterInfo }) {
   const hasOscarData = oscar_wins !== null && oscar_wins !== undefined;
   const wins         = oscar_wins ?? 0;
   const categories   = Array.isArray(oscar_nomination_categories)
-    ? oscar_nomination_categories
+    ? [...oscar_nomination_categories].sort()
     : [];
 
   // If Wikidata gave us categories, use that count as nominations.
