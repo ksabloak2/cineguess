@@ -235,7 +235,7 @@ export default function GamePage() {
           }
           if (category === 'top250' && target) {
             setStarterInfo({
-              oscar_nominations:           target.oscar_nominations,
+              oscar_wins:           target.oscar_wins,
               oscar_nomination_categories: target.oscar_nomination_categories,
               franchise_name:              target.franchise_name,
             });
@@ -253,7 +253,7 @@ export default function GamePage() {
         // Set starter info for top250 daily — always available from round start
         if (category === 'top250' && state.movie) {
           setStarterInfo({
-            oscar_nominations:           state.movie.oscar_nominations,
+            oscar_wins:           state.movie.oscar_wins,
             oscar_nomination_categories: state.movie.oscar_nomination_categories,
             franchise_name:              state.movie.franchise_name,
           });
@@ -433,7 +433,7 @@ export default function GamePage() {
     setShowStarterModal(false);
     if (category === 'top250') {
       setStarterInfo({
-        oscar_nominations:           target.oscar_nominations,
+        oscar_wins:           target.oscar_wins,
         oscar_nomination_categories: target.oscar_nomination_categories,
         franchise_name:              target.franchise_name,
       });
