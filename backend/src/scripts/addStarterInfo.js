@@ -64,17 +64,16 @@ async function fetchOmdb(imdbId) {
   return parseOscars(res.data?.Awards);
 }
 
-// ── Wikidata: Oscar nomination category names (best-effort) ──────────────────
-// Uses a simple label-filter query instead of expensive transitive subclass
-// lookup — much faster and less likely to time out.
-async function fetchWikidataCategories(imdbId) {
+// ── Wikidata: Oscar category names (best-effort) ─────────────────────────────
+// prop: 'P1411' = nominated for, 'P166' = award received
+async function fetchWikidataAwardCategories(imdbId, prop) {
   if (!imdbId) return [];
 
   const sparql = `
     SELECT DISTINCT ?awardLabel WHERE {
       ?film wdt:P345 "${imdbId}" .
-      ?film p:P1411 ?stmt .
-      ?stmt ps:P1411 ?award .
+      ?film p:${prop} ?stmt .
+      ?stmt ps:${prop} ?award .
       ?award rdfs:label ?awardLabel .
       FILTER(LANG(?awardLabel) = "en")
       FILTER(CONTAINS(LCASE(?awardLabel), "academy award"))
@@ -94,6 +93,10 @@ async function fetchWikidataCategories(imdbId) {
     // Clean up: "Academy Award for Best Picture" → "Best Picture"
     .map(label => label.replace(/^Academy Award for /i, '').trim());
 }
+
+// Convenience wrappers
+const fetchWikidataCategories    = (imdbId) => fetchWikidataAwardCategories(imdbId, 'P1411');
+const fetchWikidataWinCategories = (imdbId) => fetchWikidataAwardCategories(imdbId, 'P166');
 
 // ── Main ─────────────────────────────────────────────────────────────────────
 async function run() {
@@ -117,33 +120,37 @@ async function run() {
         fetchOmdb(row.imdb_id),
       ]);
 
-      // Step 2: Wikidata (category names) — best-effort, skip on failure
+      // Step 2: Wikidata (nomination + win category names) — best-effort, skip on failure
       let categories = [];
+      let winCategories = [];
       if (oscarCount > 0) {
         try {
-          categories = await fetchWikidataCategories(row.imdb_id);
+          [categories, winCategories] = await Promise.all([
+            fetchWikidataCategories(row.imdb_id),
+            fetchWikidataWinCategories(row.imdb_id),
+          ]);
         } catch (wikiErr) {
           wikiFailed++;
           process.stdout.write('  ⚠ Wikidata skipped: ' + wikiErr.message + '\n');
         }
         // Small delay to be polite to Wikidata
-        await sleep(500);
+        await sleep(600);
       }
 
       await pool.query(
         `UPDATE movies
          SET franchise_name              = $1,
              oscar_wins                  = $2,
-             oscar_nomination_categories = $3
-         WHERE tmdb_id = $4`,
-        [franchise, oscarCount, categories, row.tmdb_id]
-        // oscar_wins = OMDb win count (fallback when no Wikidata)
-        // oscar_nomination_categories = Wikidata nominations (categories.length = true nomination count)
+             oscar_nomination_categories = $3,
+             oscar_win_categories        = $4
+         WHERE tmdb_id = $5`,
+        [franchise, oscarCount, categories, winCategories, row.tmdb_id]
       );
 
       const franchiseStr = franchise ? franchise.replace(/ Collection$/, ' series') : 'standalone';
-      const catStr = categories.length > 0 ? `[${categories.slice(0, 2).join(', ')}${categories.length > 2 ? '…' : ''}]` : '[]';
-      console.log(`✓ ${row.title.padEnd(45)} franchise=${franchiseStr.padEnd(28)} oscars=${String(oscarCount).padEnd(3)} cats=${catStr}`);
+      const nomStr = categories.length > 0 ? `noms=[${categories.slice(0, 2).join(', ')}${categories.length > 2 ? '…' : ''}]` : 'noms=[]';
+      const winStr = winCategories.length > 0 ? `wins=[${winCategories.slice(0, 2).join(', ')}${winCategories.length > 2 ? '…' : ''}]` : 'wins=[]';
+      console.log(`✓ ${row.title.padEnd(45)} oscars=${String(oscarCount).padEnd(3)} ${nomStr} ${winStr}`);
       ok++;
     } catch (err) {
       console.error(`✗ ${row.title} (${row.tmdb_id}):`, err.message);

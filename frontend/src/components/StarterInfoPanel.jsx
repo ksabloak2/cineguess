@@ -10,16 +10,19 @@
 export default function StarterInfoPanel({ starterInfo }) {
   if (!starterInfo) return null;
 
-  const { oscar_wins, oscar_nomination_categories, franchise_name } = starterInfo;
+  const { oscar_wins, oscar_nomination_categories, oscar_win_categories, franchise_name } = starterInfo;
 
   const hasOscarData = oscar_wins !== null && oscar_wins !== undefined;
   const wins         = oscar_wins ?? 0;
   const categories   = Array.isArray(oscar_nomination_categories)
     ? [...oscar_nomination_categories].sort()
     : [];
+  const winCats      = Array.isArray(oscar_win_categories)
+    ? [...oscar_win_categories].sort()
+    : [];
 
-  // If Wikidata gave us categories, use that count as nominations.
-  // Otherwise fall back to OMDb win count.
+  // If Wikidata gave us nomination categories, use that count as nominations.
+  // If only win categories, show those. Otherwise fall back to OMDb win count.
   const hasNominations  = categories.length > 0;
   const nominationCount = categories.length;
 
@@ -56,8 +59,26 @@ export default function StarterInfoPanel({ starterInfo }) {
               ))}
             </ul>
           </>
+        ) : winCats.length > 0 ? (
+          // Fallback: have win categories from Wikidata
+          <>
+            <p className="text-sm font-semibold text-yellow-300 mb-1.5">
+              Won {winCats.length} Oscar{winCats.length !== 1 ? 's' : ''}
+            </p>
+            <ul className="flex flex-wrap gap-1.5">
+              {winCats.map((cat, i) => (
+                <li
+                  key={i}
+                  className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full
+                             bg-yellow-500/15 border border-yellow-500/25 text-yellow-200/90"
+                >
+                  {cat}
+                </li>
+              ))}
+            </ul>
+          </>
         ) : wins > 0 ? (
-          // Fallback: only have OMDb win count, no category breakdown
+          // Last resort: only have OMDb win count, no category breakdown
           <p className="text-sm font-semibold text-yellow-300">
             Won {wins} Oscar{wins !== 1 ? 's' : ''}
           </p>
