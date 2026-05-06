@@ -763,14 +763,15 @@ function evaluateSuperheroTiles(guessed, target) {
 
 // Animated-specific tile evaluation
 const STUDIO_PARENT = {
-  'Pixar':         'Disney',
-  'Disney':        'Disney',
-  'DreamWorks':    'DreamWorks/Universal',
-  'Illumination':  'Universal',
-  'Studio Ghibli': 'Studio Ghibli',
-  'Laika':         'Laika',
-  'Sony Animation':'Sony',
-  'Independent':   'Independent',
+  'Pixar':            'Disney',
+  'Disney':           'Disney',
+  'DreamWorks':       'DreamWorks/Universal',
+  'Illumination':     'Universal',
+  'Studio Ghibli':    'Studio Ghibli',
+  'Laika':            'Laika',
+  'Sony Animation':   'Sony',
+  'Blue Sky Studios': 'Blue Sky Studios',
+  'Independent':      'Independent',
 };
 
 const STYLE_BROAD = {

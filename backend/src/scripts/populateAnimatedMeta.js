@@ -260,7 +260,8 @@ const STUDIO_DEFAULTS = {
   'Studio Ghibli': { style: 'Hand-drawn (2D)', studio: 'Studio Ghibli' },
   'Illumination':  { style: 'CGI/3D',          studio: 'Illumination'  },
   'Laika':         { style: 'Stop-motion',     studio: 'Laika'         },
-  'Sony Animation':{ style: 'CGI/3D',          studio: 'Sony Animation'},
+  'Sony Animation':   { style: 'CGI/3D', studio: 'Sony Animation'   },
+  'Blue Sky Studios': { style: 'CGI/3D', studio: 'Blue Sky Studios' },
 };
 
 // ---------------------------------------------------------------
