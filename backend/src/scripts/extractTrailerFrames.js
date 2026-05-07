@@ -266,9 +266,10 @@ async function main() {
                FROM movies`;
   const conditions = [];
   if (TMDB_IDS) {
+    // When specific IDs are given, process exactly those movies — skip the
+    // "already has frames" guard (equivalent to --force for just these IDs).
     conditions.push(`tmdb_id = ANY(ARRAY[${TMDB_IDS.join(',')}])`);
-  }
-  if (!FORCE) {
+  } else if (!FORCE) {
     conditions.push(`(backdrop_paths IS NULL
                OR cardinality(backdrop_paths) = 0
                OR NOT EXISTS (
