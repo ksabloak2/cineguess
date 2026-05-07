@@ -4,6 +4,10 @@ import { tmdbImage } from '../utils/api';
 // Simple LRU-ish cache — cap at 100 entries to bound memory.
 const MAX_QUERY_CACHE = 100;
 
+// Strip all non-alphanumeric characters (punctuation, spaces, hyphens, apostrophes, etc.)
+// so "spiderman" matches "Spider-Man", "spider man", "(500)" matches "500", etc.
+const normalize = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+
 export default function MovieSearch({ movies, onSelect, disabled, alreadyGuessed }) {
   const [query, setQuery]             = useState('');
   const [debouncedQuery, setDebQuery] = useState('');
@@ -27,23 +31,38 @@ export default function MovieSearch({ movies, onSelect, disabled, alreadyGuessed
   }, [query]);
 
   const filtered = useMemo(() => {
-    const q = debouncedQuery.trim().toLowerCase();
+    const q = debouncedQuery.trim();
     if (!q) return [];
 
-    // Cache hit — same query, same movies, same guessedSet
-    if (queryCache.current.has(q)) return queryCache.current.get(q);
+    const nq = normalize(q);
+    if (!nq) return [];
 
-    const results = movies
-      .filter((m) => m.title.toLowerCase().includes(q) && !guessedSet.has(m.tmdb_id))
-      .sort((a, b) => a.title.localeCompare(b.title))
-      .slice(0, 8);
+    // Cache hit — same query, same movies, same guessedSet
+    if (queryCache.current.has(nq)) return queryCache.current.get(nq);
+
+    // Match against punctuation-stripped title so "spiderman" finds "Spider-Man",
+    // "itchapter" finds "It Chapter Two", etc.
+    const matches = movies.filter(
+      (m) => normalize(m.title).includes(nq) && !guessedSet.has(m.tmdb_id)
+    );
+
+    // Titles whose normalized form STARTS WITH the query come first (alphabetical),
+    // then titles that merely contain it (also alphabetical).
+    const startsWith = matches
+      .filter((m) => normalize(m.title).startsWith(nq))
+      .sort((a, b) => a.title.localeCompare(b.title));
+    const contains = matches
+      .filter((m) => !normalize(m.title).startsWith(nq))
+      .sort((a, b) => a.title.localeCompare(b.title));
+
+    const results = [...startsWith, ...contains].slice(0, 8);
 
     // Evict oldest entry when cache is full
     if (queryCache.current.size >= MAX_QUERY_CACHE) {
       const firstKey = queryCache.current.keys().next().value;
       queryCache.current.delete(firstKey);
     }
-    queryCache.current.set(q, results);
+    queryCache.current.set(nq, results);
     return results;
   }, [debouncedQuery, movies, guessedSet]);
 

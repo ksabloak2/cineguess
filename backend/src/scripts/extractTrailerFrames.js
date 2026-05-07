@@ -265,6 +265,8 @@ async function main() {
   let query = `SELECT id, tmdb_id, title, year, primary_language, backdrop_paths
                FROM movies`;
   const conditions = [];
+  // ALWAYS skip pinned movies — these are explicitly set to use TMDB backdrops.
+  conditions.push(`(pin_tmdb_backdrops IS NULL OR pin_tmdb_backdrops = FALSE)`);
   if (TMDB_IDS) {
     // When specific IDs are given, process exactly those movies — skip the
     // "already has frames" guard (equivalent to --force for just these IDs).

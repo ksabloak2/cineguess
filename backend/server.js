@@ -56,6 +56,107 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// ---------------------------------------------------------------
+// Dynamic frame gallery — rendered from DB on every request so
+// deletions are immediately reflected on refresh (no rebuild needed).
+// ---------------------------------------------------------------
+app.get('/frames/index.html', async (req, res) => {
+  const pool = require('./src/db/pool');
+  try {
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.setHeader('Content-Security-Policy',
+      "default-src 'self'; img-src * data: blob:; script-src 'self'; style-src 'self' 'unsafe-inline';"
+    );
+    res.setHeader('Cache-Control', 'no-store');
+
+    const { rows: movies } = await pool.query(`
+      SELECT tmdb_id, title, year, categories, backdrop_paths
+      FROM movies
+      WHERE backdrop_paths IS NOT NULL AND cardinality(backdrop_paths) > 0
+      ORDER BY title
+    `);
+
+    const TMDB_IMG = 'https://image.tmdb.org/t/p/w500';
+    const totalImages = movies.reduce((s, m) => s + (m.backdrop_paths || []).length, 0);
+    const trailerCount = movies.reduce((s, m) =>
+      s + (m.backdrop_paths || []).filter(p => p.startsWith('/frames/')).length, 0);
+    const supabaseCount = movies.reduce((s, m) =>
+      s + (m.backdrop_paths || []).filter(p => p.includes('supabase')).length, 0);
+    const tmdbCount = totalImages - trailerCount - supabaseCount;
+
+    function thumbsHtml(movie) {
+      return (movie.backdrop_paths || []).map((p, i) => {
+        const isLocal    = p.startsWith('/frames/');
+        const isSupabase = p.includes('supabase');
+        const kind       = (isLocal || isSupabase) ? 'frame' : 'tmdb';
+        const src        = isLocal ? p : isSupabase ? p : `${TMDB_IMG}${p}`;
+        const filename   = isLocal ? p.replace('/frames/', '') : '';
+        const dataAttrs  = kind === 'tmdb'
+          ? `data-kind="tmdb" data-tmdb="${movie.tmdb_id}" data-path="${p}"`
+          : `data-kind="frame" data-file="${filename}" data-tmdb="${movie.tmdb_id}" data-path="${p}"`;
+        return `<div class="thumb" ${dataAttrs}><img src="${src}" alt="${i}" loading="lazy" /><button class="del" title="Remove from movie">&times;</button></div>`;
+      }).join('\n');
+    }
+
+    function movieSection(movie) {
+      const count      = (movie.backdrop_paths || []).length;
+      const hasLocal   = (movie.backdrop_paths || []).some(p => p.startsWith('/frames/'));
+      const hasSupabase = (movie.backdrop_paths || []).some(p => p.includes('supabase'));
+      const kind = hasLocal ? 'trailer frames' : hasSupabase ? 'Supabase frames' : 'TMDB backdrops';
+      const cats = (movie.categories || []).join(', ') || 'unknown';
+      return `<section class="movie">
+        <header>
+          <h2>${movie.title} <span class="year">(${movie.year})</span></h2>
+          <p class="meta">tmdb_id ${movie.tmdb_id} &middot; ${cats} &middot; <span class="frame-count">${count}</span> ${kind}</p>
+          <div class="movie-actions">
+            <button class="keep-selected" disabled>Keep selected, delete rest</button>
+            <button class="clear-selection" disabled>Clear selection</button>
+          </div>
+        </header>
+        <div class="thumbs">${thumbsHtml(movie)}</div>
+      </section>`;
+    }
+
+    const css = `
+  :root{color-scheme:dark}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif;background:#0f1115;color:#e7e7e7}
+  header.page{position:sticky;top:0;z-index:10;padding:16px 24px;background:#0f1115ee;backdrop-filter:blur(8px);border-bottom:1px solid #222}
+  header.page h1{margin:0;font-size:18px}header.page p{margin:4px 0 0;font-size:12px;color:#888}
+  input#filter{margin-top:8px;width:320px;padding:6px 10px;font-size:13px;background:#1a1d25;color:#fff;border:1px solid #333;border-radius:6px}
+  main{padding:16px 24px 64px}section.movie{border-top:1px solid #222;padding:14px 0}
+  section.movie h2{margin:0;font-size:15px}section.movie .year{color:#888;font-weight:normal}
+  section.movie .meta{margin:2px 0 8px;font-size:11px;color:#666}
+  .thumbs{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}.thumb{position:relative}
+  .thumb img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:3px;background:#222;cursor:pointer;display:block}
+  .thumb img:hover{outline:2px solid #8ab4ff}.thumb.selected img{outline:3px solid #4ade80}
+  .thumb.selected::after{content:'✓';position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;background:#4ade80;color:#0f1115;font-size:13px;font-weight:bold;display:flex;align-items:center;justify-content:center;pointer-events:none}
+  section.movie .movie-actions{display:flex;gap:8px;margin:6px 0 8px}
+  section.movie .movie-actions button{font-size:11px;padding:4px 10px;background:#1a1d25;color:#fff;border:1px solid #333;border-radius:4px;cursor:pointer}
+  section.movie .movie-actions button:disabled{opacity:.35;cursor:not-allowed}
+  section.movie .movie-actions .keep-selected:not(:disabled):hover{background:#c0392b;border-color:#c0392b}
+  section.movie .movie-actions .clear-selection:not(:disabled):hover{background:#333}
+  .thumb .del{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.7);color:#fff;font-size:16px;line-height:1;border:1px solid #555;cursor:pointer;opacity:0;transition:opacity .15s,background .15s;display:flex;align-items:center;justify-content:center;padding:0}
+  .thumb:hover .del{opacity:1}.thumb .del:hover{background:#c0392b;border-color:#c0392b}
+  .thumb.removing img{opacity:.2}@media(max-width:900px){.thumbs{grid-template-columns:repeat(5,1fr)}.thumb .del{opacity:1}}`;
+
+    const html = `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/>
+<title>CineGuess — Frame Gallery (${movies.length} movies)</title>
+<style>${css}</style></head><body>
+<header class="page">
+  <h1>CineGuess — Frame Gallery</h1>
+  <p>${movies.length} movies &middot; ${totalImages} images total (${trailerCount} trailer-sourced, ${tmdbCount} TMDB-sourced)</p>
+  <input id="filter" placeholder="Filter by title..."/>
+</header>
+<main>${movies.map(movieSection).join('\n')}</main>
+<script src="/frames/gallery.js"></script>
+</body></html>`;
+
+    res.send(html);
+  } catch (err) {
+    res.status(500).send('Gallery error: ' + err.message);
+  }
+});
+
 // Serve extracted trailer frames (populated by scripts/extractTrailerFrames.js)
 // — these are loaded from the frontend's HintModal as `/frames/{id}_n.jpg`.
 // helmet's default crossOriginResourcePolicy blocks cross-origin <img> loads,
