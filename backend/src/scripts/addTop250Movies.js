@@ -269,6 +269,7 @@ async function fetchWikidataAwardCategories(imdbId, prop) {
 async function run() {
   console.log(`\nAdding ${MOVIES.length} top250 movies...\n`);
   let ok = 0, failed = 0;
+  const insertedIds = [];
 
   for (const movie of MOVIES) {
     try {
@@ -355,6 +356,7 @@ async function run() {
       const nomStr = nomCats.length > 0 ? ` noms=${nomCats.length}` : '';
       const winStr = winCats.length > 0 ? ` wins=${winCats.length}` : '';
       console.log(`✓  ${title} (${year})${nomStr}${winStr}`);
+      insertedIds.push(tmdbId);
       ok++;
     } catch (err) {
       console.log(`✗`);
@@ -366,6 +368,10 @@ async function run() {
   }
 
   console.log(`\nDone. ${ok} added/updated, ${failed} failed.`);
+  if (insertedIds.length) {
+    console.log(`\nNow extract trailer frames for these movies:\n`);
+    console.log(`  node src/scripts/extractTrailerFrames.js --ids=${insertedIds.join(',')}\n`);
+  }
   await pool.end();
 }
 

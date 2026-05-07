@@ -53,6 +53,8 @@ const args = process.argv.slice(2);
 const FORCE = args.includes('--force');
 const LIMIT = parseInt((args.find((a) => a.startsWith('--limit=')) || '').split('=')[1], 10) || null;
 const CONCURRENCY = parseInt((args.find((a) => a.startsWith('--concurrency=')) || '').split('=')[1], 10) || 3;
+const IDS_ARG = (args.find((a) => a.startsWith('--ids=')) || '').split('=')[1];
+const TMDB_IDS = IDS_ARG ? IDS_ARG.split(',').map(Number).filter(Boolean) : null;
 
 fs.mkdirSync(FRAMES_DIR, { recursive: true });
 
@@ -259,15 +261,21 @@ async function processMovie(movie) {
 async function main() {
   // Pick movies that either have no frames or (with --force) all of them.
   // "Already done" means backdrop_paths contains at least one /frames/ entry.
+  // --ids=id1,id2,... restricts processing to specific TMDB IDs only.
   let query = `SELECT id, tmdb_id, title, year, primary_language, backdrop_paths
                FROM movies`;
+  const conditions = [];
+  if (TMDB_IDS) {
+    conditions.push(`tmdb_id = ANY(ARRAY[${TMDB_IDS.join(',')}])`);
+  }
   if (!FORCE) {
-    query += ` WHERE backdrop_paths IS NULL
+    conditions.push(`(backdrop_paths IS NULL
                OR cardinality(backdrop_paths) = 0
                OR NOT EXISTS (
                  SELECT 1 FROM unnest(backdrop_paths) p WHERE p LIKE '/frames/%'
-               )`;
+               ))`);
   }
+  if (conditions.length) query += ` WHERE ${conditions.join(' AND ')}`;
   query += ` ORDER BY popularity DESC NULLS LAST`;
   if (LIMIT) query += ` LIMIT ${LIMIT}`;
 
