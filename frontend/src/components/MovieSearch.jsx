@@ -35,6 +35,7 @@ export default function MovieSearch({ movies, onSelect, disabled, alreadyGuessed
 
     const results = movies
       .filter((m) => m.title.toLowerCase().includes(q) && !guessedSet.has(m.tmdb_id))
+      .sort((a, b) => a.title.localeCompare(b.title))
       .slice(0, 8);
 
     // Evict oldest entry when cache is full
