@@ -23,8 +23,6 @@ if (!OMDB_KEY) { console.error('OMDB_API_KEY missing'); process.exit(1); }
 
 const TMDB_BASE    = process.env.TMDB_BASE_URL || 'https://api.themoviedb.org/3';
 const sleep        = ms => new Promise(r => setTimeout(r, ms));
-const MAX_BACKDROPS = 10;
-
 // ── Movie list ────────────────────────────────────────────────────────────────
 // hint = badly-explained logline (technically accurate, intentionally misleading)
 const MOVIES = [
@@ -293,11 +291,6 @@ async function run() {
       const studio       = d.production_companies?.[0]?.name || null;
       const franchise    = d.belongs_to_collection?.name || null;
 
-      const backdrops = (d.images?.backdrops || [])
-        .sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0))
-        .slice(0, MAX_BACKDROPS)
-        .map(b => b.file_path);
-
       // Oscar data
       let oscarWins = 0, nomCats = [], winCats = [];
       try {
@@ -322,9 +315,9 @@ async function run() {
            poster_path, imdb_id, categories, popularity,
            production_studio, franchise_name,
            oscar_wins, oscar_nomination_categories, oscar_win_categories,
-           ai_hint_quote, backdrop_paths,
+           ai_hint_quote,
            oscar_nominated, created_at, updated_at
-         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,NOW(),NOW())
+         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,NOW(),NOW())
          ON CONFLICT (tmdb_id) DO UPDATE SET
            title                       = EXCLUDED.title,
            year                        = EXCLUDED.year,
@@ -347,7 +340,6 @@ async function run() {
            oscar_nomination_categories = EXCLUDED.oscar_nomination_categories,
            oscar_win_categories        = EXCLUDED.oscar_win_categories,
            ai_hint_quote               = EXCLUDED.ai_hint_quote,
-           backdrop_paths              = EXCLUDED.backdrop_paths,
            updated_at                  = NOW()`,
         [
           tmdbId, title, year, genres, director, d.original_language,
@@ -355,14 +347,14 @@ async function run() {
           d.poster_path || null, imdbId, ['top250'], d.popularity || 0,
           studio, franchise,
           oscarWins, nomCats, winCats,
-          movie.hint, backdrops,
+          movie.hint,
           oscarWins > 0,
         ]
       );
 
       const nomStr = nomCats.length > 0 ? ` noms=${nomCats.length}` : '';
       const winStr = winCats.length > 0 ? ` wins=${winCats.length}` : '';
-      console.log(`✓  ${title} (${year}) — ${backdrops.length} backdrops${nomStr}${winStr}`);
+      console.log(`✓  ${title} (${year})${nomStr}${winStr}`);
       ok++;
     } catch (err) {
       console.log(`✗`);
