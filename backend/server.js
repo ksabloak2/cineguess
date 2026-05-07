@@ -64,6 +64,10 @@ app.use(
   '/frames',
   (req, res, next) => {
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    // Gallery HTML needs to load TMDB images — relax img-src for this admin path only.
+    res.setHeader('Content-Security-Policy',
+      "default-src 'self'; img-src * data: blob:; script-src 'self'; style-src 'self' 'unsafe-inline';"
+    );
     next();
   },
   express.static(path.join(__dirname, 'public/frames'), {
