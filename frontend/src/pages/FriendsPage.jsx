@@ -395,8 +395,7 @@ export default function FriendsPage() {
             min-width: 0 !important;
             flex: 1 1 0 !important;
             min-height: 0 !important;
-            height: 0 !important;
-            overflow-y: auto !important;
+            overflow-y: hidden !important;
           }
 
           /* Cinema screen: hidden unless screen tab is active */
