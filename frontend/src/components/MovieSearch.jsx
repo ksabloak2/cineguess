@@ -12,7 +12,7 @@ const normalize = (s) => s
   .replace(/[̀-ͯ]/g, '') // strip all combining diacritics
   .replace(/[^a-z0-9]/g, '');     // strip remaining punctuation/spaces
 
-export default function MovieSearch({ movies, onSelect, disabled, alreadyGuessed }) {
+export default function MovieSearch({ movies, onSelect, disabled, alreadyGuessed, isGameOver }) {
   const [query, setQuery]             = useState('');
   const [debouncedQuery, setDebQuery] = useState('');
   const [open, setOpen]               = useState(false);
@@ -125,11 +125,13 @@ export default function MovieSearch({ movies, onSelect, disabled, alreadyGuessed
           onKeyDown={handleKeyDown}
           disabled={disabled}
           placeholder={
-            disabled
-              ? movies && movies.length === 0
-                ? 'Loading movies...'
-                : 'Game over — come back tomorrow!'
-              : 'Search for a movie...'
+            isGameOver
+              ? 'Game over — come back tomorrow!'
+              : disabled
+                ? movies && movies.length === 0
+                  ? 'Loading movies...'
+                  : 'Search for a movie...'
+                : 'Search for a movie...'
           }
           className="input-field pl-10 text-sm sm:text-base disabled:opacity-40 disabled:cursor-not-allowed"
           autoComplete="off"

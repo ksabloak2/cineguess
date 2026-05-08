@@ -997,6 +997,7 @@ export default function GamePage() {
         movies={movies}
         onSelect={handleGuess}
         disabled={gameOver || submitting}
+        isGameOver={gameOver}
         alreadyGuessed={guessedIds}
       />
 
