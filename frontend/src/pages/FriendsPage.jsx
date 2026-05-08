@@ -1086,13 +1086,17 @@ export default function FriendsPage() {
             }}
           >
             {/* ── Top accent bar (dynamic color) */}
-            <div style={{
-              position: 'absolute', top: 0, left: 0, right: 0, height: 2, zIndex: 6,
-              background: viewingFriend
-                ? `linear-gradient(90deg, transparent, rgba(${favRgb},0.70) 35%, rgba(${favRgb},0.70) 65%, transparent)`
-                : 'linear-gradient(90deg, transparent, rgba(168,85,247,0.40) 40%, rgba(168,85,247,0.40) 60%, transparent)',
-              transition: 'background 0.5s ease',
-            }} />
+            {(() => {
+              const barRgb = viewingFriend ? favRgb : sidebarTab === 'vip' ? '243,206,19' : '168,85,247';
+              const barOpacity = viewingFriend ? '0.70' : sidebarTab === 'vip' ? '0.55' : '0.40';
+              return (
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, right: 0, height: 2, zIndex: 6,
+                  background: `linear-gradient(90deg, transparent, rgba(${barRgb},${barOpacity}) 35%, rgba(${barRgb},${barOpacity}) 65%, transparent)`,
+                  transition: 'background 0.5s ease',
+                }} />
+              );
+            })()}
 
             {/* ── Screen bezel — darkens edges to simulate concave curve */}
             <div aria-hidden style={{
@@ -1114,10 +1118,15 @@ export default function FriendsPage() {
             )}
 
             {/* ── Corner brackets */}
-            <CornerBracket pos="tl" rgb={viewingFriend ? favRgb : '168,85,247'} />
-            <CornerBracket pos="tr" rgb={viewingFriend ? favRgb : '168,85,247'} />
-            <CornerBracket pos="bl" rgb={viewingFriend ? favRgb : '168,85,247'} />
-            <CornerBracket pos="br" rgb={viewingFriend ? favRgb : '168,85,247'} />
+            {(() => {
+              const bracketRgb = viewingFriend ? favRgb : sidebarTab === 'vip' ? '243,206,19' : '168,85,247';
+              return (<>
+                <CornerBracket pos="tl" rgb={bracketRgb} />
+                <CornerBracket pos="tr" rgb={bracketRgb} />
+                <CornerBracket pos="bl" rgb={bracketRgb} />
+                <CornerBracket pos="br" rgb={bracketRgb} />
+              </>);
+            })()}
 
             {/* ── Scan line (active projection effect) */}
             {viewingFriend && (
@@ -1152,6 +1161,14 @@ export default function FriendsPage() {
                   onViewFriend={(id, username) => { setViewingFriend({ id, username }); setMobileTab('screen'); }}
                   onAddFriend={handleSendRequest}
                   onToggleVip={handleToggleVip}
+                />
+              ) : sidebarTab === 'vip' ? (
+                <VipLeaderboard
+                  vipFriends={friends.filter(f => f.is_vip)}
+                  onSelect={(friend) => {
+                    setViewingFriend({ id: friend.id, username: friend.username });
+                    setMobileTab('screen');
+                  }}
                 />
               ) : (
                 <EmptyDetail />
@@ -1294,6 +1311,177 @@ function EmptyDetail() {
         <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.22)' }}>
           Their stats will appear on the big screen
         </p>
+      </div>
+    </div>
+  );
+}
+
+// ── VIP Crew Leaderboard — shown on the right screen when VIP tab is active ──
+const CAT_ICON = { top250: '🏆', superhero: '🦸', animated: '✨', indiancinema: '🎭' };
+const RANK_MEDAL = ['🥇', '🥈', '🥉'];
+
+function VipLeaderboard({ vipFriends, onSelect }) {
+  // Sort by best current streak across all daily categories (desc)
+  const ranked = [...vipFriends].sort((a, b) => {
+    const bestA = Math.max(0, ...Object.values(a.streaks || {}).map(Number));
+    const bestB = Math.max(0, ...Object.values(b.streaks || {}).map(Number));
+    return bestB - bestA;
+  });
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+      {/* Header */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18,
+        paddingBottom: 12,
+        borderBottom: '1px solid rgba(243,206,19,0.12)',
+      }}>
+        <div style={{
+          fontSize: '1.4rem',
+          filter: 'drop-shadow(0 0 8px rgba(243,206,19,0.60))',
+          animation: 'reel-pulse 3s ease-in-out infinite',
+        }}>⭐</div>
+        <div>
+          <div style={{
+            fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.20em',
+            textTransform: 'uppercase', color: 'rgba(243,206,19,0.60)',
+          }}>NOW SHOWING</div>
+          <div style={{
+            fontSize: 'clamp(0.95rem,2vw,1.15rem)', fontWeight: 900,
+            color: '#fff', letterSpacing: '-0.01em',
+          }}>VIP Crew Standings</div>
+        </div>
+      </div>
+
+      {ranked.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '32px 0' }}>
+          <div style={{ fontSize: '2rem', marginBottom: 8 }}>⭐</div>
+          <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.35)' }}>No VIP members yet</div>
+          <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.20)', marginTop: 4 }}>Star a friend to add them</div>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {ranked.map((friend, idx) => {
+            const streaks = friend.streaks || {};
+            const bestStreak = Math.max(0, ...Object.values(streaks).map(Number));
+            // Which category has the highest streak?
+            const topCat = Object.entries(streaks).reduce(
+              (best, [cat, val]) => (Number(val) > best.val ? { cat, val: Number(val) } : best),
+              { cat: null, val: -1 }
+            ).cat;
+            // Count today's wins
+            const todayWins = Object.values(friend.today || {}).filter(v => v?.won).length;
+
+            return (
+              <button
+                key={friend.id}
+                onClick={() => onSelect(friend)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  background: idx === 0
+                    ? 'linear-gradient(135deg, rgba(243,206,19,0.12), rgba(243,206,19,0.04))'
+                    : 'rgba(255,255,255,0.04)',
+                  border: idx === 0
+                    ? '1px solid rgba(243,206,19,0.30)'
+                    : '1px solid rgba(255,255,255,0.07)',
+                  borderRadius: 10, padding: '10px 12px',
+                  cursor: 'pointer', textAlign: 'left', width: '100%',
+                  transition: 'all 0.18s ease',
+                  boxShadow: idx === 0 ? '0 0 16px rgba(243,206,19,0.10)' : 'none',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = idx === 0
+                    ? 'linear-gradient(135deg, rgba(243,206,19,0.18), rgba(243,206,19,0.08))'
+                    : 'rgba(255,255,255,0.08)';
+                  e.currentTarget.style.borderColor = 'rgba(243,206,19,0.30)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = idx === 0
+                    ? 'linear-gradient(135deg, rgba(243,206,19,0.12), rgba(243,206,19,0.04))'
+                    : 'rgba(255,255,255,0.04)';
+                  e.currentTarget.style.borderColor = idx === 0
+                    ? 'rgba(243,206,19,0.30)' : 'rgba(255,255,255,0.07)';
+                }}
+              >
+                {/* Rank */}
+                <div style={{
+                  width: 24, textAlign: 'center', flexShrink: 0,
+                  fontSize: idx < 3 ? '1rem' : '0.72rem',
+                  fontWeight: 800,
+                  color: idx < 3 ? undefined : 'rgba(255,255,255,0.30)',
+                }}>
+                  {idx < 3 ? RANK_MEDAL[idx] : `#${idx + 1}`}
+                </div>
+
+                {/* Avatar */}
+                <div style={{
+                  width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
+                  background: idx === 0 ? 'rgba(243,206,19,0.18)' : 'rgba(255,255,255,0.08)',
+                  border: idx === 0 ? '1.5px solid rgba(243,206,19,0.50)' : '1.5px solid rgba(255,255,255,0.15)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '0.95rem', fontWeight: 900,
+                  color: idx === 0 ? '#F3CE13' : '#fff',
+                  boxShadow: idx === 0 ? '0 0 12px rgba(243,206,19,0.20)' : 'none',
+                }}>
+                  {friend.username[0].toUpperCase()}
+                </div>
+
+                {/* Name + category */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    fontSize: '0.78rem', fontWeight: 700,
+                    color: idx === 0 ? '#F3CE13' : '#fff',
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  }}>
+                    @{friend.username}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                    {topCat && (
+                      <span style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.35)' }}>
+                        {CAT_ICON[topCat]}
+                      </span>
+                    )}
+                    {todayWins > 0 && (
+                      <span style={{
+                        fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.06em',
+                        color: 'rgba(74,222,128,0.80)',
+                        background: 'rgba(74,222,128,0.10)',
+                        border: '1px solid rgba(74,222,128,0.20)',
+                        borderRadius: 999, padding: '1px 5px',
+                      }}>
+                        ✓ {todayWins} today
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Streak */}
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div style={{
+                    fontSize: '1rem', fontWeight: 900,
+                    color: idx === 0 ? '#F3CE13' : 'rgba(255,255,255,0.75)',
+                  }}>
+                    {bestStreak}
+                  </div>
+                  <div style={{ fontSize: '0.52rem', color: 'rgba(255,255,255,0.28)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    streak
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Footer hint */}
+      <div style={{
+        marginTop: 16, paddingTop: 12,
+        borderTop: '1px solid rgba(255,255,255,0.06)',
+        textAlign: 'center',
+        fontSize: '0.62rem', color: 'rgba(255,255,255,0.20)',
+        letterSpacing: '0.06em',
+      }}>
+        Click a member to view full profile
       </div>
     </div>
   );
