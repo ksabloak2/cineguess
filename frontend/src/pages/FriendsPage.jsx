@@ -5,7 +5,7 @@ import {
   getFriends, getFriendRequests, getSentRequests,
   sendFriendRequest, acceptFriendRequest, declineFriendRequest,
   unfriend, cancelSentRequest, searchUsers, getFriendYearCalendar,
-  getFriendPercentiles, getFriendFriends,
+  getFriendPercentiles, getFriendFriends, addVip, removeVip,
 } from '../utils/api';
 import { CATEGORIES, getMaxGuesses } from '../utils/gameLogic';
 import YearCalendar from '../components/YearCalendar';
@@ -90,6 +90,7 @@ export default function FriendsPage() {
   const [showQR, setShowQR]             = useState(false);
   const [mobileTab, setMobileTab]       = useState('crew'); // 'crew' | 'screen'
   const [openInbox, setOpenInbox]       = useState(null);  // null | 'sent' | 'incoming'
+  const [sidebarTab, setSidebarTab]     = useState('film'); // 'film' | 'vip'
 
   const inviteUrl = buildInviteUrl(profile?.username);
 
@@ -169,6 +170,17 @@ export default function FriendsPage() {
       await unfriend(friendId);
       setFriends((f) => f.filter((fr) => fr.id !== friendId));
       if (viewingFriend?.id === friendId) setViewingFriend(null);
+    } catch {}
+  }
+
+  async function handleToggleVip(friendId, currentlyVip) {
+    try {
+      if (currentlyVip) {
+        await removeVip(friendId);
+      } else {
+        await addVip(friendId);
+      }
+      setFriends((f) => f.map((fr) => fr.id === friendId ? { ...fr, is_vip: !currentlyVip } : fr));
     } catch {}
   }
 
@@ -815,96 +827,182 @@ export default function FriendsPage() {
               onToggleQR={() => setShowQR((v) => !v)}
             />
 
-            {/* VIP friend list — scrolls independently, top sections stay pinned */}
+            {/* Crew tabs + friend list — scrolls independently */}
             <div style={{
               flex: 1, minHeight: 0,
               display: 'flex', flexDirection: 'column', gap: 8,
             }}>
-              <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.28)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700, padding: '2px 2px 0', flexShrink: 0 }}>
-                Film Crew · {friends.length}
-              </div>
-
-            {friends.length === 0 ? (
-              <GlassPane>
-                <div style={{ textAlign: 'center', padding: '10px 0' }}>
-                  <div style={{ fontSize: '1.6rem', marginBottom: 6 }}>🎬</div>
-                  <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)' }}>No friends yet</div>
-                  <div style={{ fontSize: '0.66rem', color: 'rgba(255,255,255,0.2)', marginTop: 3 }}>Search above and send a request!</div>
-                </div>
-              </GlassPane>
-            ) : (
-              <div className="scrollbar-hide" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {[...friends].sort((a, b) => a.username.localeCompare(b.username)).map((friend) => {
-                  const isSelected = viewingFriend?.id === friend.id;
+              {/* Tab switcher */}
+              <div style={{
+                display: 'flex', gap: 4, flexShrink: 0,
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 10, padding: 3,
+              }}>
+                {[
+                  { id: 'film', label: '🎬 Film Crew', count: friends.length },
+                  { id: 'vip',  label: '⭐ VIP Crew',  count: friends.filter(f => f.is_vip).length },
+                ].map(({ id, label, count }) => {
+                  const active = sidebarTab === id;
                   return (
                     <button
-                      key={friend.id}
-                      onClick={() => {
-                        if (isSelected) {
-                          setViewingFriend(null);
-                        } else {
-                          setViewingFriend({ id: friend.id, username: friend.username });
-                          setMobileTab('screen'); // auto-switch on mobile
-                        }
-                      }}
+                      key={id}
+                      onClick={() => setSidebarTab(id)}
                       style={{
-                        width: '100%', cursor: 'pointer', textAlign: 'left',
-                        background: isSelected
-                          ? 'linear-gradient(135deg, rgba(243,206,19,0.10) 0%, rgba(5,5,15,0.85) 100%)'
-                          : 'rgba(255,255,255,0.04)',
-                        border: isSelected
-                          ? '1px solid rgba(243,206,19,0.50)'
-                          : '1px solid rgba(255,255,255,0.07)',
-                        boxShadow: isSelected
-                          ? '0 0 20px rgba(243,206,19,0.20), 0 0 40px rgba(243,206,19,0.08)'
+                        flex: 1, border: 'none', cursor: 'pointer',
+                        borderRadius: 8, padding: '5px 6px',
+                        fontSize: '0.62rem', fontWeight: 700,
+                        letterSpacing: '0.04em', transition: 'all 0.18s ease',
+                        background: active
+                          ? (id === 'vip'
+                              ? 'linear-gradient(135deg, rgba(243,206,19,0.22), rgba(243,206,19,0.10))'
+                              : 'rgba(255,255,255,0.10)')
+                          : 'transparent',
+                        color: active
+                          ? (id === 'vip' ? '#F3CE13' : '#fff')
+                          : 'rgba(255,255,255,0.38)',
+                        boxShadow: active && id === 'vip'
+                          ? '0 0 10px rgba(243,206,19,0.18)'
                           : 'none',
-                        borderRadius: 10,
-                        padding: '9px 14px',
-                        transition: 'all 0.22s ease',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 10,
-                        ...vipPassMask(),
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isSelected) {
-                          e.currentTarget.style.borderColor = 'rgba(243,206,19,0.20)';
-                          e.currentTarget.style.background = 'rgba(255,255,255,0.07)';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isSelected) {
-                          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)';
-                          e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
-                        }
                       }}
                     >
-                      <AvatarCircle
-                        letter={friend.username[0]}
-                        size={32}
-                        gold={isSelected}
-                      />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div
-                          style={{
-                            fontSize: '0.78rem', fontWeight: 600,
-                            color: isSelected ? '#F3CE13' : '#fff',
-                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                          }}
-                        >
-                          @{friend.username}
-                        </div>
-                        <TodayDots today={friend.today} />
-                      </div>
-                      <span style={{ fontSize: '0.62rem', color: isSelected ? 'rgba(243,206,19,0.50)' : 'rgba(255,255,255,0.20)', flexShrink: 0 }}>
-                        {isSelected ? '◆' : '›'}
+                      {label}
+                      <span style={{
+                        marginLeft: 4,
+                        background: active ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)',
+                        borderRadius: 999, padding: '1px 5px',
+                        fontSize: '0.58rem',
+                      }}>
+                        {count}
                       </span>
                     </button>
                   );
                 })}
               </div>
-            )}
-            </div>{/* end Film Crew scroll container */}
+
+              {/* Friend list for active tab */}
+              {(() => {
+                const listFriends = sidebarTab === 'vip'
+                  ? [...friends].filter(f => f.is_vip).sort((a, b) => a.username.localeCompare(b.username))
+                  : [...friends].sort((a, b) => a.username.localeCompare(b.username));
+
+                if (listFriends.length === 0) {
+                  return (
+                    <GlassPane>
+                      <div style={{ textAlign: 'center', padding: '10px 0' }}>
+                        <div style={{ fontSize: '1.6rem', marginBottom: 6 }}>
+                          {sidebarTab === 'vip' ? '⭐' : '🎬'}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)' }}>
+                          {sidebarTab === 'vip' ? 'No VIP members yet' : 'No friends yet'}
+                        </div>
+                        <div style={{ fontSize: '0.66rem', color: 'rgba(255,255,255,0.2)', marginTop: 3 }}>
+                          {sidebarTab === 'vip'
+                            ? 'Star a friend to add them to your VIP Crew'
+                            : 'Search above and send a request!'}
+                        </div>
+                      </div>
+                    </GlassPane>
+                  );
+                }
+
+                return (
+                  <div className="scrollbar-hide" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {listFriends.map((friend) => {
+                      const isSelected = viewingFriend?.id === friend.id;
+                      return (
+                        <div key={friend.id} style={{ position: 'relative' }}>
+                          <button
+                            onClick={() => {
+                              if (isSelected) {
+                                setViewingFriend(null);
+                              } else {
+                                setViewingFriend({ id: friend.id, username: friend.username });
+                                setMobileTab('screen');
+                              }
+                            }}
+                            style={{
+                              width: '100%', cursor: 'pointer', textAlign: 'left',
+                              background: isSelected
+                                ? 'linear-gradient(135deg, rgba(243,206,19,0.10) 0%, rgba(5,5,15,0.85) 100%)'
+                                : 'rgba(255,255,255,0.04)',
+                              border: isSelected
+                                ? '1px solid rgba(243,206,19,0.50)'
+                                : '1px solid rgba(255,255,255,0.07)',
+                              boxShadow: isSelected
+                                ? '0 0 20px rgba(243,206,19,0.20), 0 0 40px rgba(243,206,19,0.08)'
+                                : 'none',
+                              borderRadius: 10,
+                              padding: '9px 38px 9px 14px',
+                              transition: 'all 0.22s ease',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 10,
+                              ...vipPassMask(),
+                            }}
+                            onMouseEnter={(e) => {
+                              if (!isSelected) {
+                                e.currentTarget.style.borderColor = 'rgba(243,206,19,0.20)';
+                                e.currentTarget.style.background = 'rgba(255,255,255,0.07)';
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!isSelected) {
+                                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)';
+                                e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+                              }
+                            }}
+                          >
+                            <AvatarCircle
+                              letter={friend.username[0]}
+                              size={32}
+                              gold={isSelected}
+                            />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div
+                                style={{
+                                  fontSize: '0.78rem', fontWeight: 600,
+                                  color: isSelected ? '#F3CE13' : '#fff',
+                                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                                }}
+                              >
+                                @{friend.username}
+                              </div>
+                              <TodayDots today={friend.today} />
+                            </div>
+                            <span style={{ fontSize: '0.62rem', color: isSelected ? 'rgba(243,206,19,0.50)' : 'rgba(255,255,255,0.20)', flexShrink: 0 }}>
+                              {isSelected ? '◆' : '›'}
+                            </span>
+                          </button>
+                          {/* VIP star toggle — sits in the top-right corner of the card */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleVip(friend.id, friend.is_vip);
+                            }}
+                            title={friend.is_vip ? 'Remove from VIP Crew' : 'Add to VIP Crew'}
+                            style={{
+                              position: 'absolute', top: '50%', right: 8,
+                              transform: 'translateY(-50%)',
+                              background: 'none', border: 'none', cursor: 'pointer',
+                              padding: 4, lineHeight: 1,
+                              fontSize: '0.78rem',
+                              color: friend.is_vip ? '#F3CE13' : 'rgba(255,255,255,0.22)',
+                              transition: 'color 0.18s ease, transform 0.18s ease',
+                              zIndex: 2,
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.color = friend.is_vip ? '#ffe566' : 'rgba(243,206,19,0.6)'; e.currentTarget.style.transform = 'translateY(-50%) scale(1.25)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.color = friend.is_vip ? '#F3CE13' : 'rgba(255,255,255,0.22)'; e.currentTarget.style.transform = 'translateY(-50%) scale(1)'; }}
+                          >
+                            {friend.is_vip ? '★' : '☆'}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </div>{/* end crew scroll container */}
           </div>
 
           {/* ── RIGHT: Cinema Screen ─────────────────────────────── */}
@@ -1001,6 +1099,7 @@ export default function FriendsPage() {
                   onClose={() => { setViewingFriend(null); setMobileTab('crew'); }}
                   onViewFriend={(id, username) => { setViewingFriend({ id, username }); setMobileTab('screen'); }}
                   onAddFriend={handleSendRequest}
+                  onToggleVip={handleToggleVip}
                 />
               ) : (
                 <EmptyDetail />
@@ -1203,7 +1302,7 @@ function FriendFlameCollection({ friend, rgb }) {
 }
 
 /* ── FriendDetail — cinematic "Now Showing" screen ─────────────────────────── */
-function FriendDetail({ friend, viewingFriend, favRgb, myFriends = [], mySentRequests = [], onUnfriend, onClose, onViewFriend, onAddFriend }) {
+function FriendDetail({ friend, viewingFriend, favRgb, myFriends = [], mySentRequests = [], onUnfriend, onClose, onViewFriend, onAddFriend, onToggleVip }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [percentiles, setPercentiles]     = useState(null);
   const [friendFriends, setFriendFriends] = useState(null);
@@ -1366,24 +1465,77 @@ function FriendDetail({ friend, viewingFriend, favRgb, myFriends = [], mySentReq
               }}>
                 @{friend.username}
               </h2>
-              {/* VIP badge */}
-              <div style={{
-                display: 'inline-flex', alignItems: 'center', gap: 5,
-                marginTop: 6, padding: '3px 9px',
-                borderRadius: 999,
-                background: `linear-gradient(90deg, rgba(${favRgb},0.18), rgba(${favRgb},0.08), rgba(${favRgb},0.18))`,
-                backgroundSize: '200% auto',
-                border: `1px solid rgba(${favRgb},0.40)`,
-                animation: 'vip-shimmer 3s linear infinite',
-                boxShadow: `0 0 12px rgba(${favRgb},0.20)`,
-              }}>
-                <span style={{ fontSize: '0.6rem' }}>★</span>
-                <span style={{
-                  fontSize: '0.58rem', fontWeight: 800, letterSpacing: '0.12em',
-                  textTransform: 'uppercase', color: accentHex,
-                }}>
-                  VIP Crew Member
-                </span>
+              {/* Crew badge + VIP toggle */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
+                {friend.is_vip ? (
+                  <div style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    padding: '3px 9px', borderRadius: 999,
+                    background: 'linear-gradient(90deg, rgba(243,206,19,0.22), rgba(243,206,19,0.08), rgba(243,206,19,0.22))',
+                    backgroundSize: '200% auto',
+                    border: '1px solid rgba(243,206,19,0.50)',
+                    animation: 'vip-shimmer 3s linear infinite',
+                    boxShadow: '0 0 12px rgba(243,206,19,0.25)',
+                  }}>
+                    <span style={{ fontSize: '0.6rem', color: '#F3CE13' }}>★</span>
+                    <span style={{
+                      fontSize: '0.58rem', fontWeight: 800, letterSpacing: '0.12em',
+                      textTransform: 'uppercase', color: '#F3CE13',
+                    }}>
+                      VIP Crew Member
+                    </span>
+                  </div>
+                ) : (
+                  <div style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    padding: '3px 9px', borderRadius: 999,
+                    background: 'rgba(255,255,255,0.06)',
+                    border: '1px solid rgba(255,255,255,0.18)',
+                  }}>
+                    <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.50)' }}>🎬</span>
+                    <span style={{
+                      fontSize: '0.58rem', fontWeight: 800, letterSpacing: '0.12em',
+                      textTransform: 'uppercase', color: 'rgba(255,255,255,0.50)',
+                    }}>
+                      Film Crew Member
+                    </span>
+                  </div>
+                )}
+                {/* VIP toggle button */}
+                {onToggleVip && (
+                  <button
+                    onClick={() => onToggleVip(friend.id, friend.is_vip)}
+                    title={friend.is_vip ? 'Remove from VIP Crew' : 'Add to VIP Crew'}
+                    style={{
+                      background: friend.is_vip
+                        ? 'rgba(243,206,19,0.12)'
+                        : 'rgba(255,255,255,0.06)',
+                      border: friend.is_vip
+                        ? '1px solid rgba(243,206,19,0.40)'
+                        : '1px solid rgba(255,255,255,0.15)',
+                      borderRadius: 999, padding: '3px 9px',
+                      cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4,
+                      transition: 'all 0.18s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = friend.is_vip ? 'rgba(243,206,19,0.22)' : 'rgba(255,255,255,0.12)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = friend.is_vip ? 'rgba(243,206,19,0.12)' : 'rgba(255,255,255,0.06)';
+                    }}
+                  >
+                    <span style={{ fontSize: '0.65rem', color: friend.is_vip ? '#F3CE13' : 'rgba(255,255,255,0.40)' }}>
+                      {friend.is_vip ? '★' : '☆'}
+                    </span>
+                    <span style={{
+                      fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                      color: friend.is_vip ? 'rgba(243,206,19,0.80)' : 'rgba(255,255,255,0.35)',
+                    }}>
+                      {friend.is_vip ? 'Remove VIP' : 'Add to VIP'}
+                    </span>
+                  </button>
+                )}
               </div>
 
               {/* Rank badge — APPRENTICE → LEGEND based on best streak */}
