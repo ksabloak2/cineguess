@@ -34,6 +34,22 @@ export default function GamePage() {
   const { session } = useAuth();
   const { colorblind } = useSettings();
 
+  // ── Stable session identity ────────────────────────────────────────────────
+  // Supabase fires TOKEN_REFRESHED on every tab-return, creating a new `session`
+  // object reference even when the user hasn't changed. To prevent the init
+  // effect from re-running on every token refresh, we:
+  //   1. Keep `sessionRef` always current (for reading inside effects without
+  //      triggering them).
+  //   2. Expose a stable `userId` state that only changes when the actual user
+  //      signs in or out — this is what the init effect depends on.
+  const sessionRef = useRef(session);
+  const [userId, setUserId] = useState(session?.user?.id ?? null);
+  useEffect(() => {
+    sessionRef.current = session;
+    const newId = session?.user?.id ?? null;
+    setUserId((prev) => (prev === newId ? prev : newId));
+  }, [session]);
+
   useEffect(() => {
     if (!VALID_MODES.has(mode) || !VALID_IDS.has(rawCategory)) {
       navigate('/', { replace: true });
@@ -148,7 +164,7 @@ export default function GamePage() {
     // Build a stable key for this init pass. If the user re-enters the same
     // mode/category combo (e.g. tab regained focus, session refreshed), skip
     // the wipe-and-reload so the board isn't nuked.
-    const userKey    = session?.user?.id || 'guest';
+    const userKey    = sessionRef.current?.user?.id || 'guest';
     const combinedKey = `${mode}_${category}_${userKey}_${currentDate}_${reloadTrigger}`;
     if (hydratedKeyRef.current === combinedKey) return;
     hydratedKeyRef.current = combinedKey;
@@ -225,7 +241,7 @@ export default function GamePage() {
         if (isUnlimited) {
           let target;
 
-          if (session) {
+          if (sessionRef.current) {
             // Authenticated: server is source of truth for cross-device sync.
             try {
               const serverSession = await getUnlimitedSession(category);
@@ -264,7 +280,7 @@ export default function GamePage() {
               setTargetMovie(target);
               const freshState = { targetId: target.tmdb_id, guesses: [], gameOver: false, won: null, hintsRevealedCount: 0, gameOverHintsRevealed: [] };
               saveUnlimitedState(category, freshState);
-              if (session) {
+              if (sessionRef.current) {
                 saveUnlimitedSession(category, {
                   target_tmdb_id: target.tmdb_id, guesses: [], game_over: false,
                   won: null, hints_revealed: [], hints_revealed_count: 0,
@@ -419,7 +435,7 @@ export default function GamePage() {
     }
 
     init();
-  }, [mode, category, session, currentDate, reloadTrigger]);
+  }, [mode, category, userId, currentDate, reloadTrigger]);
 
   // ── Visibility change: detect new-day when tab regains focus ──────────────
   // If the user leaves the tab open overnight, the init effect won't re-run
