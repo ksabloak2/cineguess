@@ -164,7 +164,7 @@ export default function RulesModal({ open, onClose, initialPage = 0 }) {
                 <p className="text-[10px] uppercase tracking-[0.25em] font-semibold text-accent/80">Most Popular</p>
               </div>
               <p className="text-[11px] text-gray-400 leading-relaxed mb-2">
-                The widest-ranging category: blockbusters, cult classics, and award winners spanning all genres and eras. Any studio, any country.
+                The widest-ranging category: blockbusters, cult classics, and award winners spanning all genres and eras. Films are drawn from the most popular and most logged movies on Letterboxd. Any studio, any country.
               </p>
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-gray-500">
                 <span>🎯 7 guesses</span>
