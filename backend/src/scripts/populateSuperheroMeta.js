@@ -162,7 +162,7 @@ const META = {
   'superman returns':                               { universe: 'Standalone',             publisher: 'DC',          focus: 'Hero',      team: 'Solo', power: 'Cosmic'         },
   'watchmen':                                       { universe: 'Standalone',             publisher: 'Independent', focus: 'Anti-hero', team: 'Team', power: 'Team/Mixed'     },
   'green lantern':                                  { universe: 'Standalone',             publisher: 'DC',          focus: 'Hero',      team: 'Solo', power: 'Cosmic'         },
-  'the losers':                                     { universe: 'Standalone',             publisher: 'Independent', focus: 'Hero',      team: 'Team', power: 'Human Enhanced' },
+  'chronicle':                                      { universe: 'Standalone',             publisher: 'Independent', focus: 'Anti-hero', team: 'Team', power: 'Mutation'       },
   'the lego batman movie':                          { universe: 'Standalone',             publisher: 'DC',          focus: 'Hero',      team: 'Solo', power: 'Tech-based'     },
   'teen titans go! to the movies':                  { universe: 'Standalone',             publisher: 'DC',          focus: 'Hero',      team: 'Team', power: 'Team/Mixed'     },
 };

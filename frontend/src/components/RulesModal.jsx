@@ -541,7 +541,7 @@ const FRANCHISE_GROUPS = [
   {
     label:    'Other',
     color:    '#6b7280',
-    examples: 'Independent superhero films, older adaptations (Blade, Punisher, Hellboy), and international titles.',
+    examples: 'Independent standalone superhero films: Constantine, V for Vendetta, Watchmen, and Chronicle.',
   },
 ];
 
