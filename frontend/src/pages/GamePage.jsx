@@ -997,8 +997,8 @@ export default function GamePage() {
           <button
             onClick={() => setShowStarterModal(true)}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl
-                       bg-amber-500/10 hover:bg-amber-500/20
-                       border border-amber-500/30 text-amber-300
+                       bg-blue-950/60 hover:bg-blue-900/60
+                       border border-blue-700/50 text-blue-300
                        text-xs sm:text-sm font-medium transition-all hover:scale-[1.02]"
           >
             <span>ℹ️</span>

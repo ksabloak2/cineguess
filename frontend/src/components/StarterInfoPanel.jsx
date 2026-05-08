@@ -33,7 +33,7 @@ export default function StarterInfoPanel({ starterInfo }) {
   return (
     <div className="flex flex-col gap-2.5">
       {/* Oscar info */}
-      <div className="rounded-xl border border-blue-800/50 bg-blue-950/40 px-3.5 py-3">
+      <div className="rounded-xl border border-amber-500/25 bg-amber-500/5 px-3.5 py-3">
         <div className="flex items-center gap-2 mb-1.5">
           <span className="text-base">🏆</span>
           <span className="text-[11px] font-semibold uppercase tracking-wider text-amber-400/80">
@@ -86,7 +86,7 @@ export default function StarterInfoPanel({ starterInfo }) {
       </div>
 
       {/* Franchise */}
-      <div className="rounded-xl border border-blue-800/50 bg-blue-950/40 px-3.5 py-3">
+      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-3.5 py-3">
         <div className="flex items-center gap-2 mb-1.5">
           <span className="text-base">🎬</span>
           <span className="text-[11px] font-semibold uppercase tracking-wider text-amber-400/70">
