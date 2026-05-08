@@ -393,8 +393,9 @@ export default function FriendsPage() {
             display: flex !important;
             width: 100% !important;
             min-width: 0 !important;
-            flex: 1 1 auto !important;
+            flex: 1 1 0 !important;
             min-height: 0 !important;
+            height: 0 !important;
             overflow-y: auto !important;
           }
 
