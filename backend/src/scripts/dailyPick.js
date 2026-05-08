@@ -2,7 +2,7 @@
  * dailyPick.js
  *
  * Selects one movie per category for the given date using a seeded shuffle.
- * Respects the 21-day repeat-prevention window.
+ * Respects the 50-day repeat-prevention window.
  *
  * Called by node-cron at midnight America/New_York (Eastern) and can also be
  * run manually with an optional YYYY-MM-DD override:
@@ -13,7 +13,7 @@ require('dotenv').config();
 const pool = require('../db/pool');
 
 const CATEGORIES = ['top250', 'superhero', 'animated', 'indiancinema'];
-const REPEAT_WINDOW_DAYS = 21;
+const REPEAT_WINDOW_DAYS = 50;
 
 // Deterministic seeded LCG for reproducible daily picks
 function seededRandom(seed) {
@@ -65,7 +65,7 @@ async function pickForCategory(client, category, dateStr) {
 
   // If all movies were used recently, reset and use the full pool
   if (eligible.length === 0) {
-    console.warn(`  All ${category} movies used in last 21 days — resetting pool.`);
+    console.warn(`  All ${category} movies used in last 50 days — resetting pool.`);
     eligible = allMovies;
   }
 
