@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import ReportIssueModal from './ReportIssueModal';
 
-const PAGES = ['How to Play', 'Scoring', 'Rankings', 'Credits & Legal'];
+const PAGES = ['How to Play', 'Scoring', 'Rankings', 'Categories', 'Credits & Legal'];
 
 // ── Rules modal ─────────────────────────────────────────────────────────────
 export default function RulesModal({ open, onClose, initialPage = 0 }) {
@@ -71,7 +71,7 @@ export default function RulesModal({ open, onClose, initialPage = 0 }) {
             <button
               key={label}
               onClick={() => setPage(i)}
-              className="flex-1 py-1.5 px-1 rounded-lg text-[10px] sm:text-xs font-semibold transition-all text-center leading-tight"
+              className="flex-1 py-1.5 px-0.5 rounded-lg text-[8.5px] sm:text-[10px] font-semibold transition-all text-center leading-tight"
               style={page === i ? {
                 background: 'rgba(243,206,19,0.15)',
                 color:      '#F3CE13',
@@ -130,29 +130,6 @@ export default function RulesModal({ open, onClose, initialPage = 0 }) {
                 <LegendRow color="amber"  label="Close"         desc="Year only: your guess is within 5 years of the target. Arrow shows direction ↑↓." />
                 <LegendRow color="yellow" label="Partial Match" desc="Shared genre, actor in a different role, same parent studio (e.g. Warner Bros. & New Line Cinema), or in Superhero: same parent universe." />
                 <LegendRow color="red"    label="No Match"      desc="Nothing in common for this attribute, or off by more than 5 years." />
-              </div>
-            </div>
-
-            {/* Franchise groupings — Superhero category */}
-            <div className="rounded-xl p-4 sm:p-5 mt-5" style={{ background: 'rgba(220,20,60,0.04)', border: '1px solid rgba(220,20,60,0.18)' }}>
-              <p className="text-[10px] uppercase tracking-[0.25em] font-semibold mb-3" style={{ color: 'rgba(220,20,60,0.7)' }}>
-                🦸 Superhero: Franchise Guide
-              </p>
-              <p className="text-[11px] text-gray-400 mb-3 leading-relaxed">
-                Movies are grouped by studio/rights holder, not just brand name, so some franchises may surprise you.
-              </p>
-              <p className="text-[11px] text-gray-400 mb-3 leading-relaxed">
-                <span className="text-yellow-400 font-semibold">Yellow tile tip:</span> if your guess and the target share a parent universe (both Marvel, or both DC) but belong to different sub-franchises (e.g. MCU vs Fox Universe, or DCEU vs Nolan Batman), the franchise tile shows yellow. Green only lights up when both films are in the exact same sub-franchise.
-              </p>
-              <div className="space-y-2">
-                {FRANCHISE_GROUPS.map(({ label, examples, color }) => (
-                  <div key={label} className="flex items-start gap-2.5">
-                    <span className="flex-shrink-0 mt-0.5 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ background: `${color}22`, color, border: `1px solid ${color}40` }}>
-                      {label}
-                    </span>
-                    <p className="text-[11px] text-gray-400 leading-snug">{examples}</p>
-                  </div>
-                ))}
               </div>
             </div>
 
@@ -268,8 +245,111 @@ export default function RulesModal({ open, onClose, initialPage = 0 }) {
           </div>
         )}
 
-        {/* ── Page 3: Credits & Legal ── */}
+        {/* ── Page 3: Categories ── */}
         {page === 3 && (
+          <div className="space-y-4">
+
+            {/* ── Most Popular ── */}
+            <div className="rounded-xl p-4 sm:p-5" style={{ background: 'rgba(243,206,19,0.04)', border: '1px solid rgba(243,206,19,0.20)' }}>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-base">🎬</span>
+                <p className="text-[10px] uppercase tracking-[0.25em] font-semibold text-accent/80">Most Popular</p>
+              </div>
+              <p className="text-[11px] text-gray-400 leading-relaxed mb-2">
+                The widest-ranging category — blockbusters, cult classics, and award winners spanning all genres and eras. Any studio, any country.
+              </p>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-gray-500">
+                <span>🎯 7 guesses</span>
+                <span>💡 Actor → Guess 4</span>
+                <span>💡 Logline → Guess 5</span>
+                <span>🖼️ Frame → Guess 6</span>
+              </div>
+            </div>
+
+            {/* ── Superhero ── */}
+            <div className="rounded-xl p-4 sm:p-5" style={{ background: 'rgba(220,20,60,0.04)', border: '1px solid rgba(220,20,60,0.18)' }}>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-base">🦸</span>
+                <p className="text-[10px] uppercase tracking-[0.25em] font-semibold" style={{ color: 'rgba(220,20,60,0.75)' }}>Superhero</p>
+              </div>
+              <p className="text-[11px] text-gray-400 leading-relaxed mb-2">
+                Comic book adaptations, origin stories, and team-up films. Movies are grouped by studio/rights holder, not just brand.
+              </p>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-gray-500 mb-3">
+                <span>🎯 7 guesses</span>
+                <span>💡 Logline → Guess 4</span>
+                <span>🖼️ Frame → Guess 6</span>
+                <span className="text-yellow-500/70">★ No actor hint</span>
+              </div>
+              <p className="text-[10px] text-gray-500 mb-2 leading-relaxed">
+                <span className="text-yellow-400 font-semibold">Yellow franchise tile:</span> both films share a parent universe (Marvel or DC) but different sub-franchise. Green = exact same sub-franchise.
+              </p>
+              <div className="space-y-1.5 mt-3">
+                {FRANCHISE_GROUPS.map(({ label, examples, color }) => (
+                  <div key={label} className="flex items-start gap-2.5">
+                    <span className="flex-shrink-0 mt-0.5 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded whitespace-nowrap" style={{ background: `${color}22`, color, border: `1px solid ${color}40` }}>
+                      {label}
+                    </span>
+                    <p className="text-[11px] text-gray-400 leading-snug">{examples}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Animated ── */}
+            <div className="rounded-xl p-4 sm:p-5" style={{ background: 'rgba(168,85,247,0.04)', border: '1px solid rgba(168,85,247,0.20)' }}>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-base">🎨</span>
+                <p className="text-[10px] uppercase tracking-[0.25em] font-semibold" style={{ color: 'rgba(192,132,252,0.85)' }}>Animated</p>
+              </div>
+              <p className="text-[11px] text-gray-400 leading-relaxed mb-2">
+                Animated feature films from all major studios — CGI, traditional hand-drawn, stop-motion, and anime. Studio tile shows yellow when both films share the same parent company.
+              </p>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-gray-500 mb-3">
+                <span>🎯 7 guesses</span>
+                <span>💡 Logline → Guess 4</span>
+                <span>🖼️ Frame → Guess 6</span>
+                <span className="text-yellow-500/70">★ No actor hint</span>
+              </div>
+              <p className="text-[10px] uppercase tracking-[0.20em] font-semibold text-purple-400/60 mb-2">Studios in the Pool</p>
+              <div className="space-y-1.5">
+                {ANIMATED_STUDIOS.map(({ label, examples, color }) => (
+                  <div key={label} className="flex items-start gap-2.5">
+                    <span className="flex-shrink-0 mt-0.5 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded whitespace-nowrap" style={{ background: `${color}22`, color, border: `1px solid ${color}40` }}>
+                      {label}
+                    </span>
+                    <p className="text-[11px] text-gray-400 leading-snug">{examples}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Indian Cinema ── */}
+            <div className="rounded-xl p-4 sm:p-5" style={{ background: 'rgba(249,115,22,0.04)', border: '1px solid rgba(249,115,22,0.20)' }}>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-base">🎵</span>
+                <p className="text-[10px] uppercase tracking-[0.25em] font-semibold" style={{ color: 'rgba(251,146,60,0.85)' }}>Indian Cinema</p>
+              </div>
+              <p className="text-[11px] text-gray-400 leading-relaxed mb-2">
+                Bollywood and regional Indian films — Hindi, Tamil, Telugu, Malayalam, and beyond. Covers iconic classics, modern blockbusters, and critically acclaimed drama.
+              </p>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-gray-500 mb-2">
+                <span>🎯 8 guesses (not 7)</span>
+                <span>💡 Actor → Guess 4</span>
+                <span>💡 Logline → Guess 5</span>
+                <span>🖼️ Frame → Guess 6</span>
+                <span>🎵 Song → Guess 7</span>
+              </div>
+              <p className="text-[11px] text-gray-500 leading-relaxed">
+                The <span className="text-orange-400/80 font-semibold">Musical Hint</span> (exclusive to this category) reveals the title and playback singers of an iconic song from the film. Indian Cinema also gets one extra guess to match the epic scale of its storytelling.
+              </p>
+            </div>
+
+          </div>
+        )}
+
+        {/* ── Page 4: Credits & Legal ── */}
+        {page === 4 && (
           <div className="space-y-5">
 
             {/* Data Sources */}
@@ -467,6 +547,50 @@ const FRANCHISE_GROUPS = [
     label:    'Other',
     color:    '#6b7280',
     examples: 'Independent superhero films, older adaptations (Blade, Punisher, Hellboy), and international titles.',
+  },
+];
+
+// ── Animated studio groupings ─────────────────────────────────────────────
+const ANIMATED_STUDIOS = [
+  {
+    label:    'Disney',
+    color:    '#60a5fa',
+    examples: 'Classics (Snow White → Tarzan) + modern Disney Animation: Tangled, Frozen, Wreck-It Ralph, Big Hero 6, Zootopia, Moana, Encanto, Wish, and sequels.',
+  },
+  {
+    label:    'Pixar',
+    color:    '#34d399',
+    examples: 'Toy Story, A Bug\'s Life, Monsters Inc., Finding Nemo, The Incredibles, WALL-E, Up, Brave, Inside Out, Coco, Soul, and all sequels.',
+  },
+  {
+    label:    'DreamWorks',
+    color:    '#fbbf24',
+    examples: 'Shrek, Kung Fu Panda, How to Train Your Dragon, Madagascar, Megamind, Puss in Boots, The Bad Guys, The Wild Robot, Dog Man, and more.',
+  },
+  {
+    label:    'Illumination',
+    color:    '#fb923c',
+    examples: 'Despicable Me, Minions, Sing, The Lorax, The Grinch, The Secret Life of Pets, The Super Mario Bros. Movie.',
+  },
+  {
+    label:    'Studio Ghibli',
+    color:    '#4ade80',
+    examples: 'Spirited Away, Princess Mononoke, My Neighbor Totoro, Howl\'s Moving Castle, Grave of the Fireflies, Ponyo, The Boy and the Heron.',
+  },
+  {
+    label:    'Sony',
+    color:    '#e879f9',
+    examples: 'Spider-Man: Into & Across the Spider-Verse, Hotel Transylvania series, Cloudy with a Chance of Meatballs, The Mitchells vs. the Machines.',
+  },
+  {
+    label:    'Blue Sky',
+    color:    '#67e8f9',
+    examples: 'Ice Age series, Rio, Rio 2, The Peanuts Movie, Robots, Horton Hears a Who!, Over the Hedge.',
+  },
+  {
+    label:    'Warner Bros.',
+    color:    '#f87171',
+    examples: 'The Lego Movie series (Lego Batman, Ninjago), Batman: Mask of the Phantasm, Batman Beyond: Return of the Joker, The Iron Giant, Corpse Bride, Happy Feet, Scoob!, Smallfoot, Storks, Teen Titans Go! To the Movies, Scooby-Doo on Zombie Island.',
   },
 ];
 
