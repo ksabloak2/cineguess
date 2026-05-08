@@ -205,7 +205,7 @@ export default function LeaderboardPage() {
       {/* Daily / Unlimited leaderboard toggle — top, controls which board you're viewing */}
       <div className="flex justify-center">
         <div
-          className="relative flex rounded-full w-56 sm:w-64"
+          className="relative flex rounded-full w-56 sm:w-80"
           style={{
             background: 'rgba(255,255,255,0.05)',
             border:     '1px solid rgba(255,255,255,0.09)',
@@ -227,7 +227,8 @@ export default function LeaderboardPage() {
             style={{ color: leaderMode === 'daily' ? '#F3CE13' : 'rgba(255,255,255,0.38)' }}
           >
             <span>📅</span>
-            <span>Daily</span>
+            <span className="sm:hidden">Daily</span>
+            <span className="hidden sm:inline">Daily Rankings</span>
           </button>
           <button
             onClick={() => setLeaderMode('unlimited')}
@@ -235,14 +236,15 @@ export default function LeaderboardPage() {
             style={{ color: leaderMode === 'unlimited' ? '#c084fc' : 'rgba(255,255,255,0.38)' }}
           >
             <span>∞</span>
-            <span>Unlimited</span>
+            <span className="sm:hidden">Unlimited</span>
+            <span className="hidden sm:inline">Unlimited Rankings</span>
           </button>
         </div>
       </div>
 
       {/* Category tabs */}
       <div
-        className="flex gap-1 p-1 rounded-xl overflow-x-auto scrollbar-hide"
+        className="flex gap-1 p-1 rounded-xl"
         style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
       >
         {tabs.map((tab) => {
@@ -251,7 +253,7 @@ export default function LeaderboardPage() {
             <button
               key={String(tab.id)}
               onClick={() => isUnlimitedMode ? setUnlimitedTab(tab.id) : setActiveTab(tab.id)}
-              className="flex-shrink-0 flex items-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all"
+              className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all"
               style={isActive ? {
                 background: isUnlimitedMode ? 'rgba(168,85,247,0.15)' : 'rgba(243,206,19,0.15)',
                 color:      isUnlimitedMode ? '#c084fc' : '#F3CE13',
