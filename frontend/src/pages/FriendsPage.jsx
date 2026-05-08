@@ -1494,10 +1494,10 @@ const CAT_META = {
   superhero:              { emoji: '🦸', label: 'Superhero' },
   animated:               { emoji: '✨', label: 'Animated' },
   indiancinema:           { emoji: '🎭', label: 'Indian Cinema' },
-  unlimited_top250:       { emoji: '♾️', label: 'Unlimited Most Popular' },
-  unlimited_superhero:    { emoji: '♾️', label: 'Unlimited Superhero' },
-  unlimited_animated:     { emoji: '♾️', label: 'Unlimited Animated' },
-  unlimited_indiancinema: { emoji: '♾️', label: 'Unlimited Indian' },
+  unlimited_top250:       { emoji: '♾️', label: '∞ Most Popular' },
+  unlimited_superhero:    { emoji: '♾️', label: '∞ Superhero' },
+  unlimited_animated:     { emoji: '♾️', label: '∞ Animated' },
+  unlimited_indiancinema: { emoji: '♾️', label: '∞ Indian Cinema' },
 };
 
 /* ── FriendFlameCollection ───────────────────────────────────────────────────── */
@@ -1948,9 +1948,10 @@ function FriendDetail({ friend, viewingFriend, favRgb, myFriends = [], mySentReq
                     <span style={{ fontSize: '0.9rem', flexShrink: 0 }}>{meta.emoji}</span>
                     <div style={{ minWidth: 0 }}>
                       <div style={{
-                        fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.08em',
+                        fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.06em',
                         textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)',
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        lineHeight: 1.25,
+                        wordBreak: 'break-word',
                       }}>
                         {meta.label}
                       </div>
