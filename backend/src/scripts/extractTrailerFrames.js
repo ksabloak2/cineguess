@@ -275,9 +275,9 @@ async function main() {
   // ALWAYS skip pinned movies — these are explicitly set to use TMDB backdrops.
   conditions.push(`(pin_tmdb_backdrops IS NULL OR pin_tmdb_backdrops = FALSE)`);
   if (TMDB_IDS) {
-    // When specific IDs are given, process exactly those movies — skip the
-    // "already has frames" guard (equivalent to --force for just these IDs).
-    conditions.push(`tmdb_id = ANY(ARRAY[${TMDB_IDS.join(',')}])`);
+    // When specific IDs are given, process exactly those movies by DB row id.
+    // Skip the "already has frames" guard (equivalent to --force for just these).
+    conditions.push(`id = ANY(ARRAY[${TMDB_IDS.join(',')}])`);
   } else if (!FORCE) {
     conditions.push(`(backdrop_paths IS NULL
                OR cardinality(backdrop_paths) = 0
