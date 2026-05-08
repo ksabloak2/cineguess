@@ -180,7 +180,8 @@ export default function FriendsPage() {
     try {
       if (currentlyVip) { await removeVip(friendId); }
       else { await addVip(friendId); }
-    } catch {
+    } catch (err) {
+      console.error('[VIP toggle failed]', err?.response?.status, err?.response?.data || err?.message);
       // Revert on failure
       setFriends((f) => f.map((fr) => fr.id === friendId ? { ...fr, is_vip: currentlyVip } : fr));
     }
@@ -335,9 +336,9 @@ export default function FriendsPage() {
           .friends-mob-tabs {
             display: flex;
             flex-shrink: 0;
-            gap: 6px;
-            padding: 4px;
-            border-radius: 14px;
+            gap: 4px;
+            padding: 3px;
+            border-radius: 11px;
             background: rgba(168,85,247,0.05);
             border: 1px solid rgba(168,85,247,0.14);
           }
@@ -346,12 +347,12 @@ export default function FriendsPage() {
           .mob-tab {
             flex: 1;
             display: flex; align-items: center; justify-content: center;
-            gap: 7px;
-            padding: 11px 0;
-            border-radius: 10px;
+            gap: 5px;
+            padding: 7px 0;
+            border-radius: 8px;
             background: transparent;
             border: 1px solid transparent;
-            font-size: 0.82rem; font-weight: 700;
+            font-size: 0.76rem; font-weight: 700;
             color: rgba(255,255,255,0.30);
             cursor: pointer;
             position: relative;
@@ -364,16 +365,16 @@ export default function FriendsPage() {
             box-shadow: 0 0 22px rgba(168,85,247,0.22), 0 0 50px rgba(168,85,247,0.08) !important;
           }
           .mob-tab-badge {
-            position: absolute; top: 6px; right: 14px;
-            min-width: 16px; height: 16px;
+            position: absolute; top: 3px; right: 10px;
+            min-width: 15px; height: 15px;
             background: #F3CE13; color: #000;
-            font-size: 0.55rem; font-weight: 800;
-            border-radius: 999px; padding: 0 4px;
+            font-size: 0.50rem; font-weight: 800;
+            border-radius: 999px; padding: 0 3px;
             display: flex; align-items: center; justify-content: center;
           }
           .mob-tab-dot {
-            position: absolute; top: 8px; right: 16px;
-            width: 7px; height: 7px; border-radius: 50%;
+            position: absolute; top: 4px; right: 12px;
+            width: 6px; height: 6px; border-radius: 50%;
             background: #c084fc;
             box-shadow: 0 0 8px rgba(168,85,247,0.80);
           }

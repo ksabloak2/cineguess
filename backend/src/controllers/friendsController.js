@@ -194,6 +194,13 @@ async function listFriends(req, res) {
       avgByUser[a.user_id][a.category] = a.avg_guesses !== null ? parseFloat(a.avg_guesses) : null;
     }
 
+    // Fetch the requesting user's VIP crew
+    const { rows: vipRows } = await client.query(
+      `SELECT friend_id FROM vip_crew WHERE user_id = $1`,
+      [req.user.id]
+    );
+    const vipSet = new Set(vipRows.map((r) => r.friend_id));
+
     const result = profiles.map((p) => ({
       id: p.id,
       username: p.username,
@@ -201,11 +208,41 @@ async function listFriends(req, res) {
       streaks: streakByUser[p.id] || {},
       bestStreaks: bestByUser[p.id] || {},
       avgGuesses: avgByUser[p.id] || {},
+      is_vip: vipSet.has(p.id),
     }));
 
     res.json(result);
   } finally {
     client.release();
+  }
+}
+
+// POST /api/friends/vip/:friend_id — add a friend to VIP crew
+async function addVip(req, res) {
+  const { friend_id } = req.params;
+  try {
+    await pool.query(
+      `INSERT INTO vip_crew (user_id, friend_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+      [req.user.id, friend_id]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[addVip error]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+}
+
+// DELETE /api/friends/vip/:friend_id — remove a friend from VIP crew
+async function removeVip(req, res) {
+  try {
+    await pool.query(
+      `DELETE FROM vip_crew WHERE user_id = $1 AND friend_id = $2`,
+      [req.user.id, req.params.friend_id]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[removeVip error]', err.message);
+    res.status(500).json({ error: err.message });
   }
 }
 
@@ -465,4 +502,5 @@ module.exports = {
   sendRequest, acceptRequest, declineRequest, unfriend,
   listFriends, listRequests, getFriendYearCalendar,
   getSentRequests, cancelSentRequest, getFriendPercentiles, getFriendFriends,
+  addVip, removeVip,
 };
