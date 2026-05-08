@@ -272,8 +272,7 @@ export default function LeaderboardPage() {
       {!loading && !error && rows.length > 0 && (
         isUnlimitedMode ? (
           <div
-            className="grid text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold text-gray-600 px-3 py-1"
-            style={{ gridTemplateColumns: '2rem 1fr 4.5rem 4.5rem' }}
+            className="grid text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold text-gray-600 px-3 py-1 [grid-template-columns:1.5rem_1fr_3rem_3rem] sm:[grid-template-columns:2rem_1fr_4.5rem_4.5rem]"
           >
             <span className="text-center">#</span>
             <span>Player</span>
@@ -282,8 +281,7 @@ export default function LeaderboardPage() {
           </div>
         ) : (
           <div
-            className="grid text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold text-gray-600 px-3 py-1"
-            style={{ gridTemplateColumns: '2rem 1fr 4.5rem 4.5rem 5.5rem' }}
+            className="grid text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold text-gray-600 px-3 py-1 [grid-template-columns:1.5rem_1fr_2.5rem_2.8rem_3rem] sm:[grid-template-columns:2rem_1fr_4.5rem_4.5rem_5.5rem]"
           >
             <span className="text-center">#</span>
             <span>Player</span>
@@ -324,9 +322,8 @@ export default function LeaderboardPage() {
             return isUnlimitedMode ? (
               <div
                 key={row.username}
-                className="grid items-center gap-2 px-3 py-2.5 rounded-xl"
+                className="grid items-center gap-1 sm:gap-2 px-3 py-2.5 rounded-xl [grid-template-columns:1.5rem_1fr_3rem_3rem] sm:[grid-template-columns:2rem_1fr_4.5rem_4.5rem]"
                 style={{
-                  gridTemplateColumns: '2rem 1fr 4.5rem 4.5rem',
                   background: rank <= 3 ? 'rgba(168,85,247,0.06)' : 'rgba(255,255,255,0.03)',
                   border:     rank <= 3 ? '1px solid rgba(168,85,247,0.18)' : '1px solid rgba(255,255,255,0.06)',
                 }}
@@ -353,18 +350,17 @@ export default function LeaderboardPage() {
                 </button>
 
                 <div className="text-center">
-                  <span className="text-sm font-bold text-purple-400">{row.current_streak ?? 0}</span>
+                  <span className="text-xs sm:text-sm font-bold text-purple-400">{row.current_streak ?? 0}</span>
                 </div>
                 <div className="text-center">
-                  <span className="text-sm text-gray-400">{row.longest_streak ?? 0}</span>
+                  <span className="text-xs sm:text-sm text-gray-400">{row.longest_streak ?? 0}</span>
                 </div>
               </div>
             ) : (
               <div
                 key={row.username}
-                className="grid items-center gap-2 px-3 py-2.5 rounded-xl"
+                className="grid items-center gap-1 sm:gap-2 px-3 py-2.5 rounded-xl [grid-template-columns:1.5rem_1fr_2.5rem_2.8rem_3rem] sm:[grid-template-columns:2rem_1fr_4.5rem_4.5rem_5.5rem]"
                 style={{
-                  gridTemplateColumns: '2rem 1fr 4.5rem 4.5rem 5.5rem',
                   background: rank <= 3 ? 'rgba(243,206,19,0.05)' : 'rgba(255,255,255,0.03)',
                   border:     rank <= 3 ? '1px solid rgba(243,206,19,0.15)' : '1px solid rgba(255,255,255,0.06)',
                 }}
@@ -391,15 +387,15 @@ export default function LeaderboardPage() {
                 </button>
 
                 <div className="text-center">
-                  <span className="text-sm font-bold text-orange-400">🔥 {row.current_streak ?? 0}</span>
+                  <span className="text-xs sm:text-sm font-bold text-orange-400">🔥 {row.current_streak ?? 0}</span>
                 </div>
                 <div className="text-center">
-                  <span className="text-sm text-gray-300">
+                  <span className="text-xs sm:text-sm text-gray-300">
                     {row.avg_score != null ? Number(row.avg_score).toFixed(1) : '—'}
                   </span>
                 </div>
                 <div className="text-center">
-                  <span className="text-sm font-bold" style={{ color: rank <= 3 ? '#F3CE13' : 'rgba(255,255,255,0.85)' }}>
+                  <span className="text-xs sm:text-sm font-bold" style={{ color: rank <= 3 ? '#F3CE13' : 'rgba(255,255,255,0.85)' }}>
                     {row.global_rating != null ? Number(row.global_rating).toFixed(0) : '—'}
                   </span>
                 </div>
