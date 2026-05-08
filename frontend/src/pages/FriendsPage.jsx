@@ -333,7 +333,7 @@ export default function FriendsPage() {
 
         @media (max-width: 767px) {
           /* Shrink page height to clear the fixed bottom mode-toggle */
-          .friends-page-wrap { height: calc(100dvh - 4rem - 52px) !important; }
+          .friends-page-wrap { height: calc(100dvh - 4rem - 68px) !important; }
 
           /* Show the mobile tab bar */
           .friends-mob-tabs {
@@ -382,8 +382,8 @@ export default function FriendsPage() {
             box-shadow: 0 0 8px rgba(168,85,247,0.80);
           }
 
-          /* Two-col → no gap on mobile */
-          .friends-two-col { gap: 0 !important; }
+          /* Two-col → no gap, fills remaining height on mobile */
+          .friends-two-col { gap: 0 !important; flex: 1 1 0 !important; min-height: 0 !important; }
 
           /* Sidebar: hidden unless crew tab is active */
           .friends-sidebar {
