@@ -98,7 +98,8 @@ export default function GamePage() {
   // Auto-retry counter for backend cold-starts (Railway free tier).
   // Each increment triggers a fresh init attempt without resetting other state.
   const [reloadTrigger, setReloadTrigger] = useState(0);
-  const retryCountRef = useRef(0); // how many auto-retries have fired this session
+  const retryCountRef  = useRef(0); // how many auto-retries have fired this session
+  const hiddenAtRef    = useRef(null); // timestamp when tab was hidden (ms)
 
   const boardRef       = useRef(null);
   // Tracks which mode+category+user combo has already been fully initialised.
@@ -237,6 +238,7 @@ export default function GamePage() {
                     gameOver:             serverSession.game_over,
                     won:                  serverSession.won,
                     hintsRevealedCount:   serverSession.hints_revealed_count,
+                    hintsRevealed:        Array.isArray(serverSession.hints_revealed) ? serverSession.hints_revealed : [],
                     gameOverHintsRevealed: Array.isArray(serverSession.hints_revealed) ? serverSession.hints_revealed : [],
                   };
                   // Sync back to localStorage so offline fallback stays current
@@ -425,15 +427,43 @@ export default function GamePage() {
   // the Eastern date has rolled over. When it has, updating currentDate changes
   // combinedKey → the guard passes → init re-runs → fresh daily pick loads.
   useEffect(() => {
+    const TEN_MINUTES = 10 * 60 * 1000;
     function onVisibility() {
-      if (document.visibilityState !== 'visible') return;
+      if (document.visibilityState === 'hidden') {
+        hiddenAtRef.current = Date.now();
+        return;
+      }
+      // Tab became visible — only trigger re-init if the date changed OR the user
+      // was away for more than 10 minutes. Short tab switches are ignored entirely.
+      const awayMs = hiddenAtRef.current ? Date.now() - hiddenAtRef.current : 0;
+      hiddenAtRef.current = null;
+
       const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
       setCurrentDate((prev) => {
-        if (prev === today) return prev; // no change — React bails out, no re-render
-        // Date rolled over: reset retry counter so new-day errors retry cleanly.
-        retryCountRef.current = 0;
-        return today;
+        if (prev !== today) {
+          // Date rolled over: force re-init.
+          retryCountRef.current = 0;
+          return today;
+        }
+        if (awayMs >= TEN_MINUTES) {
+          // Away 10+ minutes: force re-init by bumping reloadTrigger below.
+          return prev;
+        }
+        // Away less than 10 min and same date — do nothing.
+        return prev;
       });
+
+      if (awayMs >= TEN_MINUTES) {
+        const today2 = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+        const nowDate = today2;
+        // Only force reload if date didn't already change (avoid double re-init)
+        setCurrentDate((prev) => {
+          if (prev !== nowDate) return prev; // already handled by date change above
+          hydratedKeyRef.current = null;    // clear guard so init re-runs
+          return prev;
+        });
+        setReloadTrigger((n) => n + 1);
+      }
     }
     document.addEventListener('visibilitychange', onVisibility);
     return () => document.removeEventListener('visibilitychange', onVisibility);
@@ -529,8 +559,9 @@ export default function GamePage() {
         mergeHints(getHints(99, target, category), true);
       }
     } else {
-      // Restore hint count for in-progress unlimited game
+      // Restore hint count and revealed hints for in-progress unlimited game
       if (saved.hintsRevealedCount) setHintsRevealedCount(saved.hintsRevealedCount);
+      if (saved.hintsRevealed?.length) setHintsRevealed(saved.hintsRevealed);
       updateHints(rows.length, target);
     }
   }
@@ -685,6 +716,7 @@ export default function GamePage() {
           gameOver: isGameOver,
           won: isGameOver ? correct : null,
           hintsRevealedCount: hintsRevealedCount,
+          hintsRevealed: [...hintsRevealed],
           gameOverHintsRevealed: isGameOver ? [...hintsRevealed] : [],
         });
         // Authenticated: sync in-progress state to server so other devices stay current.
@@ -697,7 +729,7 @@ export default function GamePage() {
             guesses:             newIds,
             game_over:           false,
             won:                 null,
-            hints_revealed:      [],
+            hints_revealed:      hintsRevealed,
             hints_revealed_count: hintsRevealedCount,
           }).catch(() => {});
         }
@@ -787,8 +819,28 @@ export default function GamePage() {
     const misses    = guessResults.length;
     setPotentialScore(Math.max(0, 20 - hintCost - misses));
 
-    // Persist updated hint count to localStorage
-    if (!isUnlimited) {
+    // Persist state so hints survive tab switches / navigation
+    if (isUnlimited && targetMovie) {
+      saveUnlimitedState(category, {
+        targetId: targetMovie.tmdb_id,
+        guesses: guessedIds,
+        gameOver: false,
+        won: null,
+        hintsRevealedCount: newCount,
+        hintsRevealed: newRevealed,
+        gameOverHintsRevealed: [],
+      });
+      if (session) {
+        saveUnlimitedSession(category, {
+          target_tmdb_id:       targetMovie.tmdb_id,
+          guesses:              guessedIds,
+          game_over:            false,
+          won:                  null,
+          hints_revealed:       newRevealed,
+          hints_revealed_count: newCount,
+        }).catch(() => {});
+      }
+    } else if (!isUnlimited) {
       const saved = loadDailyState(guestKey);
       if (saved) {
         saveDailyState(guestKey, { ...saved, hintsRevealedCount: newCount });
