@@ -217,10 +217,24 @@ async function listFriends(req, res) {
   }
 }
 
+// Ensure the vip_crew table exists (called lazily on first VIP request)
+async function ensureVipTable() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS vip_crew (
+      user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      friend_id  UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (user_id, friend_id)
+    );
+    CREATE INDEX IF NOT EXISTS vip_crew_user_idx ON vip_crew(user_id);
+  `);
+}
+
 // POST /api/friends/vip/:friend_id — add a friend to VIP crew
 async function addVip(req, res) {
   const { friend_id } = req.params;
   try {
+    await ensureVipTable();
     await pool.query(
       `INSERT INTO vip_crew (user_id, friend_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
       [req.user.id, friend_id]
@@ -235,6 +249,7 @@ async function addVip(req, res) {
 // DELETE /api/friends/vip/:friend_id — remove a friend from VIP crew
 async function removeVip(req, res) {
   try {
+    await ensureVipTable();
     await pool.query(
       `DELETE FROM vip_crew WHERE user_id = $1 AND friend_id = $2`,
       [req.user.id, req.params.friend_id]

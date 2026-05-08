@@ -181,7 +181,10 @@ export default function FriendsPage() {
       if (currentlyVip) { await removeVip(friendId); }
       else { await addVip(friendId); }
     } catch (err) {
-      console.error('[VIP toggle failed]', err?.response?.status, err?.response?.data || err?.message);
+      const msg = err?.response?.data?.error || err?.message || 'Unknown error';
+      console.error('[VIP toggle failed]', err?.response?.status, msg);
+      setAddMsg(`VIP error: ${msg}`);
+      setTimeout(() => setAddMsg(''), 6000);
       // Revert on failure
       setFriends((f) => f.map((fr) => fr.id === friendId ? { ...fr, is_vip: currentlyVip } : fr));
     }
