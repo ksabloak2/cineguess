@@ -829,6 +829,22 @@ export default function GamePage() {
 
   return (
     <div className="space-y-4 sm:space-y-6 lg:space-y-3 animate-fade-in">
+      {/* ── Obsidian grid overlay ─────────────────────────────────────────── */}
+      <div
+        aria-hidden="true"
+        style={{
+          position:        'fixed',
+          inset:           0,
+          backgroundImage: `
+            linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)
+          `,
+          backgroundSize:  '44px 44px',
+          pointerEvents:   'none',
+          zIndex:          0,
+        }}
+      />
+
       {/* Category header + streak badge */}
       <div className="relative flex items-start justify-between gap-3">
         {/* Spacer so title stays centred */}
