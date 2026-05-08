@@ -152,6 +152,11 @@ const META = {
   // ── DCU (James Gunn era) ─────────────────────────────────────────────────
   'superman 2025':                                  { universe: 'DCU',                    publisher: 'DC',    focus: 'Hero',      team: 'Solo', power: 'Cosmic'         },
 
+  // ── Blade Trilogy (New Line Cinema / Marvel) ─────────────────────────────
+  'blade':                                          { universe: 'Blade Trilogy',          publisher: 'Marvel', focus: 'Anti-hero', team: 'Solo', power: 'Human Enhanced' },
+  'blade ii':                                       { universe: 'Blade Trilogy',          publisher: 'Marvel', focus: 'Anti-hero', team: 'Solo', power: 'Human Enhanced' },
+  'blade: trinity':                                 { universe: 'Blade Trilogy',          publisher: 'Marvel', focus: 'Anti-hero', team: 'Team', power: 'Human Enhanced' },
+
   // ── DC — Standalone / Classic ────────────────────────────────────────────
   'batman: the movie':                              { universe: 'Standalone',             publisher: 'DC',          focus: 'Hero',      team: 'Solo', power: 'Tech-based'     },
   'batman: mask of the phantasm':                   { universe: 'Standalone',             publisher: 'DC',          focus: 'Hero',      team: 'Solo', power: 'Tech-based'     },

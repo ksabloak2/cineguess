@@ -529,6 +529,11 @@ const FRANCHISE_GROUPS = [
     examples: 'Fox-era Marvel films: X-Men series, Deadpool (1 & 2), Fantastic Four (2005, 2015), Logan, and related spin-offs.',
   },
   {
+    label:    'Blade Trilogy',
+    color:    '#dc2626',
+    examples: 'New Line Cinema Marvel films: Blade (1998), Blade II (2002), Blade: Trinity (2004). Marvel publisher — yellow when guessed against other Marvel universes.',
+  },
+  {
     label:    'DC / WB',
     color:    '#60a5fa',
     examples: 'Warner Bros. DC films: Batman (Nolan/Keaton), Superman, Wonder Woman, Justice League, Aquaman, The Flash, etc.',
