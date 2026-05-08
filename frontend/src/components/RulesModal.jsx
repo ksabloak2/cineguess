@@ -164,7 +164,7 @@ export default function RulesModal({ open, onClose, initialPage = 0 }) {
                 <p className="text-[10px] uppercase tracking-[0.25em] font-semibold text-accent/80">Most Popular</p>
               </div>
               <p className="text-[11px] text-gray-400 leading-relaxed mb-2">
-                The widest-ranging category — blockbusters, cult classics, and award winners spanning all genres and eras. Any studio, any country.
+                The widest-ranging category: blockbusters, cult classics, and award winners spanning all genres and eras. Any studio, any country.
               </p>
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-gray-500">
                 <span>🎯 7 guesses</span>
@@ -211,7 +211,7 @@ export default function RulesModal({ open, onClose, initialPage = 0 }) {
                 <p className="text-[10px] uppercase tracking-[0.25em] font-semibold" style={{ color: 'rgba(192,132,252,0.85)' }}>Animated</p>
               </div>
               <p className="text-[11px] text-gray-400 leading-relaxed mb-2">
-                Animated feature films from all major studios — CGI, traditional hand-drawn, stop-motion, and anime. Studio tile shows yellow when both films share the same parent company.
+                Animated feature films from all major studios: CGI, traditional hand-drawn, stop-motion, and anime. Studio tile shows yellow when both films share the same parent company.
               </p>
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-gray-500 mb-3">
                 <span>🎯 7 guesses</span>
@@ -220,14 +220,11 @@ export default function RulesModal({ open, onClose, initialPage = 0 }) {
                 <span className="text-yellow-500/70">★ No actor hint</span>
               </div>
               <p className="text-[10px] uppercase tracking-[0.20em] font-semibold text-purple-400/60 mb-2">Studios in the Pool</p>
-              <div className="space-y-1.5">
-                {ANIMATED_STUDIOS.map(({ label, examples, color }) => (
-                  <div key={label} className="flex items-start gap-2.5">
-                    <span className="flex-shrink-0 mt-0.5 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded whitespace-nowrap" style={{ background: `${color}22`, color, border: `1px solid ${color}40` }}>
-                      {label}
-                    </span>
-                    <p className="text-[11px] text-gray-400 leading-snug">{examples}</p>
-                  </div>
+              <div className="flex flex-wrap gap-1.5">
+                {ANIMATED_STUDIOS.map(({ label, color }) => (
+                  <span key={label} className="text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded whitespace-nowrap" style={{ background: `${color}22`, color, border: `1px solid ${color}40` }}>
+                    {label}
+                  </span>
                 ))}
               </div>
             </div>
@@ -239,7 +236,7 @@ export default function RulesModal({ open, onClose, initialPage = 0 }) {
                 <p className="text-[10px] uppercase tracking-[0.25em] font-semibold" style={{ color: 'rgba(251,146,60,0.85)' }}>Indian Cinema</p>
               </div>
               <p className="text-[11px] text-gray-400 leading-relaxed mb-2">
-                Bollywood and regional Indian films — Hindi, Tamil, Telugu, Malayalam, and beyond. Covers iconic classics, modern blockbusters, and critically acclaimed drama.
+                Bollywood and regional Indian films: Hindi, Tamil, Telugu, Malayalam, and beyond. Covers iconic classics, modern blockbusters, and critically acclaimed drama.
               </p>
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-gray-500 mb-2">
                 <span>🎯 8 guesses (not 7)</span>
@@ -267,7 +264,7 @@ export default function RulesModal({ open, onClose, initialPage = 0 }) {
                 Every daily game starts at <span className="text-accent font-bold">20 potential points</span>. Points are deducted as you guess and reveal hints. Score is locked when the game ends.
               </p>
               <p className="text-[11px] text-gray-500 italic mb-3">
-                Points only matter for leaderboard rankings — feel free to play however you like!
+                Points only matter for leaderboard rankings, so feel free to play however you like!
               </p>
               <div className="space-y-2">
                 <ScoreRow icon="❌" label="Incorrect guess"       detail="−1 point per wrong guess" />
@@ -293,7 +290,7 @@ export default function RulesModal({ open, onClose, initialPage = 0 }) {
               <ul className="mt-3 space-y-1">
                 <li className="text-[11px] text-gray-500">• Score never goes below 0 · Lost games score 0 (excluded from avg)</li>
                 <li className="text-[11px] text-gray-500">• Unlimited mode does not track scores</li>
-                <li className="text-[11px] text-gray-500">• Hints unlock automatically — cost points only if you click to reveal</li>
+                <li className="text-[11px] text-gray-500">• Hints unlock automatically; cost points only if you click to reveal</li>
               </ul>
             </div>
 
@@ -399,8 +396,8 @@ export default function RulesModal({ open, onClose, initialPage = 0 }) {
               <p className="text-[11px] text-gray-400 leading-relaxed">
                 The CineGuess name, logo, game concept, scoring system, visual design, user interface, and all
                 original written content are the exclusive intellectual property of CineGuess and its creators.
-                Unauthorized reproduction, copying, modification, or distribution of any part of this product
-                — in whole or in part — is strictly prohibited without prior written permission.
+                Unauthorized reproduction, copying, modification, or distribution of this product,
+                in whole or in part, is strictly prohibited without prior written permission.
               </p>
             </div>
 
@@ -492,7 +489,7 @@ const HINTS = [
     icon: '🎭',
     trigger: 'Guess 4 (Most Popular & Indian Cinema)',
     label: 'A Cast Member',
-    detail: 'A photo and name of the 3rd or 4th-credited cast member — not the lead or supporting actor already visible on the board.',
+    detail: 'A photo and name of the 3rd or 4th-credited cast member, not the lead or supporting actor already visible on the board.',
   },
   {
     icon: '💡',
