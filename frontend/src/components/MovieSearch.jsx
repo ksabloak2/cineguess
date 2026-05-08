@@ -153,7 +153,7 @@ export default function MovieSearch({ movies, onSelect, disabled, alreadyGuessed
               {movie.poster_path ? (
                 <img
                   src={tmdbImage(movie.poster_path, 'w92')}
-                  alt={movie.title}
+                  alt={`${movie.title}${movie.year ? ` (${movie.year})` : ''} movie poster`}
                   className="w-8 h-12 object-cover rounded-lg flex-shrink-0 ring-1 ring-white/5"
                 />
               ) : (

@@ -110,7 +110,7 @@ export default function GuessRow({ movie, tiles, isNew = false, category = 'top2
         {movie.poster_path ? (
           <img
             src={tmdbImage(movie.poster_path, 'w185')}
-            alt={movie.title}
+            alt={`${movie.title}${movie.year ? ` (${movie.year})` : ''} movie poster`}
             className="w-full h-full object-cover"
           />
         ) : (
