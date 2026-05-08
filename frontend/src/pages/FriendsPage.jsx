@@ -333,7 +333,7 @@ export default function FriendsPage() {
 
         @media (max-width: 767px) {
           /* Shrink page height to clear the fixed bottom mode-toggle */
-          .friends-page-wrap { height: calc(100dvh - 4rem - 68px) !important; }
+          .friends-page-wrap { height: calc(100dvh - 4rem - 52px) !important; }
 
           /* Show the mobile tab bar */
           .friends-mob-tabs {
