@@ -220,7 +220,7 @@ export default function RulesModal({ open, onClose, initialPage = 0 }) {
                 Animated feature films from all major studios: CGI, traditional hand-drawn, stop-motion, and anime.
               </p>
               <p className="text-[10px] text-gray-500 mb-2 leading-relaxed">
-                <span className="text-yellow-400 font-semibold">Yellow studio tile:</span> both films share the same parent company but are made by different studios — e.g. guessing a <span className="text-blue-300/80 font-semibold">Disney Animation</span> film when the answer is <span className="text-emerald-300/80 font-semibold">Pixar</span> (or vice versa) shows yellow, because both are owned by The Walt Disney Company. <span className="text-green-400 font-semibold">Green</span> only when the exact same studio matches.
+                <span className="text-yellow-400 font-semibold">Yellow studio tile:</span> both films share the same parent company but are from different studios. For example, guessing a <span className="text-blue-300/80 font-semibold">Disney Animation</span> film when the answer is <span className="text-emerald-300/80 font-semibold">Pixar</span> (or vice versa) shows yellow, because both are owned by The Walt Disney Company. <span className="text-green-400 font-semibold">Green</span> only when the exact same studio matches.
               </p>
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-gray-500 mb-3">
                 <span>🎯 7 guesses</span>
@@ -472,8 +472,8 @@ export default function RulesModal({ open, onClose, initialPage = 0 }) {
 
 // ── Rules content ──────────────────────────────────────────────────────────
 const RULES = [
-  'Guess the target movie in 7 tries or fewer (8 for Indian Cinema). Each guess must be a real film from the chosen category. After every guess, tiles reveal how close you are — see the color legend and tile breakdowns below.',
-  'In Daily mode, everyone plays the same movie each day. Your streak grows with each win and only resets on a wrong answer — skipping a day keeps it alive.',
+  'Guess the target movie in 7 tries or fewer (8 for Indian Cinema). Each guess must be a real film from the chosen category. After every guess, tiles reveal how close you are. See the color legend and tile breakdowns below.',
+  'In Daily mode, everyone plays the same movie each day. Your streak grows with each win and only resets on a wrong answer. Skipping a day keeps your streak alive, but you miss out on points that count toward your Global Rating.',
   'Unlimited mode lets you play as many rounds as you want with a random target each round. Separate streaks are tracked per category.',
   'Share your result grid with friends using the share button at the end of a game. Friends cannot see your current-day answers until they finish that category themselves.',
 ];
