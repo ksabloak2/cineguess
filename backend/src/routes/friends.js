@@ -17,6 +17,10 @@ router.post('/request',  requireAuth, bodyValidator(schemas.friendRequest),  ah(
 router.post('/accept',   requireAuth, bodyValidator(schemas.friendRespond),  ah(ctrl.acceptRequest));
 router.post('/decline',  requireAuth, bodyValidator(schemas.friendRespond),  ah(ctrl.declineRequest));
 
+// VIP crew — must come before /:friend_id wildcard
+router.post('/vip/:friend_id',   requireAuth, ah(ctrl.addVip));
+router.delete('/vip/:friend_id', requireAuth, ah(ctrl.removeVip));
+
 // Dynamic GET routes (must come after /requests and /sent-requests)
 router.get('/:friend_id/calendar-year',  requireAuth, ah(ctrl.getFriendYearCalendar));
 router.get('/:friend_id/percentiles',    requireAuth, ah(ctrl.getFriendPercentiles));
