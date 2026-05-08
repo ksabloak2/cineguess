@@ -198,15 +198,63 @@ export default function RulesModal({ open, onClose, initialPage = 0 }) {
               <p className="text-[10px] text-gray-500 mb-2 leading-relaxed">
                 <span className="text-yellow-400 font-semibold">Yellow franchise tile:</span> both films share a parent universe (Marvel or DC) but different sub-franchise. Green = exact same sub-franchise.
               </p>
-              <div className="space-y-1.5 mt-3">
-                {FRANCHISE_GROUPS.map(({ label, examples, color }) => (
-                  <div key={label} className="flex items-start gap-2.5">
-                    <span className="flex-shrink-0 mt-0.5 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded whitespace-nowrap" style={{ background: `${color}22`, color, border: `1px solid ${color}40` }}>
-                      {label}
-                    </span>
-                    <p className="text-[11px] text-gray-400 leading-snug">{examples}</p>
+              <div className="space-y-3 mt-3">
+
+                {/* ── Marvel ── */}
+                <div>
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider mb-2"
+                    style={{ background: 'rgba(239,68,68,0.18)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.40)' }}>
+                    Marvel
+                  </span>
+                  <div className="pl-3 space-y-1.5">
+                    <div className="flex items-center flex-wrap gap-1.5">
+                      <span className="text-[8px] font-bold text-gray-600 uppercase tracking-wider w-7 flex-shrink-0">MCU</span>
+                      {[['Infinity Saga','#ef4444'],['Multiverse Saga','#ef4444']].map(([l,c]) => (
+                        <span key={l} className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full whitespace-nowrap" style={{ background: `${c}18`, color: c, border: `1px solid ${c}35` }}>{l}</span>
+                      ))}
+                    </div>
+                    <div className="flex items-center flex-wrap gap-1.5">
+                      <span className="text-[8px] font-bold text-gray-600 uppercase tracking-wider w-7 flex-shrink-0">Fox</span>
+                      <span className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full whitespace-nowrap" style={{ background: '#F3CE1318', color: '#F3CE13', border: '1px solid #F3CE1335' }}>X-Men Universe</span>
+                    </div>
+                    <div className="flex items-center flex-wrap gap-1.5">
+                      <span className="text-[8px] font-bold text-gray-600 uppercase tracking-wider w-7 flex-shrink-0">Sony</span>
+                      {[['Raimi Spider-Man','#a855f7'],['Amazing Spider-Man','#a855f7'],['Spider-Man Universe','#a855f7'],['Spider-Verse','#a855f7']].map(([l,c]) => (
+                        <span key={l} className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full whitespace-nowrap" style={{ background: `${c}18`, color: c, border: `1px solid ${c}35` }}>{l}</span>
+                      ))}
+                    </div>
+                    <div className="flex items-center flex-wrap gap-1.5">
+                      <span className="w-7 flex-shrink-0" />
+                      <span className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full whitespace-nowrap" style={{ background: '#dc262618', color: '#dc2626', border: '1px solid #dc262635' }}>Blade Trilogy</span>
+                    </div>
                   </div>
-                ))}
+                </div>
+
+                {/* ── DC / WB ── */}
+                <div>
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider mb-2"
+                    style={{ background: 'rgba(96,165,250,0.18)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.40)' }}>
+                    DC / WB
+                  </span>
+                  <div className="pl-3 flex flex-wrap gap-1.5">
+                    {[
+                      ['Nolanverse','#60a5fa'],['DCEU','#60a5fa'],['DCU','#60a5fa'],['Elseworlds','#60a5fa'],
+                      ['Reeveverse','#93c5fd'],['Burtonverse','#93c5fd'],['Schumacherverse','#93c5fd'],['Standalone','#6b7280'],
+                    ].map(([l,c]) => (
+                      <span key={l} className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full whitespace-nowrap" style={{ background: `${c}18`, color: c, border: `1px solid ${c}35` }}>{l}</span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ── Other ── */}
+                <div className="flex items-start gap-2.5">
+                  <span className="flex-shrink-0 mt-0.5 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full whitespace-nowrap"
+                    style={{ background: '#6b728018', color: '#6b7280', border: '1px solid #6b728035' }}>
+                    Other
+                  </span>
+                  <p className="text-[11px] text-gray-400 leading-snug">Independent standalone films: Constantine, V for Vendetta, Watchmen, and Chronicle.</p>
+                </div>
+
               </div>
             </div>
 
@@ -516,39 +564,6 @@ const HINTS = [
   },
 ];
 
-// ── Franchise groupings for Superhero category ────────────────────────────────
-const FRANCHISE_GROUPS = [
-  {
-    label:    'MCU',
-    color:    '#ef4444',
-    examples: 'All Disney/Marvel Studios films: Iron Man, Avengers, Spider-Man (Holland), Black Panther, etc.',
-  },
-  {
-    label:    'Fox Universe',
-    color:    '#F3CE13',
-    examples: 'Fox-era Marvel films: X-Men series, Deadpool (1 & 2), Fantastic Four (2005, 2015), Logan, and related spin-offs.',
-  },
-  {
-    label:    'Blade Trilogy',
-    color:    '#dc2626',
-    examples: 'New Line Cinema Marvel films: Blade (1998), Blade II (2002), Blade: Trinity (2004). Marvel publisher — yellow when guessed against other Marvel universes.',
-  },
-  {
-    label:    'DC / WB',
-    color:    '#60a5fa',
-    examples: 'Warner Bros. DC films: Batman (Nolan/Keaton), Superman, Wonder Woman, Justice League, Aquaman, The Flash, etc.',
-  },
-  {
-    label:    'Sony Spider-Verse',
-    color:    '#a855f7',
-    examples: 'Sony\'s Spider-Man universe: Venom, Morbius, Madame Web, and animated Spider-Verse films.',
-  },
-  {
-    label:    'Other',
-    color:    '#6b7280',
-    examples: 'Independent standalone superhero films: Constantine, V for Vendetta, Watchmen, and Chronicle.',
-  },
-];
 
 // ── Animated studio groupings ─────────────────────────────────────────────
 const ANIMATED_STUDIOS = [
