@@ -213,7 +213,7 @@ export default function LeaderboardPage() {
           }}
         >
           <div
-            className="absolute inset-[3px] w-1/2 rounded-full transition-all duration-200"
+            className="absolute top-[3px] bottom-[3px] left-[3px] w-[calc(50%-3px)] rounded-full transition-all duration-200"
             style={{
               transform:  leaderMode === 'unlimited' ? 'translateX(100%)' : 'translateX(0)',
               background: leaderMode === 'unlimited' ? 'rgba(168,85,247,0.20)' : 'rgba(243,206,19,0.14)',
