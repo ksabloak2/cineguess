@@ -173,6 +173,22 @@ export default function LeaderboardPage() {
 
   return (
     <div className="space-y-4 animate-fade-in pb-4">
+      {/* ── Obsidian grid overlay ─────────────────────────────────────────── */}
+      <div
+        aria-hidden="true"
+        style={{
+          position:        'fixed',
+          inset:           0,
+          backgroundImage: `
+            linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)
+          `,
+          backgroundSize:  '44px 44px',
+          pointerEvents:   'none',
+          zIndex:          0,
+        }}
+      />
+
       {/* Page header */}
       <div className="text-center">
         <h1
