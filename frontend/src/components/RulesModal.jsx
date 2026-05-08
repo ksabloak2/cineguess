@@ -166,11 +166,17 @@ export default function RulesModal({ open, onClose, initialPage = 0 }) {
               <p className="text-[11px] text-gray-400 leading-relaxed mb-2">
                 The widest-ranging category: blockbusters, cult classics, and award winners spanning all genres and eras. Films are drawn from the most popular and most logged movies on Letterboxd. Any studio, any country.
               </p>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-gray-500">
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-gray-500 mb-3">
                 <span>🎯 7 guesses</span>
                 <span>💡 Actor → Guess 4</span>
                 <span>💡 Logline → Guess 5</span>
                 <span>🖼️ Frame → Guess 6</span>
+              </div>
+              <div className="rounded-lg px-3 py-2.5" style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.18)' }}>
+                <p className="text-[10px] uppercase tracking-[0.20em] font-semibold text-accent/60 mb-1.5">Starting Clues</p>
+                <p className="text-[11px] text-gray-400 leading-relaxed">
+                  Before your first guess, Most Popular reveals two clues about the target film: its <span className="text-amber-300/90 font-semibold">Oscar history</span> (nomination count and categories, or a win tally if nominated) and whether it is part of a <span className="text-amber-300/90 font-semibold">franchise or a standalone film</span>. No other category gets this head start.
+                </p>
               </div>
             </div>
 
