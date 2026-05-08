@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import ReportIssueModal from './ReportIssueModal';
 
-const PAGES = ['How to Play', 'Scoring', 'Rankings', 'Categories', 'Credits & Legal'];
+const PAGES = ['How to Play', 'Categories', 'Scoring & Rankings', 'Credits & Legal'];
 
 // ── Rules modal ─────────────────────────────────────────────────────────────
 export default function RulesModal({ open, onClose, initialPage = 0 }) {
@@ -71,7 +71,7 @@ export default function RulesModal({ open, onClose, initialPage = 0 }) {
             <button
               key={label}
               onClick={() => setPage(i)}
-              className="flex-1 py-1.5 px-0.5 rounded-lg text-[8.5px] sm:text-[10px] font-semibold transition-all text-center leading-tight"
+              className="flex-1 py-1.5 px-1 rounded-lg text-[9px] sm:text-xs font-semibold transition-all text-center leading-tight"
               style={page === i ? {
                 background: 'rgba(243,206,19,0.15)',
                 color:      '#F3CE13',
@@ -153,100 +153,8 @@ export default function RulesModal({ open, onClose, initialPage = 0 }) {
           </>
         )}
 
-        {/* ── Page 1: Scoring ── */}
+        {/* ── Page 1: Categories ── */}
         {page === 1 && (
-          <div className="space-y-5">
-            <div className="rounded-xl p-4 sm:p-5" style={{ background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.20)' }}>
-              <p className="text-[10px] uppercase tracking-[0.25em] font-semibold text-accent/80 mb-3">How Points Work</p>
-              <p className="text-sm text-gray-200 leading-relaxed mb-1">
-                Every daily game starts at <span className="text-accent font-bold">20 potential points</span>. Points are deducted as you guess and reveal hints. The final score is locked when the game ends.
-              </p>
-              <p className="text-[11px] text-gray-500 italic mb-3">
-                Points only matter if you care about leaderboard rankings — feel free to play however you like!
-              </p>
-              <div className="space-y-2">
-                <ScoreRow icon="❌" label="Incorrect guess" detail="−1 point per wrong guess" />
-                <ScoreRow icon="💡" label="Actor hint revealed" detail="−1 point (Most Popular & Indian Cinema)" />
-                <ScoreRow icon="💡" label="Logline hint revealed" detail="−3 points (Most Popular & Superhero/Animated); −2 points (Indian Cinema)" />
-                <ScoreRow icon="💡" label="Frame hint revealed" detail="−4 points (Most Popular & Superhero/Animated); −3 points (Indian Cinema)" />
-                <ScoreRow icon="🎵" label="Song hint revealed" detail="−4 points (Indian Cinema only)" />
-                <ScoreRow icon="⭐" label="No-hint bonus" detail="+3 points if you revealed zero hints" />
-              </div>
-            </div>
-
-            <div className="rounded-xl p-4 sm:p-5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-              <p className="text-[10px] uppercase tracking-[0.25em] font-semibold text-gray-500 mb-3">Example Breakdown</p>
-              <p className="text-[11px] text-gray-400 mb-2">Won in 3 guesses (2 wrong), no hints revealed:</p>
-              <p className="text-sm font-mono text-gray-200">
-                Base (20) − Misses (2) + Bonus (3) = <span className="text-accent font-bold">21pts</span>
-              </p>
-              <p className="text-[11px] text-gray-500 mt-3 mb-2">Won in 5 guesses (4 wrong), revealed Actor + Logline:</p>
-              <p className="text-sm font-mono text-gray-200">
-                Base (20) − Hints (4) − Misses (4) = <span className="text-accent font-bold">12pts</span>
-              </p>
-            </div>
-
-            <div className="rounded-xl p-4 sm:p-5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-              <p className="text-[10px] uppercase tracking-[0.25em] font-semibold text-gray-500 mb-2">Notes</p>
-              <ul className="space-y-1.5">
-                <li className="text-[11px] text-gray-400">• Score never goes below 0</li>
-                <li className="text-[11px] text-gray-400">• Lost games always score 0 (excluded from avg)</li>
-                <li className="text-[11px] text-gray-400">• Unlimited mode does not track scores</li>
-                <li className="text-[11px] text-gray-400">• Hints unlock automatically but cost points only if you click to reveal</li>
-              </ul>
-            </div>
-          </div>
-        )}
-
-        {/* ── Page 2: Rankings ── */}
-        {page === 2 && (
-          <div className="space-y-5">
-            <div className="rounded-xl p-4 sm:p-5" style={{ background: 'rgba(99,102,241,0.05)', border: '1px solid rgba(99,102,241,0.20)' }}>
-              <p className="text-[10px] uppercase tracking-[0.25em] font-semibold mb-3" style={{ color: 'rgba(129,140,248,0.9)' }}>Global Rating Formula</p>
-              <p className="text-sm text-gray-200 leading-relaxed mb-3">
-                Your <span className="text-indigo-300 font-bold">Global Rating</span> determines your leaderboard position.
-              </p>
-              <div className="rounded-lg p-3 font-mono text-sm text-center text-gray-200" style={{ background: 'rgba(0,0,0,0.3)' }}>
-                (Current Streak × 10) + Avg Score + No-Hint Bonus
-              </div>
-              <div className="mt-3 space-y-1.5">
-                <ScoreRow icon="🔥" label="Streak bonus" detail="Current streak × 10 points" />
-                <ScoreRow icon="⭐" label="Avg score" detail="Average score of all won daily games" />
-                <ScoreRow icon="💡" label="No-hint bonus" detail="+5 per no-hint win within your current streak" />
-              </div>
-            </div>
-
-            <div className="rounded-xl p-4 sm:p-5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-              <p className="text-[10px] uppercase tracking-[0.25em] font-semibold text-gray-500 mb-3">Status Tiers</p>
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <span className="text-xl flex-shrink-0">🌟</span>
-                  <div>
-                    <p className="text-sm font-bold text-yellow-300">A-List</p>
-                    <p className="text-[11px] text-gray-400">Earn all 9 Cinema Awards.</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <span className="text-xl flex-shrink-0">🎬</span>
-                  <div>
-                    <p className="text-sm font-bold" style={{ background: 'linear-gradient(90deg, #c084fc, #F3CE13)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Certified Cinephile</p>
-                    <p className="text-[11px] text-gray-400">Earn all 9 awards AND maintain an active streak in all 4 daily categories simultaneously.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-xl p-4 sm:p-5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-              <p className="text-[10px] uppercase tracking-[0.25em] font-semibold text-gray-500 mb-2">Leaderboard</p>
-              <p className="text-[11px] text-gray-400 leading-relaxed">
-                The leaderboard shows the top 50 players sorted by Global Rating. Toggle between Global and per-category views. Access it via the trophy icon in the navigation bar.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* ── Page 3: Categories ── */}
-        {page === 3 && (
           <div className="space-y-4">
 
             {/* ── Most Popular ── */}
@@ -348,8 +256,93 @@ export default function RulesModal({ open, onClose, initialPage = 0 }) {
           </div>
         )}
 
-        {/* ── Page 4: Credits & Legal ── */}
-        {page === 4 && (
+        {/* ── Page 2: Scoring & Rankings ── */}
+        {page === 2 && (
+          <div className="space-y-4">
+
+            {/* ── Scoring ── */}
+            <div className="rounded-xl p-4 sm:p-5" style={{ background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.20)' }}>
+              <p className="text-[10px] uppercase tracking-[0.25em] font-semibold text-accent/80 mb-3">How Points Work</p>
+              <p className="text-sm text-gray-200 leading-relaxed mb-1">
+                Every daily game starts at <span className="text-accent font-bold">20 potential points</span>. Points are deducted as you guess and reveal hints. Score is locked when the game ends.
+              </p>
+              <p className="text-[11px] text-gray-500 italic mb-3">
+                Points only matter for leaderboard rankings — feel free to play however you like!
+              </p>
+              <div className="space-y-2">
+                <ScoreRow icon="❌" label="Incorrect guess"       detail="−1 point per wrong guess" />
+                <ScoreRow icon="💡" label="Actor hint"            detail="−1 pt (Most Popular & Indian Cinema)" />
+                <ScoreRow icon="💡" label="Logline hint"          detail="−3 pts (Most Popular & Superhero/Animated) · −2 pts (Indian Cinema)" />
+                <ScoreRow icon="💡" label="Frame hint"            detail="−4 pts (Most Popular & Superhero/Animated) · −3 pts (Indian Cinema)" />
+                <ScoreRow icon="🎵" label="Song hint"             detail="−4 pts (Indian Cinema only)" />
+                <ScoreRow icon="⭐" label="No-hint bonus"         detail="+3 pts if you revealed zero hints" />
+              </div>
+            </div>
+
+            {/* Example */}
+            <div className="rounded-xl p-4 sm:p-5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <p className="text-[10px] uppercase tracking-[0.25em] font-semibold text-gray-500 mb-3">Example Breakdown</p>
+              <p className="text-[11px] text-gray-400 mb-1.5">Won in 3 guesses (2 wrong), no hints revealed:</p>
+              <p className="text-sm font-mono text-gray-200 mb-3">
+                Base (20) − Misses (2) + Bonus (3) = <span className="text-accent font-bold">21 pts</span>
+              </p>
+              <p className="text-[11px] text-gray-400 mb-1.5">Won in 5 guesses (4 wrong), revealed Actor + Logline:</p>
+              <p className="text-sm font-mono text-gray-200">
+                Base (20) − Hints (4) − Misses (4) = <span className="text-accent font-bold">12 pts</span>
+              </p>
+              <ul className="mt-3 space-y-1">
+                <li className="text-[11px] text-gray-500">• Score never goes below 0 · Lost games score 0 (excluded from avg)</li>
+                <li className="text-[11px] text-gray-500">• Unlimited mode does not track scores</li>
+                <li className="text-[11px] text-gray-500">• Hints unlock automatically — cost points only if you click to reveal</li>
+              </ul>
+            </div>
+
+            {/* ── Rankings ── */}
+            <div className="rounded-xl p-4 sm:p-5" style={{ background: 'rgba(99,102,241,0.05)', border: '1px solid rgba(99,102,241,0.20)' }}>
+              <p className="text-[10px] uppercase tracking-[0.25em] font-semibold mb-3" style={{ color: 'rgba(129,140,248,0.9)' }}>Global Rating Formula</p>
+              <p className="text-sm text-gray-200 leading-relaxed mb-3">
+                Your <span className="text-indigo-300 font-bold">Global Rating</span> determines your leaderboard position.
+              </p>
+              <div className="rounded-lg p-3 font-mono text-sm text-center text-gray-200" style={{ background: 'rgba(0,0,0,0.3)' }}>
+                (Current Streak × 10) + Avg Score + No-Hint Bonus
+              </div>
+              <div className="mt-3 space-y-1.5">
+                <ScoreRow icon="🔥" label="Streak bonus"  detail="Current streak × 10 points" />
+                <ScoreRow icon="⭐" label="Avg score"     detail="Average score of all won daily games" />
+                <ScoreRow icon="💡" label="No-hint bonus" detail="+5 per no-hint win within your current streak" />
+              </div>
+            </div>
+
+            {/* Status tiers + leaderboard */}
+            <div className="rounded-xl p-4 sm:p-5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <p className="text-[10px] uppercase tracking-[0.25em] font-semibold text-gray-500 mb-3">Status Tiers</p>
+              <div className="space-y-2.5 mb-4">
+                <div className="flex items-start gap-3">
+                  <span className="text-lg flex-shrink-0">🌟</span>
+                  <div>
+                    <p className="text-sm font-bold text-yellow-300">A-List</p>
+                    <p className="text-[11px] text-gray-400">Earn all 9 Cinema Awards.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-lg flex-shrink-0">🎬</span>
+                  <div>
+                    <p className="text-sm font-bold" style={{ background: 'linear-gradient(90deg, #c084fc, #F3CE13)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Certified Cinephile</p>
+                    <p className="text-[11px] text-gray-400">Earn all 9 awards AND maintain an active streak in all 4 daily categories simultaneously.</p>
+                  </div>
+                </div>
+              </div>
+              <p className="text-[10px] uppercase tracking-[0.25em] font-semibold text-gray-500 mb-1.5">Leaderboard</p>
+              <p className="text-[11px] text-gray-400 leading-relaxed">
+                Top 50 players sorted by Global Rating. Toggle between Global and per-category views via the trophy icon in the nav bar.
+              </p>
+            </div>
+
+          </div>
+        )}
+
+        {/* ── Page 3: Credits & Legal ── */}
+        {page === 3 && (
           <div className="space-y-5">
 
             {/* Data Sources */}
