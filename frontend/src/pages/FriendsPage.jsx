@@ -91,6 +91,7 @@ export default function FriendsPage() {
   const [mobileTab, setMobileTab]       = useState('crew'); // 'crew' | 'screen'
   const [openInbox, setOpenInbox]       = useState(null);  // null | 'sent' | 'incoming'
   const [sidebarTab, setSidebarTab]     = useState('film'); // 'film' | 'vip'
+  const [vipSearch, setVipSearch]       = useState('');
 
   const inviteUrl = buildInviteUrl(profile?.username);
 
@@ -174,14 +175,15 @@ export default function FriendsPage() {
   }
 
   async function handleToggleVip(friendId, currentlyVip) {
+    // Optimistic update — flip immediately so the star responds at once
+    setFriends((f) => f.map((fr) => fr.id === friendId ? { ...fr, is_vip: !currentlyVip } : fr));
     try {
-      if (currentlyVip) {
-        await removeVip(friendId);
-      } else {
-        await addVip(friendId);
-      }
-      setFriends((f) => f.map((fr) => fr.id === friendId ? { ...fr, is_vip: !currentlyVip } : fr));
-    } catch {}
+      if (currentlyVip) { await removeVip(friendId); }
+      else { await addVip(friendId); }
+    } catch {
+      // Revert on failure
+      setFriends((f) => f.map((fr) => fr.id === friendId ? { ...fr, is_vip: currentlyVip } : fr));
+    }
   }
 
   async function handleCopyLink() {
@@ -847,7 +849,7 @@ export default function FriendsPage() {
                   return (
                     <button
                       key={id}
-                      onClick={() => setSidebarTab(id)}
+                      onClick={() => { setSidebarTab(id); setVipSearch(''); }}
                       style={{
                         flex: 1, border: 'none', cursor: 'pointer',
                         borderRadius: 8, padding: '5px 6px',
@@ -880,11 +882,61 @@ export default function FriendsPage() {
                 })}
               </div>
 
+              {/* VIP search input — only shown on VIP tab */}
+              {sidebarTab === 'vip' && (
+                <div style={{ position: 'relative', flexShrink: 0 }}>
+                  <input
+                    value={vipSearch}
+                    onChange={(e) => setVipSearch(e.target.value)}
+                    placeholder="Search friends to add..."
+                    style={{
+                      width: '100%', boxSizing: 'border-box',
+                      background: 'rgba(255,255,255,0.05)',
+                      border: vipSearch
+                        ? '1px solid rgba(243,206,19,0.40)'
+                        : '1px solid rgba(255,255,255,0.10)',
+                      borderRadius: 8, padding: '6px 28px 6px 10px',
+                      fontSize: '0.72rem', color: '#fff',
+                      outline: 'none', transition: 'border-color 0.18s',
+                    }}
+                    onFocus={(e) => { e.target.style.borderColor = 'rgba(243,206,19,0.50)'; }}
+                    onBlur={(e) => { e.target.style.borderColor = vipSearch ? 'rgba(243,206,19,0.40)' : 'rgba(255,255,255,0.10)'; }}
+                  />
+                  {vipSearch ? (
+                    <button
+                      onClick={() => setVipSearch('')}
+                      style={{
+                        position: 'absolute', right: 7, top: '50%', transform: 'translateY(-50%)',
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        color: 'rgba(255,255,255,0.40)', fontSize: '0.75rem', lineHeight: 1, padding: 2,
+                      }}
+                    >×</button>
+                  ) : (
+                    <span style={{
+                      position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+                      fontSize: '0.65rem', color: 'rgba(255,255,255,0.25)', pointerEvents: 'none',
+                    }}>⭐</span>
+                  )}
+                </div>
+              )}
+
               {/* Friend list for active tab */}
               {(() => {
-                const listFriends = sidebarTab === 'vip'
-                  ? [...friends].filter(f => f.is_vip).sort((a, b) => a.username.localeCompare(b.username))
-                  : [...friends].sort((a, b) => a.username.localeCompare(b.username));
+                let listFriends;
+                if (sidebarTab === 'vip') {
+                  if (vipSearch.trim()) {
+                    // Search mode: show all friends matching query (VIP or not)
+                    const q = vipSearch.trim().toLowerCase();
+                    listFriends = [...friends]
+                      .filter(f => f.username.toLowerCase().includes(q))
+                      .sort((a, b) => a.username.localeCompare(b.username));
+                  } else {
+                    // Default VIP tab: show only VIP friends
+                    listFriends = [...friends].filter(f => f.is_vip).sort((a, b) => a.username.localeCompare(b.username));
+                  }
+                } else {
+                  listFriends = [...friends].sort((a, b) => a.username.localeCompare(b.username));
+                }
 
                 if (listFriends.length === 0) {
                   return (
@@ -894,12 +946,12 @@ export default function FriendsPage() {
                           {sidebarTab === 'vip' ? '⭐' : '🎬'}
                         </div>
                         <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)' }}>
-                          {sidebarTab === 'vip' ? 'No VIP members yet' : 'No friends yet'}
+                          {sidebarTab === 'vip' && vipSearch.trim() ? 'No matches found' : sidebarTab === 'vip' ? 'No VIP members yet' : 'No friends yet'}
                         </div>
                         <div style={{ fontSize: '0.66rem', color: 'rgba(255,255,255,0.2)', marginTop: 3 }}>
-                          {sidebarTab === 'vip'
+                          {sidebarTab === 'vip' && !vipSearch.trim()
                             ? 'Star a friend to add them to your VIP Crew'
-                            : 'Search above and send a request!'}
+                            : sidebarTab !== 'vip' ? 'Search above and send a request!' : ''}
                         </div>
                       </div>
                     </GlassPane>
