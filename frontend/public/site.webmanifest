@@ -1,7 +1,7 @@
 {
-  "name": "CineGuess",
-  "short_name": "CineGuess",
-  "description": "The daily movie guessing game. Guess the movie from genre, director, year, and more.",
+  "name": "CineGUESS — The Daily Movie Guessing Game",
+  "short_name": "CineGUESS",
+  "description": "The first fully interactive and competitive daily movie guessing game. Play free at cineguessit.com!",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0f",

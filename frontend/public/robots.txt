@@ -1,0 +1,10 @@
+# robots.txt — cineguessit.com
+# Allow all search engine crawlers to index the full site.
+
+User-agent: *
+Allow: /
+
+# Block crawlers from hitting API routes (served from separate Railway backend)
+Disallow: /api/
+
+Sitemap: https://cineguessit.com/sitemap.xml

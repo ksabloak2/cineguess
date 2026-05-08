@@ -3,19 +3,97 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="description" content="CineGuess — the daily movie guessing game. Guess the movie from genre, director, year, and more." />
+
+    <!-- ═══════════════════════════════════════════════════════════
+         PRIMARY SEO
+    ═══════════════════════════════════════════════════════════ -->
+    <title>CineGUESS — The Daily Movie Guessing Game | cineguessit.com</title>
+
+    <meta name="description"
+      content="CineGUESS is cineguessit's free daily movie guessing game — the first fully interactive & competitive daily movie guessing game. Guess Top 250, Superhero, Animated & more!" />
+
+    <meta name="keywords"
+      content="cineguess, cineguessit, movie guessing game, daily movie game, film trivia game, guess the movie, wordle movie, movie quiz, superhero movie game, animated movie game, bollywood guessing game, cinephile game" />
+
+    <meta name="robots" content="index, follow" />
+    <meta name="author" content="CineGUESS" />
+    <link rel="canonical" href="https://cineguessit.com/" />
+
+    <!-- ═══════════════════════════════════════════════════════════
+         OPEN GRAPH  (Facebook, iMessage, Discord, WhatsApp, etc.)
+    ═══════════════════════════════════════════════════════════ -->
+    <meta property="og:type"        content="website" />
+    <meta property="og:url"         content="https://cineguessit.com/" />
+    <meta property="og:site_name"   content="CineGUESS" />
+    <meta property="og:title"       content="CineGUESS — The Daily Movie Guessing Game" />
+    <meta property="og:description"
+      content="The first fully interactive &amp; competitive daily movie guessing game. Guess films across Top 250, Superhero, Animated, and Indian Cinema categories. Free to play at cineguessit.com!" />
+    <meta property="og:image"       content="https://cineguessit.com/og-image.png" />
+    <meta property="og:image:width"  content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt"   content="CineGUESS — Daily Movie Guessing Game" />
+    <meta property="og:locale"      content="en_US" />
+
+    <!-- ═══════════════════════════════════════════════════════════
+         TWITTER / X CARD
+    ═══════════════════════════════════════════════════════════ -->
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:site"        content="@cineguessit" />
+    <meta name="twitter:title"       content="CineGUESS — The Daily Movie Guessing Game" />
+    <meta name="twitter:description"
+      content="The first fully interactive &amp; competitive daily movie guessing game. New puzzles every day across Top 250, Superhero, Animated &amp; Indian Cinema. Play free at cineguessit.com!" />
+    <meta name="twitter:image"       content="https://cineguessit.com/og-image.png" />
+    <meta name="twitter:image:alt"   content="CineGUESS — Daily Movie Guessing Game" />
+
+    <!-- ═══════════════════════════════════════════════════════════
+         STRUCTURED DATA — WebApplication (helps Google rich results)
+    ═══════════════════════════════════════════════════════════ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "CineGUESS",
+      "url": "https://cineguessit.com/",
+      "description": "The first fully interactive and competitive daily movie guessing game. Guess films across multiple categories, build streaks, and compete on global leaderboards.",
+      "applicationCategory": "GameApplication",
+      "genre": "Trivia",
+      "operatingSystem": "Any",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "keywords": "cineguess, cineguessit, movie guessing game, daily movie game, film trivia"
+    }
+    </script>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         THEME / FAVICONS / PWA
+    ═══════════════════════════════════════════════════════════ -->
     <meta name="theme-color" content="#0a0a0f" />
-    <title>CineGuess</title>
-    <!-- Favicon -->
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- ═══════════════════════════════════════════════════════════
+         FONTS
+    ═══════════════════════════════════════════════════════════ -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
   </head>
   <body class="bg-surface-bg text-white font-sans">
+
+    <!--
+      H1 hidden visually but fully readable by Google crawlers.
+      Placed immediately inside <body> so it is the very first
+      meaningful text the crawler encounters.
+    -->
+    <h1 style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">
+      CineGUESS: The Daily Movie Guessing Game — cineguessit.com
+    </h1>
+
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
