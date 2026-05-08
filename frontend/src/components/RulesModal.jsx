@@ -173,23 +173,6 @@ export default function RulesModal({ open, onClose, initialPage = 0 }) {
               </div>
             </div>
 
-            {/* Report an Issue */}
-            <div className="mt-5 flex items-center justify-between gap-3">
-              <p className="text-[11px] text-gray-600 tracking-wide">
-                7 guesses · 4 categories · Daily &amp; Unlimited
-              </p>
-              <button
-                onClick={() => setReportOpen(true)}
-                className="flex items-center gap-1.5 flex-shrink-0 text-[11px] font-semibold text-orange-400/70 hover:text-orange-400 transition-colors"
-              >
-                <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="12" y1="8" x2="12" y2="12"/>
-                  <line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-                Report an Issue
-              </button>
-            </div>
           </>
         )}
 
@@ -380,6 +363,24 @@ export default function RulesModal({ open, onClose, initialPage = 0 }) {
 
           </div>
         )}
+
+        {/* ── Report an Issue — always visible on every tab ── */}
+        <div className="mt-6 pt-4 flex items-center justify-between gap-3" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+          <p className="text-[11px] text-gray-600 tracking-wide">
+            7 guesses · 4 categories · Daily &amp; Unlimited
+          </p>
+          <button
+            onClick={() => setReportOpen(true)}
+            className="flex items-center gap-1.5 flex-shrink-0 text-[11px] font-semibold text-orange-400/70 hover:text-orange-400 transition-colors"
+          >
+            <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            Report an Issue
+          </button>
+        </div>
       </div>
 
       <ReportIssueModal
