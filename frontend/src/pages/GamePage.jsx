@@ -433,37 +433,29 @@ export default function GamePage() {
         hiddenAtRef.current = Date.now();
         return;
       }
-      // Tab became visible — only trigger re-init if the date changed OR the user
-      // was away for more than 10 minutes. Short tab switches are ignored entirely.
+      // Tab became visible — calculate how long the tab was hidden
       const awayMs = hiddenAtRef.current ? Date.now() - hiddenAtRef.current : 0;
       hiddenAtRef.current = null;
 
       const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
-      setCurrentDate((prev) => {
-        if (prev !== today) {
-          // Date rolled over: force re-init.
-          retryCountRef.current = 0;
-          return today;
-        }
-        if (awayMs >= TEN_MINUTES) {
-          // Away 10+ minutes: force re-init by bumping reloadTrigger below.
-          return prev;
-        }
-        // Away less than 10 min and same date — do nothing.
-        return prev;
-      });
 
       if (awayMs >= TEN_MINUTES) {
-        const today2 = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
-        const nowDate = today2;
-        // Only force reload if date didn't already change (avoid double re-init)
-        setCurrentDate((prev) => {
-          if (prev !== nowDate) return prev; // already handled by date change above
-          hydratedKeyRef.current = null;    // clear guard so init re-runs
-          return prev;
-        });
-        setReloadTrigger((n) => n + 1);
+        // Away 10+ minutes: force full re-init by clearing the guard and bumping reloadTrigger.
+        // We set the ref directly here (outside a setState updater) to avoid React
+        // batching issues where the side effect inside a state setter may be skipped.
+        hydratedKeyRef.current = null;
+        retryCountRef.current  = 0;
+        setCurrentDate(today);          // update to current Eastern date (may be same value)
+        setReloadTrigger((n) => n + 1); // always increments, guaranteeing a new combinedKey
+        return;
       }
+
+      // Away less than 10 minutes — only re-init if the Eastern date actually rolled over
+      setCurrentDate((prev) => {
+        if (prev === today) return prev; // no change — React bails out, no re-render
+        retryCountRef.current = 0;
+        return today;
+      });
     }
     document.addEventListener('visibilitychange', onVisibility);
     return () => document.removeEventListener('visibilitychange', onVisibility);
@@ -508,7 +500,7 @@ export default function GamePage() {
         franchise_name:              target.franchise_name,
       });
     }
-    saveUnlimitedState(category, { targetId: target.tmdb_id, guesses: [], gameOver: false, won: null, hintsRevealedCount: 0, gameOverHintsRevealed: [] });
+    saveUnlimitedState(category, { targetId: target.tmdb_id, guesses: [], gameOver: false, won: null, hintsRevealedCount: 0, hintsRevealed: [], gameOverHintsRevealed: [] });
     // Sync new round to server so other devices pick up the same movie.
     if (session) {
       saveUnlimitedSession(category, {
