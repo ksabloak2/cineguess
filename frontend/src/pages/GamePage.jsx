@@ -866,6 +866,35 @@ export default function GamePage() {
         )}
       </div>
 
+      {/* Guest CTA — nudge unsigned users to create an account */}
+      {!session && (
+        <div
+          className="flex items-center justify-between gap-3 px-3 py-2 rounded-xl animate-fade-in"
+          style={{
+            background: 'rgba(243,206,19,0.06)',
+            border: '1px solid rgba(243,206,19,0.18)',
+          }}
+        >
+          <p className="text-xs text-yellow-200/70 leading-snug">
+            <span className="font-semibold text-yellow-300/90">Create a free account</span>
+            {' '}to track your stats, streaks, and add friends.
+          </p>
+          <button
+            onClick={() => navigate('/auth', { state: { mode: 'signup' } })}
+            className="flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
+            style={{
+              background: 'rgba(243,206,19,0.15)',
+              border: '1px solid rgba(243,206,19,0.35)',
+              color: '#F3CE13',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(243,206,19,0.25)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(243,206,19,0.15)'; }}
+          >
+            Sign up free
+          </button>
+        </div>
+      )}
+
       {/* Error banner */}
       {error && (
         <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-sm text-red-400 flex items-center justify-between gap-3">

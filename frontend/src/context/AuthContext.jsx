@@ -59,6 +59,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   async function fetchProfile(session) {
+    setLoading(true);
     try {
       const prof = await getProfile();
       setProfile(prof);
