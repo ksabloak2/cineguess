@@ -152,7 +152,8 @@ async function getMoviePool(req, res) {
               animation_style, animation_studio, has_sequel, protagonist_type, is_musical,
               superhero_universe, superhero_publisher, hero_villain_focus, solo_or_team, superpower_type,
               production_studio,
-              oscar_wins, oscar_nomination_categories, oscar_win_categories, franchise_name
+              oscar_wins, oscar_nomination_categories, oscar_win_categories, franchise_name,
+              letterboxd_slug
        FROM movies
        WHERE $1 = ANY(categories)
        ORDER BY popularity DESC`,
@@ -380,7 +381,8 @@ async function getResult(req, res) {
     const { rows } = await client.query(
       `SELECT m.tmdb_id, m.title, m.year, m.poster_path, m.imdb_id,
               m.lead_actor, m.supporting_actor, m.cast_list, m.cast_profiles,
-              m.ai_hint_quote, m.backdrop_paths, m.music_hint_song, m.music_hint_singers
+              m.ai_hint_quote, m.backdrop_paths, m.music_hint_song, m.music_hint_singers,
+              m.letterboxd_slug
        FROM daily_picks dp
        JOIN movies m ON m.id = dp.movie_id
        WHERE dp.category = $1 AND dp.pick_date::date = $2`,
@@ -395,7 +397,7 @@ async function getResult(req, res) {
       year: m.year,
       poster_path: m.poster_path,
       imdb_id: m.imdb_id,
-      letterboxd_url: buildLetterboxdUrl(m.title),
+      letterboxd_slug: m.letterboxd_slug || null,
       imdb_url: m.imdb_id ? `https://www.imdb.com/title/${m.imdb_id}/` : null,
       hint: buildHint(m, { guessNumber: 99, category }),
     });

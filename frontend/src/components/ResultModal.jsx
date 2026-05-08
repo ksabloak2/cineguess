@@ -77,10 +77,12 @@ export default function ResultModal({
   const shareText = buildShareString(category, guessResults.map((g) => g.tiles), won, profile?.username, hintsRevealedCount, finalScore);
   const fields    = getTileFields(category);
 
-  // Always include the year in the slug to avoid title conflicts (e.g. Smile 2022 vs 1975).
-  // Letterboxd's canonical URL format for disambiguation is /film/title-year/.
-  const _lbSlug = result.title?.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim().replace(/\s+/g, '-') || '';
-  const letterboxdUrl = `https://letterboxd.com/film/${_lbSlug}${result.year ? `-${result.year}` : ''}/`;
+  // Use the pre-verified letterboxd_slug from the DB when available (some movies need
+  // year disambiguation e.g. /film/smile-2022/, others don't e.g. /film/corpse-bride/).
+  // Fall back to generating a plain slug if the DB field isn't populated yet.
+  const _lbSlugFallback = result.title?.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim().replace(/\s+/g, '-') || '';
+  const _lbSlug = result.letterboxd_slug || `${_lbSlugFallback}${result.year ? `-${result.year}` : ''}`;
+  const letterboxdUrl = `https://letterboxd.com/film/${_lbSlug}/`;
   const imdbUrl = result.imdb_id ? `https://www.imdb.com/title/${result.imdb_id}/` : null;
 
   const accentColor = won ? '#22c55e' : '#ef4444';
