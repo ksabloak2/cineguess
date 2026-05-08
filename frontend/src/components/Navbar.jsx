@@ -362,7 +362,7 @@ export function ModeToggle({ toggleMode, activeMode, inGame, activeCategory, ful
       {/* Sliding pill */}
       {hasActiveMode && (
         <div
-          className="absolute inset-[3px] w-1/2 rounded-full"
+          className="absolute inset-[3px] w-[calc(50%-3px)] rounded-full"
           style={{
             transform:  isUnlimited ? 'translateX(100%)' : 'translateX(0)',
             transition: 'transform 0.22s cubic-bezier(0.16,1,0.3,1), background 0.22s ease, box-shadow 0.22s ease',
