@@ -121,6 +121,7 @@ export const getYearCalendar  = (year) => api.get('/game/calendar-year', { param
 export const getRatings       = (tmdb_id) => api.get(`/game/ratings/${tmdb_id}`).then(r => r.data);
 export const getLeaderboard   = (category) =>
   api.get('/game/leaderboard', { params: category ? { category } : {} }).then(r => r.data);
+export const getUserBadges    = () => api.get('/game/badges').then(r => r.data);
 
 // ---------------------------------------------------------------
 // Auth profile
@@ -154,6 +155,8 @@ export const getFriendPercentiles = (friend_id) =>
   api.get(`/friends/${friend_id}/percentiles`).then(r => r.data);
 export const getFriendFriends = (friend_id) =>
   api.get(`/friends/${friend_id}/friends`).then(r => r.data);
+export const getFriendBadges  = (friend_id) =>
+  api.get(`/friends/${friend_id}/badges`).then(r => r.data);
 export const addVip    = (friend_id) => api.post(`/friends/vip/${friend_id}`).then(r => r.data);
 export const removeVip = (friend_id) => api.delete(`/friends/vip/${friend_id}`).then(r => r.data);
 export const getSentRequests = () =>

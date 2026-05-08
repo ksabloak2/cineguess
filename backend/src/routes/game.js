@@ -38,4 +38,7 @@ router.put('/unlimited/current/:category',  requireAuth, ah(ctrl.saveUnlimitedSe
 // Public leaderboard
 router.get('/leaderboard',            ah(ctrl.getLeaderboard));
 
+// Authenticated — user's own badges
+router.get('/badges',                 requireAuth, ah(ctrl.getUserBadges));
+
 module.exports = router;

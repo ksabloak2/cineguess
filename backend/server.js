@@ -404,6 +404,25 @@ cron.schedule('*/15 * * * *', async () => {
 })();
 
 // ---------------------------------------------------------------
+// Monthly leaderboard badge cron — runs at 00:05 ET on the 1st of each month.
+// Awards badges for the previous month's final standings before any resets.
+// ---------------------------------------------------------------
+cron.schedule('5 0 1 * *', async () => {
+  try {
+    const { awardMonthlyBadges } = require('./src/scripts/awardMonthlyBadges');
+    // prevMonthStr() is defined inside awardMonthlyBadges.js; pass explicit month here
+    const now   = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+    const year  = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+    const month = now.getMonth() === 0 ? 12 : now.getMonth();
+    const monthStr = `${year}-${String(month).padStart(2, '0')}`;
+    console.log(`[cron] Awarding monthly badges for ${monthStr}`);
+    await awardMonthlyBadges(monthStr);
+  } catch (err) {
+    console.error('[cron] Monthly badge award error:', err.message);
+  }
+}, { timezone: 'America/New_York' });
+
+// ---------------------------------------------------------------
 // Nightly log pruning cron — delete log_events older than 30 days.
 // Runs at 02:00 America/New_York to avoid peak hours.
 // ---------------------------------------------------------------
@@ -441,6 +460,25 @@ async function runStartupMigrations() {
     console.log('[migration] vip_crew table ready');
   } catch (err) {
     console.error('[migration] vip_crew migration failed:', err.message);
+  }
+
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS leaderboard_badges (
+        id         BIGSERIAL PRIMARY KEY,
+        user_id    UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        category   TEXT        NOT NULL,
+        rank       SMALLINT    NOT NULL CHECK (rank BETWEEN 1 AND 4),
+        month      CHAR(7)     NOT NULL,
+        awarded_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE (user_id, category, month)
+      );
+      CREATE INDEX IF NOT EXISTS lb_badges_user_idx     ON leaderboard_badges(user_id);
+      CREATE INDEX IF NOT EXISTS lb_badges_category_idx ON leaderboard_badges(category, month);
+    `);
+    console.log('[migration] leaderboard_badges table ready');
+  } catch (err) {
+    console.error('[migration] leaderboard_badges migration failed:', err.message);
   }
 }
 

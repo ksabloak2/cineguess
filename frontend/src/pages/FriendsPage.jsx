@@ -5,7 +5,7 @@ import {
   getFriends, getFriendRequests, getSentRequests,
   sendFriendRequest, acceptFriendRequest, declineFriendRequest,
   unfriend, cancelSentRequest, searchUsers, getFriendYearCalendar,
-  getFriendPercentiles, getFriendFriends, addVip, removeVip,
+  getFriendPercentiles, getFriendFriends, getFriendBadges, addVip, removeVip,
 } from '../utils/api';
 import { CATEGORIES, getMaxGuesses } from '../utils/gameLogic';
 import YearCalendar from '../components/YearCalendar';
@@ -1514,6 +1514,29 @@ function VipLeaderboard({ vipFriends, onSelect }) {
   );
 }
 
+// ── Badge metadata (shared with Trophies section) ────────────────────────────
+const CAT_BADGE_META = {
+  top250:                 { emoji: '🏆', short: 'Most Popular' },
+  superhero:              { emoji: '🦸', short: 'Superheroes' },
+  animated:               { emoji: '🎨', short: 'Animated' },
+  indiancinema:           { emoji: '🎬', short: 'Indian Cinema' },
+  unlimited_top250:       { emoji: '♾️', short: '∞ Popular' },
+  unlimited_superhero:    { emoji: '♾️', short: '∞ Superheroes' },
+  unlimited_animated:     { emoji: '♾️', short: '∞ Animated' },
+  unlimited_indiancinema: { emoji: '♾️', short: '∞ Indian Cinema' },
+};
+const RANK_META_FRIEND = {
+  1: { medal: '🥇', label: '1st Place', color: '243,206,19' },
+  2: { medal: '🥈', label: '2nd Place', color: '192,192,192' },
+  3: { medal: '🥉', label: '3rd Place', color: '205,127,50' },
+  4: { medal: '🎖️', label: 'Top 10',   color: '168,85,247' },
+};
+function fmtMonth(m) {
+  const [y, mo] = m.split('-');
+  const d = new Date(Number(y), Number(mo) - 1, 1);
+  return d.toLocaleString('en-US', { month: 'short', year: 'numeric' });
+}
+
 // ── Category display metadata for the standings section ─────────────────────
 const CAT_META = {
   top250:                 { emoji: '🏆', label: 'Most Popular' },
@@ -1573,6 +1596,7 @@ function FriendDetail({ friend, viewingFriend, favRgb, myFriends = [], mySentReq
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [percentiles, setPercentiles]     = useState(null);
   const [friendFriends, setFriendFriends] = useState(null);
+  const [friendBadges, setFriendBadges]   = useState(null); // null=loading, []+=loaded
   const [addingPill, setAddingPill]       = useState(null); // id of pill showing add-prompt
   const [crewExpanded, setCrewExpanded]   = useState(false);
 
@@ -1580,6 +1604,7 @@ function FriendDetail({ friend, viewingFriend, favRgb, myFriends = [], mySentReq
     if (!friend?.id) return;
     setPercentiles(null);
     setFriendFriends(null);
+    setFriendBadges(null);
     setCrewExpanded(false);
     getFriendPercentiles(friend.id)
       .then(setPercentiles)
@@ -1587,6 +1612,9 @@ function FriendDetail({ friend, viewingFriend, favRgb, myFriends = [], mySentReq
     getFriendFriends(friend.id)
       .then(setFriendFriends)
       .catch(() => setFriendFriends([]));
+    getFriendBadges(friend.id)
+      .then(setFriendBadges)
+      .catch(() => setFriendBadges([]));
   }, [friend?.id]);
 
   if (!friend) return null;
@@ -2001,6 +2029,52 @@ function FriendDetail({ friend, viewingFriend, favRgb, myFriends = [], mySentReq
               })}
             </div>
           )}
+        </div>
+      )}
+
+      {/* ════ TROPHIES (monthly leaderboard badges) ════ */}
+      {friendBadges !== null && friendBadges.length > 0 && (
+        <div>
+          <SectionLabel rgb={favRgb}>Trophies</SectionLabel>
+          <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', marginTop: 10 }}>
+            {friendBadges.map((b, i) => {
+              const rm = RANK_META_FRIEND[b.rank] || RANK_META_FRIEND[4];
+              const cm = CAT_BADGE_META[b.category] || { emoji: '🎬', short: b.category };
+              return (
+                <div
+                  key={i}
+                  title={`${rm.label} — ${cm.short} — ${fmtMonth(b.month)}`}
+                  style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+                    padding: '7px 9px', borderRadius: 9, minWidth: 60,
+                    background: `rgba(${rm.color},0.09)`,
+                    border: `1px solid rgba(${rm.color},0.32)`,
+                    boxShadow: `0 0 8px rgba(${rm.color},0.12)`,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <span style={{ fontSize: '1rem', lineHeight: 1 }}>{rm.medal}</span>
+                    <span style={{ fontSize: '0.8rem', lineHeight: 1 }}>{cm.emoji}</span>
+                  </div>
+                  <span style={{
+                    fontSize: '0.45rem', fontWeight: 900, letterSpacing: '0.07em',
+                    textTransform: 'uppercase', textAlign: 'center',
+                    color: `rgba(${rm.color},0.88)`,
+                    lineHeight: 1.3,
+                  }}>
+                    {cm.short}
+                  </span>
+                  <span style={{
+                    fontSize: '0.40rem', fontWeight: 600,
+                    color: 'rgba(255,255,255,0.35)',
+                    textAlign: 'center', lineHeight: 1.3,
+                  }}>
+                    {fmtMonth(b.month)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 

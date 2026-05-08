@@ -25,6 +25,7 @@ router.delete('/vip/:friend_id', requireAuth, ah(ctrl.removeVip));
 router.get('/:friend_id/calendar-year',  requireAuth, ah(ctrl.getFriendYearCalendar));
 router.get('/:friend_id/percentiles',    requireAuth, ah(ctrl.getFriendPercentiles));
 router.get('/:friend_id/friends',        requireAuth, ah(ctrl.getFriendFriends));
+router.get('/:friend_id/badges',         requireAuth, ah(ctrl.getFriendBadges));
 
 // DELETE — /cancel/:receiver_id before /:friend_id to avoid collision
 router.delete('/cancel/:receiver_id', requireAuth, ah(ctrl.cancelSentRequest));

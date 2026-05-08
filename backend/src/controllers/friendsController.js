@@ -513,9 +513,42 @@ async function getFriendFriends(req, res) {
   }
 }
 
+// GET /api/friends/:friend_id/badges
+// Returns all leaderboard badges for a friend (friendship check enforced).
+async function getFriendBadges(req, res) {
+  const { friend_id } = req.params;
+  const client = await pool.connect();
+  try {
+    const { rows: friendship } = await client.query(
+      `SELECT 1 FROM friends
+       WHERE status = 'accepted'
+         AND (
+           (requester_id = $1 AND receiver_id = $2)
+           OR (requester_id = $2 AND receiver_id = $1)
+         )`,
+      [req.user.id, friend_id]
+    );
+    if (!friendship.length) {
+      return res.status(403).json({ error: 'Not friends with this user' });
+    }
+    const { rows } = await client.query(
+      `SELECT category, rank, month, awarded_at
+       FROM leaderboard_badges
+       WHERE user_id = $1
+       ORDER BY month DESC, rank ASC, category ASC`,
+      [friend_id]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  } finally {
+    client.release();
+  }
+}
+
 module.exports = {
   sendRequest, acceptRequest, declineRequest, unfriend,
   listFriends, listRequests, getFriendYearCalendar,
   getSentRequests, cancelSentRequest, getFriendPercentiles, getFriendFriends,
-  addVip, removeVip,
+  addVip, removeVip, getFriendBadges,
 };

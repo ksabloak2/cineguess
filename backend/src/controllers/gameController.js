@@ -1286,6 +1286,31 @@ async function saveUnlimitedSession(req, res) {
   }
 }
 
+// ---------------------------------------------------------------
+// GET /api/game/badges
+// Returns all leaderboard badges earned by the authenticated user,
+// sorted most-recent first.
+// ---------------------------------------------------------------
+async function getUserBadges(req, res) {
+  if (!req.user) return res.status(401).json({ error: 'Auth required' });
+  const client = await pool.connect();
+  try {
+    const { rows } = await client.query(
+      `SELECT category, rank, month, awarded_at
+       FROM leaderboard_badges
+       WHERE user_id = $1
+       ORDER BY month DESC, rank ASC, category ASC`,
+      [req.user.id]
+    );
+    res.json(rows);
+  } catch (err) {
+    logger.error('getUserBadges failed', { stack: err.stack });
+    res.status(500).json({ error: 'Could not load badges.' });
+  } finally {
+    client.release();
+  }
+}
+
 module.exports = {
   getDailyState,
   getMoviePool,
@@ -1301,4 +1326,5 @@ module.exports = {
   getRatings,
   getPercentiles,
   getLeaderboard,
+  getUserBadges,
 };

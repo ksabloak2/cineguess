@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
-import { getStreaks, getPercentiles, updateUsername, deleteAccount, clearPoolCache } from '../utils/api';
+import { getStreaks, getPercentiles, getUserBadges, updateUsername, deleteAccount, clearPoolCache } from '../utils/api';
 import { CATEGORIES } from '../utils/gameLogic';
 import YearCalendar from '../components/YearCalendar';
 import { FlameSVG, FLAME_TIERS } from '../components/FlameIndicator';
@@ -187,6 +187,7 @@ export default function ProfilePage() {
   const [allStreaks, setAllStreaks]         = useState({});
   const [allPercentiles, setAllPercentiles] = useState({});
   const [streaksLoading, setStreaksLoading] = useState(true);
+  const [leaderBadges, setLeaderBadges]    = useState([]);
   // Initialize tab from router state (Gear icon navigates with {tab:'settings'}).
   // useEffect keeps it in sync when navigating to /profile while already on it.
   const [activeTab, setActiveTab] = useState(location.state?.tab || 'streaks');
@@ -204,12 +205,14 @@ export default function ProfilePage() {
     Promise.all([
       Promise.all(keys.map((k) => getStreaks(k).then((s) => ({ key: k, ...s })))),
       getPercentiles().catch(() => ({})),
+      getUserBadges().catch(() => []),
     ])
-      .then(([streakResults, percentiles]) => {
+      .then(([streakResults, percentiles, badges]) => {
         const map = {};
         streakResults.forEach((r) => { map[r.key] = r; });
         setAllStreaks(map);
         setAllPercentiles(percentiles);
+        setLeaderBadges(badges);
       })
       .catch(console.error)
       .finally(() => setStreaksLoading(false));
@@ -223,14 +226,16 @@ export default function ProfilePage() {
       ...CATEGORIES.map((c) => `unlimited_${c.id}`),
     ];
     try {
-      const [streakResults, percentiles] = await Promise.all([
+      const [streakResults, percentiles, badges] = await Promise.all([
         Promise.all(keys.map((k) => getStreaks(k).then((s) => ({ key: k, ...s })))),
         getPercentiles().catch(() => ({})),
+        getUserBadges().catch(() => []),
       ]);
       const map = {};
       streakResults.forEach((r) => { map[r.key] = r; });
       setAllStreaks(map);
       setAllPercentiles(percentiles);
+      setLeaderBadges(badges);
     } catch (e) {
       console.error(e);
     } finally {
@@ -530,7 +535,7 @@ export default function ProfilePage() {
         <div className="profile-tab-content" style={{ flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}>
           {activeTab === 'streaks'  && <StreaksTab allStreaks={allStreaks} allPercentiles={allPercentiles} loading={streaksLoading} />}
           {activeTab === 'history'  && <HistoryTab />}
-          {activeTab === 'awards'   && <AwardsTab  awards={awards} allStreaks={allStreaks} loading={streaksLoading} />}
+          {activeTab === 'awards'   && <AwardsTab  awards={awards} allStreaks={allStreaks} loading={streaksLoading} leaderBadges={leaderBadges} />}
           {activeTab === 'settings' && <SettingsTab onRefresh={handleRefresh} />}
         </div>
       </div>
@@ -1056,7 +1061,135 @@ function FlameCollection({ allStreaks, loading }) {
   );
 }
 
-function AwardsTab({ awards, allStreaks, loading }) {
+// ── Badge meta helpers ────────────────────────────────────────────────────────
+const CAT_BADGE_META = {
+  top250:                 { emoji: '🏆', short: 'Most Popular' },
+  superhero:              { emoji: '🦸', short: 'Superheroes' },
+  animated:               { emoji: '🎨', short: 'Animated' },
+  indiancinema:           { emoji: '🎬', short: 'Indian Cinema' },
+  unlimited_top250:       { emoji: '♾️', short: '∞ Popular' },
+  unlimited_superhero:    { emoji: '♾️', short: '∞ Superheroes' },
+  unlimited_animated:     { emoji: '♾️', short: '∞ Animated' },
+  unlimited_indiancinema: { emoji: '♾️', short: '∞ Indian Cinema' },
+};
+const RANK_META = {
+  1: { medal: '🥇', label: '1st Place', color: '243,206,19' },
+  2: { medal: '🥈', label: '2nd Place', color: '192,192,192' },
+  3: { medal: '🥉', label: '3rd Place', color: '205,127,50' },
+  4: { medal: '🎖️', label: 'Top 10',   color: '168,85,247' },
+};
+function formatMonth(m) {
+  // m = "YYYY-MM"
+  const [y, mo] = m.split('-');
+  const d = new Date(Number(y), Number(mo) - 1, 1);
+  return d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+}
+
+function LeaderboardBadgesSection({ leaderBadges, isAList, isCertifiedCinephile, loading }) {
+  // Profile-level status badges (A-List / Certified Cinephile)
+  const statusBadges = [];
+  if (isCertifiedCinephile) statusBadges.push({ id: 'cinephile', label: 'Certified Cinephile', desc: 'All Cinema Awards + active streak in every category', medal: '🎬', color: '168,85,247', iridescent: true });
+  else if (isAList) statusBadges.push({ id: 'alist', label: 'A-List', desc: 'All 9 Cinema Awards earned', medal: '⭐', color: '243,206,19', iridescent: false });
+
+  const hasAnything = statusBadges.length > 0 || leaderBadges.length > 0;
+  if (!hasAnything && !loading) return null;
+
+  return (
+    <div style={{ marginBottom: 'clamp(8px,1.2vh,14px)' }}>
+      {/* Section header */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10,
+        paddingBottom: 8,
+        borderBottom: '1px solid rgba(168,85,247,0.18)',
+      }}>
+        <span style={{ fontSize: '1rem' }}>🎖️</span>
+        <span style={{ fontSize: '0.68rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(168,85,247,0.80)' }}>
+          Badges
+        </span>
+      </div>
+
+      {loading ? (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {[0, 1, 2].map((i) => (
+            <div key={i} style={{ width: 80, height: 72, background: 'rgba(255,255,255,0.04)', borderRadius: 10 }} />
+          ))}
+        </div>
+      ) : (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+
+          {/* Status badges */}
+          {statusBadges.map((b) => (
+            <div
+              key={b.id}
+              title={b.desc}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                padding: '8px 12px', borderRadius: 10, minWidth: 72,
+                background: b.iridescent
+                  ? 'linear-gradient(135deg, rgba(168,85,247,0.18), rgba(243,206,19,0.10))'
+                  : 'rgba(243,206,19,0.10)',
+                border: b.iridescent
+                  ? '1px solid rgba(168,85,247,0.50)'
+                  : '1px solid rgba(243,206,19,0.40)',
+                boxShadow: `0 0 14px rgba(${b.color},0.20)`,
+              }}
+            >
+              <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>{b.medal}</span>
+              <span style={{
+                fontSize: '0.48rem', fontWeight: 900, letterSpacing: '0.10em',
+                textTransform: 'uppercase', textAlign: 'center',
+                color: b.iridescent ? '#c084fc' : '#F3CE13',
+              }}>
+                {b.label}
+              </span>
+            </div>
+          ))}
+
+          {/* Monthly leaderboard badges */}
+          {leaderBadges.map((b, i) => {
+            const rm   = RANK_META[b.rank] || RANK_META[4];
+            const cm   = CAT_BADGE_META[b.category] || { emoji: '🎬', short: b.category };
+            return (
+              <div
+                key={i}
+                title={`${rm.label} — ${cm.short} — ${formatMonth(b.month)}`}
+                style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+                  padding: '8px 10px', borderRadius: 10, minWidth: 68,
+                  background: `rgba(${rm.color},0.09)`,
+                  border: `1px solid rgba(${rm.color},0.35)`,
+                  boxShadow: `0 0 10px rgba(${rm.color},0.14)`,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                  <span style={{ fontSize: '1.1rem', lineHeight: 1 }}>{rm.medal}</span>
+                  <span style={{ fontSize: '0.85rem', lineHeight: 1 }}>{cm.emoji}</span>
+                </div>
+                <span style={{
+                  fontSize: '0.47rem', fontWeight: 900, letterSpacing: '0.08em',
+                  textTransform: 'uppercase', textAlign: 'center',
+                  color: `rgba(${rm.color},0.90)`,
+                  lineHeight: 1.3,
+                }}>
+                  {cm.short}
+                </span>
+                <span style={{
+                  fontSize: '0.42rem', fontWeight: 600,
+                  color: 'rgba(255,255,255,0.35)',
+                  textAlign: 'center', lineHeight: 1.3,
+                }}>
+                  {formatMonth(b.month)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AwardsTab({ awards, allStreaks, loading, leaderBadges }) {
   const earnedCount          = awards.filter((a) => a.earned).length;
   const pct                  = Math.round((earnedCount / awards.length) * 100);
   const isAList              = computeIsAList(awards, allStreaks);
@@ -1071,6 +1204,14 @@ function AwardsTab({ awards, allStreaks, loading }) {
         <div style={{ marginBottom: 'clamp(8px,1.2vh,14px)' }}>
           <FlameCollection allStreaks={allStreaks} loading={loading} />
         </div>
+
+        {/* Badges section — A-List / Certified Cinephile + monthly leaderboard */}
+        <LeaderboardBadgesSection
+          leaderBadges={leaderBadges}
+          isAList={isAList}
+          isCertifiedCinephile={isCertifiedCinephile}
+          loading={loading}
+        />
 
         <div style={{
           display: 'grid',
