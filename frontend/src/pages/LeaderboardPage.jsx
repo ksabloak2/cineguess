@@ -173,6 +173,18 @@ export default function LeaderboardPage() {
 
   return (
     <div className="space-y-4 animate-fade-in pb-4">
+      <style>{`
+        /* Mobile-only grid overrides (< 640px) */
+        @media (max-width: 639px) {
+          .lb-grid-daily     { grid-template-columns: 1.5rem 1fr 2.5rem 2.6rem 2.8rem !important; gap: 4px !important; }
+          .lb-grid-unlimited { grid-template-columns: 1.5rem 1fr 3rem 3rem !important; gap: 4px !important; }
+        }
+        /* Mobile: category tabs scroll naturally */
+        @media (max-width: 639px) {
+          .lb-cat-tabs { overflow-x: auto; }
+          .lb-cat-tab  { flex: 0 0 auto !important; }
+        }
+      `}</style>
       {/* ── Obsidian grid overlay ─────────────────────────────────────────── */}
       <div
         aria-hidden="true"
@@ -244,7 +256,7 @@ export default function LeaderboardPage() {
 
       {/* Category tabs */}
       <div
-        className="flex gap-1 p-1 rounded-xl"
+        className="lb-cat-tabs flex gap-1 p-1 rounded-xl scrollbar-hide"
         style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
       >
         {tabs.map((tab) => {
@@ -253,7 +265,7 @@ export default function LeaderboardPage() {
             <button
               key={String(tab.id)}
               onClick={() => isUnlimitedMode ? setUnlimitedTab(tab.id) : setActiveTab(tab.id)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all"
+              className="lb-cat-tab flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all"
               style={isActive ? {
                 background: isUnlimitedMode ? 'rgba(168,85,247,0.15)' : 'rgba(243,206,19,0.15)',
                 color:      isUnlimitedMode ? '#c084fc' : '#F3CE13',
@@ -274,7 +286,8 @@ export default function LeaderboardPage() {
       {!loading && !error && rows.length > 0 && (
         isUnlimitedMode ? (
           <div
-            className="grid text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold text-gray-600 px-3 py-1 [grid-template-columns:1.5rem_1fr_3rem_3rem] sm:[grid-template-columns:2rem_1fr_4.5rem_4.5rem]"
+            className="lb-grid-unlimited grid text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold text-gray-600 px-3 py-1"
+            style={{ gridTemplateColumns: '2rem 1fr 4.5rem 4.5rem' }}
           >
             <span className="text-center">#</span>
             <span>Player</span>
@@ -283,7 +296,8 @@ export default function LeaderboardPage() {
           </div>
         ) : (
           <div
-            className="grid text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold text-gray-600 px-3 py-1 [grid-template-columns:1.5rem_1fr_2.5rem_2.8rem_3rem] sm:[grid-template-columns:2rem_1fr_4.5rem_4.5rem_5.5rem]"
+            className="lb-grid-daily grid text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold text-gray-600 px-3 py-1"
+            style={{ gridTemplateColumns: '2rem 1fr 4.5rem 4.5rem 5.5rem' }}
           >
             <span className="text-center">#</span>
             <span>Player</span>
@@ -324,8 +338,9 @@ export default function LeaderboardPage() {
             return isUnlimitedMode ? (
               <div
                 key={row.username}
-                className="grid items-center gap-1 sm:gap-2 px-3 py-2.5 rounded-xl [grid-template-columns:1.5rem_1fr_3rem_3rem] sm:[grid-template-columns:2rem_1fr_4.5rem_4.5rem]"
+                className="lb-grid-unlimited grid items-center gap-2 px-3 py-2.5 rounded-xl"
                 style={{
+                  gridTemplateColumns: '2rem 1fr 4.5rem 4.5rem',
                   background: rank <= 3 ? 'rgba(168,85,247,0.06)' : 'rgba(255,255,255,0.03)',
                   border:     rank <= 3 ? '1px solid rgba(168,85,247,0.18)' : '1px solid rgba(255,255,255,0.06)',
                 }}
@@ -361,8 +376,9 @@ export default function LeaderboardPage() {
             ) : (
               <div
                 key={row.username}
-                className="grid items-center gap-1 sm:gap-2 px-3 py-2.5 rounded-xl [grid-template-columns:1.5rem_1fr_2.5rem_2.8rem_3rem] sm:[grid-template-columns:2rem_1fr_4.5rem_4.5rem_5.5rem]"
+                className="lb-grid-daily grid items-center gap-2 px-3 py-2.5 rounded-xl"
                 style={{
+                  gridTemplateColumns: '2rem 1fr 4.5rem 4.5rem 5.5rem',
                   background: rank <= 3 ? 'rgba(243,206,19,0.05)' : 'rgba(255,255,255,0.03)',
                   border:     rank <= 3 ? '1px solid rgba(243,206,19,0.15)' : '1px solid rgba(255,255,255,0.06)',
                 }}
