@@ -154,6 +154,8 @@ export const getFriendPercentiles = (friend_id) =>
   api.get(`/friends/${friend_id}/percentiles`).then(r => r.data);
 export const getFriendFriends = (friend_id) =>
   api.get(`/friends/${friend_id}/friends`).then(r => r.data);
+export const addVip    = (friend_id) => api.post(`/friends/vip/${friend_id}`).then(r => r.data);
+export const removeVip = (friend_id) => api.delete(`/friends/vip/${friend_id}`).then(r => r.data);
 export const getSentRequests = () =>
   api.get('/friends/sent-requests').then(r => r.data);
 export const cancelSentRequest = (receiver_id) =>
