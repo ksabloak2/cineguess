@@ -53,7 +53,14 @@ const args = process.argv.slice(2);
 const FORCE = args.includes('--force');
 const LIMIT = parseInt((args.find((a) => a.startsWith('--limit=')) || '').split('=')[1], 10) || null;
 const CONCURRENCY = parseInt((args.find((a) => a.startsWith('--concurrency=')) || '').split('=')[1], 10) || 3;
-const IDS_ARG = (args.find((a) => a.startsWith('--ids=')) || '').split('=')[1];
+// Support both --ids=1,2,3 and --ids 1,2,3
+const IDS_ARG = (() => {
+  const eqForm = args.find((a) => a.startsWith('--ids='));
+  if (eqForm) return eqForm.split('=')[1];
+  const spaceIdx = args.indexOf('--ids');
+  if (spaceIdx !== -1 && args[spaceIdx + 1]) return args[spaceIdx + 1];
+  return null;
+})();
 const TMDB_IDS = IDS_ARG ? IDS_ARG.split(',').map(Number).filter(Boolean) : null;
 
 fs.mkdirSync(FRAMES_DIR, { recursive: true });
