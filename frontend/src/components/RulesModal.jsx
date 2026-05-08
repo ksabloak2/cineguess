@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import ReportIssueModal from './ReportIssueModal';
 
-const PAGES = ['How to Play', 'Scoring', 'Rankings'];
+const PAGES = ['How to Play', 'Scoring', 'Rankings', 'Credits & Legal'];
 
 // ── Rules modal ─────────────────────────────────────────────────────────────
 export default function RulesModal({ open, onClose, initialPage = 0 }) {
@@ -71,7 +71,7 @@ export default function RulesModal({ open, onClose, initialPage = 0 }) {
             <button
               key={label}
               onClick={() => setPage(i)}
-              className="flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all"
+              className="flex-1 py-1.5 px-1 rounded-lg text-[10px] sm:text-xs font-semibold transition-all text-center leading-tight"
               style={page === i ? {
                 background: 'rgba(243,206,19,0.15)',
                 color:      '#F3CE13',
@@ -282,6 +282,102 @@ export default function RulesModal({ open, onClose, initialPage = 0 }) {
                 The leaderboard shows the top 50 players sorted by Global Rating. Toggle between Global and per-category views. Access it via the trophy icon in the navigation bar.
               </p>
             </div>
+          </div>
+        )}
+
+        {/* ── Page 3: Credits & Legal ── */}
+        {page === 3 && (
+          <div className="space-y-5">
+
+            {/* Data Sources */}
+            <div className="rounded-xl p-4 sm:p-5" style={{ background: 'rgba(243,206,19,0.04)', border: '1px solid rgba(243,206,19,0.18)' }}>
+              <p className="text-[10px] uppercase tracking-[0.25em] font-semibold text-accent/80 mb-3">Data Sources</p>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <span className="text-base flex-shrink-0">🎬</span>
+                  <div>
+                    <p className="text-xs font-semibold text-white">The Movie Database (TMDB)</p>
+                    <p className="text-[11px] text-gray-400 leading-relaxed mt-0.5">
+                      Movie metadata, posters, cast, crew, backdrops, trailers, and collection data are sourced via the TMDB API.
+                      This product uses the TMDB API but is not endorsed or certified by TMDB.
+                    </p>
+                    <a href="https://www.themoviedb.org" target="_blank" rel="noopener noreferrer"
+                      className="text-[11px] text-accent/70 hover:text-accent mt-1 inline-block transition-colors">
+                      themoviedb.org →
+                    </a>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-base flex-shrink-0">🏆</span>
+                  <div>
+                    <p className="text-xs font-semibold text-white">Wikidata</p>
+                    <p className="text-[11px] text-gray-400 leading-relaxed mt-0.5">
+                      Oscar nomination and win data is sourced from Wikidata, the free knowledge base maintained by the Wikimedia Foundation, licensed under CC0.
+                    </p>
+                    <a href="https://www.wikidata.org" target="_blank" rel="noopener noreferrer"
+                      className="text-[11px] text-accent/70 hover:text-accent mt-1 inline-block transition-colors">
+                      wikidata.org →
+                    </a>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-base flex-shrink-0">🎞️</span>
+                  <div>
+                    <p className="text-xs font-semibold text-white">OMDb API</p>
+                    <p className="text-[11px] text-gray-400 leading-relaxed mt-0.5">
+                      Supplemental awards and ratings data sourced from the Open Movie Database (OMDb), which aggregates data from IMDb.
+                    </p>
+                    <a href="https://www.omdbapi.com" target="_blank" rel="noopener noreferrer"
+                      className="text-[11px] text-accent/70 hover:text-accent mt-1 inline-block transition-colors">
+                      omdbapi.com →
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Copyright */}
+            <div className="rounded-xl p-4 sm:p-5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <p className="text-[10px] uppercase tracking-[0.25em] font-semibold text-gray-500 mb-3">Copyright</p>
+              <p className="text-xs font-semibold text-white mb-2">© {new Date().getFullYear()} CineGuess. All rights reserved.</p>
+              <p className="text-[11px] text-gray-400 leading-relaxed">
+                The CineGuess name, logo, game concept, scoring system, visual design, user interface, and all
+                original written content are the exclusive intellectual property of CineGuess and its creators.
+                Unauthorized reproduction, copying, modification, or distribution of any part of this product
+                — in whole or in part — is strictly prohibited without prior written permission.
+              </p>
+            </div>
+
+            {/* IP Protection */}
+            <div className="rounded-xl p-4 sm:p-5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <p className="text-[10px] uppercase tracking-[0.25em] font-semibold text-gray-500 mb-3">Intellectual Property</p>
+              <ul className="space-y-2">
+                {[
+                  'The gameplay mechanics, hint system, scoring formula, and ranking algorithm are original works protected under applicable copyright and trade secret law.',
+                  'The source code, architecture, and design of CineGuess are proprietary. Cloning, reverse-engineering, or repurposing any part of this codebase is prohibited.',
+                  'All custom UI components, animations, and visual design elements are original works of CineGuess.',
+                  'Movie posters, backdrops, and cast images are the property of their respective studios and rights holders, used via TMDB\'s API under their terms of service.',
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-2.5">
+                    <span className="text-accent/50 flex-shrink-0 mt-0.5 text-xs font-bold">•</span>
+                    <p className="text-[11px] text-gray-400 leading-relaxed">{item}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Third-party notices */}
+            <div className="rounded-xl p-4 sm:p-5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <p className="text-[10px] uppercase tracking-[0.25em] font-semibold text-gray-500 mb-3">Third-Party Notices</p>
+              <p className="text-[11px] text-gray-400 leading-relaxed">
+                CineGuess is an independent fan project. All movie titles, characters, and related marks are
+                trademarks of their respective studios and rights holders. CineGuess is not affiliated with,
+                endorsed by, or sponsored by any film studio, streaming service, or media company.
+                IMDb™ is a trademark of IMDb.com, Inc. Oscar® is a registered trademark of the Academy of
+                Motion Picture Arts and Sciences.
+              </p>
+            </div>
+
           </div>
         )}
       </div>
