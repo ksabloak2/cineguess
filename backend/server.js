@@ -423,9 +423,32 @@ cron.schedule('0 2 * * *', async () => {
 // ---------------------------------------------------------------
 // Start
 // ---------------------------------------------------------------
+// Run any pending schema migrations before accepting traffic.
+// Using IF NOT EXISTS means this is always safe to re-run.
+// ---------------------------------------------------------------
+async function runStartupMigrations() {
+  const pool = require('./src/db/pool');
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS vip_crew (
+        user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        friend_id  UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        PRIMARY KEY (user_id, friend_id)
+      );
+      CREATE INDEX IF NOT EXISTS vip_crew_user_idx ON vip_crew(user_id);
+    `);
+    console.log('[migration] vip_crew table ready');
+  } catch (err) {
+    console.error('[migration] vip_crew migration failed:', err.message);
+  }
+}
+
+// ---------------------------------------------------------------
 const PORT = process.env.PORT || 3001;
 const server = app.listen(PORT, () => {
   console.log(`CineGuess API listening on port ${PORT}`);
+  runStartupMigrations();
 });
 
 // Handle port-in-use and other listen errors so nodemon doesn't
