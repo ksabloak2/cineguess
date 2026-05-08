@@ -234,7 +234,9 @@ export default function App() {
           {/* ErrorBoundary ensures a broken page never kills the whole app */}
           <ErrorBoundary>
             <Suspense fallback={<PageSpinner />}>
-              <div>
+              {/* flex-1 so this div fills remaining height when content is short,
+                  which pushes MobileFooterToggle to the bottom of the viewport */}
+              <div className="flex-1">
                 <Routes>
                   <Route path="/"                        element={<HomePage />} />
                   <Route path="/daily"                   element={<ModeHub />} />
