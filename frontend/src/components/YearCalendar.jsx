@@ -36,9 +36,16 @@ export default function YearCalendar({ fetcher }) {
   const today        = new Date();
   const currentYear  = today.getFullYear();
   const currentQtr   = Math.floor(today.getMonth() / 3);
+  const currentMonth = today.getMonth();
 
   const [year, setYear]       = useState(currentYear);
   const [quarter, setQuarter] = useState(currentQtr);
+  // Mobile: index (0-2) of which month within the current quarter is shown
+  const [mobileMthIdx, setMobileMthIdx] = useState(
+    () => QUARTER_RANGES[currentQtr].indexOf(currentMonth) >= 0
+      ? QUARTER_RANGES[currentQtr].indexOf(currentMonth)
+      : 0
+  );
   const [rows, setRows]       = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
@@ -75,43 +82,93 @@ export default function YearCalendar({ fetcher }) {
   function prevQuarter() {
     if (quarter === 0) { setYear((y) => y - 1); setQuarter(3); }
     else setQuarter((q) => q - 1);
+    setMobileMthIdx(0);
   }
 
   function nextQuarter() {
     if (quarter === 3) { setYear((y) => y + 1); setQuarter(0); }
     else setQuarter((q) => q + 1);
+    setMobileMthIdx(0);
   }
 
+  // Mobile: navigate one month at a time, crossing quarter/year boundaries naturally
+  function prevMonth() {
+    if (mobileMthIdx > 0) {
+      setMobileMthIdx((i) => i - 1);
+    } else {
+      // Cross into previous quarter
+      if (quarter === 0) { setYear((y) => y - 1); setQuarter(3); }
+      else setQuarter((q) => q - 1);
+      setMobileMthIdx(2);
+    }
+  }
+
+  function nextMonth() {
+    if (mobileMthIdx < 2) {
+      setMobileMthIdx((i) => i + 1);
+    } else {
+      // Cross into next quarter
+      if (quarter === 3) { setYear((y) => y + 1); setQuarter(0); }
+      else setQuarter((q) => q + 1);
+      setMobileMthIdx(0);
+    }
+  }
+
+  const activeMobileMonthIdx = QUARTER_RANGES[quarter][mobileMthIdx];
   const atFuture = year > currentYear || (year === currentYear && quarter >= currentQtr);
+  const atFutureMobile = year > currentYear ||
+    (year === currentYear && activeMobileMonthIdx >= currentMonth);
 
   return (
     <div className="space-y-4">
-      {/* Quarter navigation header */}
-      <div className="flex items-center justify-between gap-2">
+      {/* ── Mobile nav: one month at a time ── */}
+      <div className="flex sm:hidden items-center justify-between gap-2">
+        <button
+          onClick={prevMonth}
+          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface-input hover:bg-surface-border
+                     text-gray-400 hover:text-white transition-all text-xs font-medium"
+        >
+          ←
+        </button>
+        <div className="text-center">
+          <p className="font-display font-bold text-sm text-white">
+            {MONTH_NAMES[activeMobileMonthIdx]}
+          </p>
+          <p className="text-[10px] text-gray-600">{year}</p>
+        </div>
+        <button
+          onClick={nextMonth}
+          disabled={atFutureMobile}
+          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface-input hover:bg-surface-border
+                     text-gray-400 hover:text-white transition-all text-xs font-medium
+                     disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          →
+        </button>
+      </div>
+
+      {/* ── Desktop nav: one quarter at a time ── */}
+      <div className="hidden sm:flex items-center justify-between gap-2">
         <button
           onClick={prevQuarter}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-input hover:bg-surface-border
-                     text-gray-400 hover:text-white transition-all text-xs sm:text-sm font-medium"
+                     text-gray-400 hover:text-white transition-all text-sm font-medium"
         >
           <span>←</span>
-          <span className="hidden sm:inline">Prev Quarter</span>
+          <span>Prev Quarter</span>
         </button>
-
         <div className="text-center">
-          <p className="font-display font-bold text-sm sm:text-base text-white">
-            {QUARTER_LABELS[quarter]}
-          </p>
-          <p className="text-[10px] sm:text-xs text-gray-600">{year}</p>
+          <p className="font-display font-bold text-base text-white">{QUARTER_LABELS[quarter]}</p>
+          <p className="text-xs text-gray-600">{year}</p>
         </div>
-
         <button
           onClick={nextQuarter}
           disabled={atFuture}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-input hover:bg-surface-border
-                     text-gray-400 hover:text-white transition-all text-xs sm:text-sm font-medium
+                     text-gray-400 hover:text-white transition-all text-sm font-medium
                      disabled:opacity-30 disabled:cursor-not-allowed"
         >
-          <span className="hidden sm:inline">Next Quarter</span>
+          <span>Next Quarter</span>
           <span>→</span>
         </button>
       </div>
@@ -124,25 +181,40 @@ export default function YearCalendar({ fetcher }) {
         <Legend color="bg-black border border-white/10" label="No play" />
       </div>
 
-      {/* 3-month grid */}
       {loading ? (
         <div className="flex justify-center py-10">
           <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-          {QUARTER_RANGES[quarter].map((mIdx) => (
+        <>
+          {/* Mobile: single month */}
+          <div className="sm:hidden">
             <MonthGrid
-              key={mIdx}
-              name={MONTH_NAMES[mIdx]}
+              key={activeMobileMonthIdx}
+              name={MONTH_NAMES[activeMobileMonthIdx]}
               year={year}
-              month={mIdx}
+              month={activeMobileMonthIdx}
               byDay={byDay}
               todayKey={todayKey}
               onSelect={setSelected}
             />
-          ))}
-        </div>
+          </div>
+
+          {/* Desktop: 3-month quarter grid */}
+          <div className="hidden sm:grid grid-cols-3 gap-4">
+            {QUARTER_RANGES[quarter].map((mIdx) => (
+              <MonthGrid
+                key={mIdx}
+                name={MONTH_NAMES[mIdx]}
+                year={year}
+                month={mIdx}
+                byDay={byDay}
+                todayKey={todayKey}
+                onSelect={setSelected}
+              />
+            ))}
+          </div>
+        </>
       )}
 
       {selected && (

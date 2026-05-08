@@ -33,10 +33,10 @@ export default function StarterInfoPanel({ starterInfo }) {
   return (
     <div className="flex flex-col gap-2.5">
       {/* Oscar info */}
-      <div className="rounded-xl border border-yellow-500/25 bg-yellow-500/5 px-3.5 py-3">
+      <div className="rounded-xl border border-teal-500/25 bg-teal-500/5 px-3.5 py-3">
         <div className="flex items-center gap-2 mb-1.5">
           <span className="text-base">🏆</span>
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-yellow-400/80">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-teal-400/80">
             Oscar Nominations
           </span>
         </div>
@@ -44,7 +44,7 @@ export default function StarterInfoPanel({ starterInfo }) {
           <p className="text-xs text-gray-500 italic">Loading…</p>
         ) : hasNominations ? (
           <>
-            <p className="text-sm font-semibold text-yellow-300 mb-1.5">
+            <p className="text-sm font-semibold text-teal-300 mb-1.5">
               {nominationCount} nomination{nominationCount !== 1 ? 's' : ''}
             </p>
             <ul className="flex flex-wrap gap-1.5">
@@ -52,7 +52,7 @@ export default function StarterInfoPanel({ starterInfo }) {
                 <li
                   key={i}
                   className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full
-                             bg-yellow-500/15 border border-yellow-500/25 text-yellow-200/90"
+                             bg-teal-500/15 border border-teal-500/25 text-teal-200/90"
                 >
                   {cat}
                 </li>
@@ -60,9 +60,8 @@ export default function StarterInfoPanel({ starterInfo }) {
             </ul>
           </>
         ) : winCats.length > 0 ? (
-          // Fallback: have win categories from Wikidata
           <>
-            <p className="text-sm font-semibold text-yellow-300 mb-1.5">
+            <p className="text-sm font-semibold text-teal-300 mb-1.5">
               Won {winCats.length} Oscar{winCats.length !== 1 ? 's' : ''}
             </p>
             <ul className="flex flex-wrap gap-1.5">
@@ -70,7 +69,7 @@ export default function StarterInfoPanel({ starterInfo }) {
                 <li
                   key={i}
                   className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full
-                             bg-yellow-500/15 border border-yellow-500/25 text-yellow-200/90"
+                             bg-teal-500/15 border border-teal-500/25 text-teal-200/90"
                 >
                   {cat}
                 </li>
@@ -78,8 +77,7 @@ export default function StarterInfoPanel({ starterInfo }) {
             </ul>
           </>
         ) : wins > 0 ? (
-          // Last resort: only have OMDb win count, no category breakdown
-          <p className="text-sm font-semibold text-yellow-300">
+          <p className="text-sm font-semibold text-teal-300">
             Won {wins} Oscar{wins !== 1 ? 's' : ''}
           </p>
         ) : (
@@ -88,15 +86,15 @@ export default function StarterInfoPanel({ starterInfo }) {
       </div>
 
       {/* Franchise */}
-      <div className="rounded-xl border border-blue-500/25 bg-blue-500/5 px-3.5 py-3">
+      <div className="rounded-xl border border-teal-500/20 bg-teal-500/5 px-3.5 py-3">
         <div className="flex items-center gap-2 mb-1.5">
           <span className="text-base">🎬</span>
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-blue-400/80">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-teal-400/70">
             Franchise
           </span>
         </div>
         {cleanFranchise ? (
-          <p className="text-sm text-blue-200 font-semibold">Part of a franchise</p>
+          <p className="text-sm text-teal-200 font-semibold">Part of a franchise</p>
         ) : (
           <p className="text-sm text-gray-400">Standalone film</p>
         )}
