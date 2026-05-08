@@ -393,7 +393,8 @@ export default function FriendsPage() {
             display: flex !important;
             width: 100% !important;
             min-width: 0 !important;
-            flex-shrink: 1 !important;
+            flex: 1 1 0 !important;
+            height: 0 !important;
           }
 
           /* Cinema screen: hidden unless screen tab is active */
@@ -563,7 +564,7 @@ export default function FriendsPage() {
           >
             <span style={{ fontSize: '0.9rem' }}>📽</span>
             <span>On Screen</span>
-            {viewingFriend && <span className="mob-tab-dot" />}
+            {(viewingFriend || sidebarTab === 'vip') && <span className="mob-tab-dot" style={sidebarTab === 'vip' && !viewingFriend ? { background: '#F3CE13', boxShadow: '0 0 8px rgba(243,206,19,0.80)' } : {}} />}
           </button>
         </div>
 
