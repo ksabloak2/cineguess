@@ -49,22 +49,37 @@
          STRUCTURED DATA — WebApplication (helps Google rich results)
     ═══════════════════════════════════════════════════════════ -->
     <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "CineGUESS",
-      "url": "https://cineguessit.com/",
-      "description": "The first fully interactive and competitive daily movie guessing game. Guess films across multiple categories, build streaks, and compete on global leaderboards.",
-      "applicationCategory": "GameApplication",
-      "genre": "Trivia",
-      "operatingSystem": "Any",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
+    [
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "CineGUESS",
+        "url": "https://cineguessit.com/",
+        "description": "The first fully interactive and competitive daily movie guessing game. Guess films across multiple categories, build streaks, and compete on global leaderboards.",
+        "applicationCategory": "GameApplication",
+        "genre": "Trivia",
+        "operatingSystem": "Any",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "keywords": "cineguess, cineguessit, movie guessing game, daily movie game, film trivia"
       },
-      "keywords": "cineguess, cineguessit, movie guessing game, daily movie game, film trivia"
-    }
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "CineGUESS",
+        "url": "https://cineguessit.com/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://cineguessit.com/apple-touch-icon.png",
+          "width": 180,
+          "height": 180
+        },
+        "sameAs": ["https://cineguessit.com/"]
+      }
+    ]
     </script>
 
     <!-- ═══════════════════════════════════════════════════════════

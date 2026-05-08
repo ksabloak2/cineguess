@@ -1,10 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- Dark rounded background -->
+  <!-- Dark background -->
   <rect width="32" height="32" rx="7" fill="#0a0a0f"/>
-  <!-- Subtle inner glow ring -->
-  <rect width="32" height="32" rx="7" fill="none" stroke="#F3CE13" stroke-width="0.5" opacity="0.3"/>
-  <!-- Film strip icon (same path as Navbar FilmIcon, scaled/centered into 32x32) -->
-  <g transform="translate(4, 4)" fill="none" stroke="#F3CE13" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M7 3v18M17 3v18M2 8h5M2 13h5M17 8h5M17 13h5"/>
-  </g>
+  <!-- Gold border -->
+  <rect width="32" height="32" rx="7" fill="none" stroke="#F3CE13" stroke-width="1.2" opacity="0.6"/>
+  <!-- Film frame strips — left and right columns, bold gold at tiny sizes -->
+  <rect x="3"  y="4" width="5" height="24" rx="1.5" fill="#F3CE13" opacity="0.15"/>
+  <rect x="24" y="4" width="5" height="24" rx="1.5" fill="#F3CE13" opacity="0.15"/>
+  <!-- Sprocket holes — left -->
+  <rect x="4"  y="7"  width="3" height="3" rx="0.8" fill="#F3CE13"/>
+  <rect x="4"  y="14" width="3" height="3" rx="0.8" fill="#F3CE13"/>
+  <rect x="4"  y="21" width="3" height="3" rx="0.8" fill="#F3CE13"/>
+  <!-- Sprocket holes — right -->
+  <rect x="25" y="7"  width="3" height="3" rx="0.8" fill="#F3CE13"/>
+  <rect x="25" y="14" width="3" height="3" rx="0.8" fill="#F3CE13"/>
+  <rect x="25" y="21" width="3" height="3" rx="0.8" fill="#F3CE13"/>
+  <!-- "CG" text centred — readable even at 16px -->
+  <text x="16" y="21" text-anchor="middle"
+        font-family="Arial Black, Arial, sans-serif"
+        font-weight="900" font-size="11"
+        fill="#F3CE13" letter-spacing="-0.5">CG</text>
 </svg>
