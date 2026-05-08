@@ -6,7 +6,11 @@ const MAX_QUERY_CACHE = 100;
 
 // Strip all non-alphanumeric characters (punctuation, spaces, hyphens, apostrophes, etc.)
 // so "spiderman" matches "Spider-Man", "spider man", "(500)" matches "500", etc.
-const normalize = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+const normalize = (s) => s
+  .toLowerCase()
+  .normalize('NFD')               // decompose ā → a + combining macron, é → e + accent, etc.
+  .replace(/[̀-ͯ]/g, '') // strip all combining diacritics
+  .replace(/[^a-z0-9]/g, '');     // strip remaining punctuation/spaces
 
 export default function MovieSearch({ movies, onSelect, disabled, alreadyGuessed }) {
   const [query, setQuery]             = useState('');
