@@ -51,6 +51,7 @@ const MIN_TRAILER_DURATION = 20;
 // CLI flags
 const args = process.argv.slice(2);
 const FORCE = args.includes('--force');
+const ALL   = args.includes('--all');   // must be explicit to process the whole DB
 const LIMIT = parseInt((args.find((a) => a.startsWith('--limit=')) || '').split('=')[1], 10) || null;
 const CONCURRENCY = parseInt((args.find((a) => a.startsWith('--concurrency=')) || '').split('=')[1], 10) || 3;
 // Support both --ids=1,2,3 and --ids 1,2,3
@@ -62,6 +63,24 @@ const IDS_ARG = (() => {
   return null;
 })();
 const TMDB_IDS = IDS_ARG ? IDS_ARG.split(',').map(Number).filter(Boolean) : null;
+
+// ── Safety guard ──────────────────────────────────────────────────────────────
+// Running without --ids would silently process every movie in the database.
+// --all must be passed explicitly to allow that; otherwise we abort immediately.
+if (!TMDB_IDS && !ALL) {
+  console.error(
+    '\n  ✗  SAFETY GUARD: no --ids provided.\n' +
+    '\n' +
+    '  This script may only run on specific movies:\n' +
+    '    node src/scripts/extractTrailerFrames.js --ids=<id1>,<id2>,...\n' +
+    '\n' +
+    '  To intentionally process ALL movies in the database, pass --all explicitly:\n' +
+    '    node src/scripts/extractTrailerFrames.js --all\n' +
+    '\n  Aborting.\n'
+  );
+  process.exit(1);
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 fs.mkdirSync(FRAMES_DIR, { recursive: true });
 
@@ -266,19 +285,20 @@ async function processMovie(movie) {
 }
 
 async function main() {
-  // Pick movies that either have no frames or (with --force) all of them.
+  // Pick movies that either have no frames or (with --force/--all) all of them.
   // "Already done" means backdrop_paths contains at least one /frames/ entry.
-  // --ids=id1,id2,... restricts processing to specific TMDB IDs only.
+  // --ids=id1,id2,... restricts processing to specific DB row IDs only (REQUIRED).
+  // --all processes every non-pinned movie (must be passed explicitly).
   let query = `SELECT id, tmdb_id, title, year, primary_language, backdrop_paths
                FROM movies`;
   const conditions = [];
-  // ALWAYS skip pinned movies — these are explicitly set to use TMDB backdrops.
+  // ALWAYS skip pinned movies — these are explicitly set and must not be touched.
   conditions.push(`(pin_tmdb_backdrops IS NULL OR pin_tmdb_backdrops = FALSE)`);
   if (TMDB_IDS) {
     // When specific IDs are given, process exactly those movies by DB row id.
     // Skip the "already has frames" guard (equivalent to --force for just these).
     conditions.push(`id = ANY(ARRAY[${TMDB_IDS.join(',')}])`);
-  } else if (!FORCE) {
+  } else if (!FORCE && !ALL) {
     conditions.push(`(backdrop_paths IS NULL
                OR cardinality(backdrop_paths) = 0
                OR NOT EXISTS (
