@@ -1432,7 +1432,7 @@ function VipLeaderboard({ vipFriends, onSelect }) {
                   {friend.username[0].toUpperCase()}
                 </div>
 
-                {/* Name + category */}
+                {/* Name + today's per-category status */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{
                     fontSize: '0.78rem', fontWeight: 700,
@@ -1441,23 +1441,44 @@ function VipLeaderboard({ vipFriends, onSelect }) {
                   }}>
                     @{friend.username}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                    {topCat && (
-                      <span style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.35)' }}>
-                        {CAT_ICON[topCat]}
-                      </span>
-                    )}
-                    {todayWins > 0 && (
-                      <span style={{
-                        fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.06em',
-                        color: 'rgba(74,222,128,0.80)',
-                        background: 'rgba(74,222,128,0.10)',
-                        border: '1px solid rgba(74,222,128,0.20)',
-                        borderRadius: 999, padding: '1px 5px',
-                      }}>
-                        ✓ {todayWins} today
-                      </span>
-                    )}
+                  {/* Per-category today dots */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, flexWrap: 'wrap' }}>
+                    {DAILY_CATS.map((cat) => {
+                      const g    = friend.today?.[cat.id];
+                      const won  = g?.won === true;
+                      const lost = g?.won === false;
+                      const catRgb = CAT_RGB[cat.id] || DEFAULT_RGB;
+                      return (
+                        <div
+                          key={cat.id}
+                          title={`${cat.label}: ${won ? `won (${g.guesses_taken} guess${g.guesses_taken !== 1 ? 'es' : ''})` : lost ? 'lost' : 'not played'}`}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 3,
+                            padding: '2px 6px', borderRadius: 999,
+                            background: won
+                              ? 'rgba(74,222,128,0.12)'
+                              : lost
+                              ? 'rgba(248,113,113,0.10)'
+                              : 'rgba(255,255,255,0.04)',
+                            border: `1px solid ${won
+                              ? 'rgba(74,222,128,0.28)'
+                              : lost
+                              ? 'rgba(248,113,113,0.22)'
+                              : `rgba(${catRgb},0.15)`}`,
+                          }}
+                        >
+                          <span style={{ fontSize: '0.58rem', lineHeight: 1 }}>{cat.emoji}</span>
+                          {won && (
+                            <span style={{ fontSize: '0.52rem', fontWeight: 800, color: '#4ade80' }}>
+                              {g.guesses_taken}
+                            </span>
+                          )}
+                          {lost && (
+                            <span style={{ fontSize: '0.52rem', fontWeight: 800, color: '#f87171' }}>✕</span>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -2010,12 +2031,10 @@ function FriendDetail({ friend, viewingFriend, favRgb, myFriends = [], mySentReq
 
                     return (
                       <div key={f.id} style={{ position: 'relative' }}>
-                        {/* pill */}
+                        {/* pill — only friends are navigable; non-friends are display-only */}
                         <button
-                          onClick={() => {
-                            if (isFriend) { onViewFriend?.(f.id, f.username); }
-                            else if (!isPending && !isMe) { setAddingPill(showPrompt ? null : f.id); }
-                          }}
+                          onClick={() => { if (isFriend) onViewFriend?.(f.id, f.username); }}
+                          disabled={!isFriend && !isMe}
                           style={{
                             display: 'flex', alignItems: 'center', gap: 6,
                             padding: '5px 10px 5px 6px',
@@ -2030,7 +2049,7 @@ function FriendDetail({ friend, viewingFriend, favRgb, myFriends = [], mySentReq
                               : isPending
                               ? 'rgba(243,206,19,0.22)'
                               : 'rgba(255,255,255,0.12)'}`,
-                            cursor: isMe ? 'default' : 'pointer',
+                            cursor: isFriend ? 'pointer' : 'default',
                             transition: 'background 0.18s, border-color 0.18s',
                           }}
                         >
@@ -2044,51 +2063,8 @@ function FriendDetail({ friend, viewingFriend, favRgb, myFriends = [], mySentReq
                           {isPending && (
                             <span style={{ fontSize: '0.55rem', color: 'rgba(243,206,19,0.65)', marginLeft: 1 }}>⏳</span>
                           )}
-                          {!isFriend && !isPending && !isMe && (
-                            <span style={{ fontSize: '0.55rem', color: 'rgba(168,85,247,0.70)', marginLeft: 1 }}>+</span>
-                          )}
                         </button>
 
-                        {/* add-friend prompt popover */}
-                        {showPrompt && (
-                          <div style={{
-                            position: 'absolute', bottom: 'calc(100% + 6px)', left: '50%',
-                            transform: 'translateX(-50%)',
-                            zIndex: 20,
-                            background: 'rgba(10,10,20,0.96)',
-                            border: '1px solid rgba(168,85,247,0.35)',
-                            borderRadius: 10, padding: '8px 10px',
-                            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-                            whiteSpace: 'nowrap',
-                            boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-                          }}>
-                            <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.65)' }}>
-                              Add @{f.username}?
-                            </span>
-                            <div style={{ display: 'flex', gap: 6 }}>
-                              <button
-                                onClick={() => { onAddFriend?.(f.username); setAddingPill(null); }}
-                                style={{
-                                  padding: '4px 12px', borderRadius: 7, fontSize: '0.65rem',
-                                  fontWeight: 700, cursor: 'pointer',
-                                  background: 'rgba(168,85,247,0.20)',
-                                  border: '1px solid rgba(168,85,247,0.45)',
-                                  color: '#c084fc',
-                                }}
-                              >Send request</button>
-                              <button
-                                onClick={() => setAddingPill(null)}
-                                style={{
-                                  padding: '4px 8px', borderRadius: 7, fontSize: '0.65rem',
-                                  fontWeight: 600, cursor: 'pointer',
-                                  background: 'rgba(255,255,255,0.05)',
-                                  border: '1px solid rgba(255,255,255,0.10)',
-                                  color: 'rgba(255,255,255,0.40)',
-                                }}
-                              >Cancel</button>
-                            </div>
-                          </div>
-                        )}
                       </div>
                     );
                   })}

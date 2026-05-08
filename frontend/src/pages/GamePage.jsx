@@ -257,6 +257,23 @@ export default function GamePage() {
                     hintsRevealed:        Array.isArray(serverSession.hints_revealed) ? serverSession.hints_revealed : [],
                     gameOverHintsRevealed: Array.isArray(serverSession.hints_revealed) ? serverSession.hints_revealed : [],
                   };
+                  // The server session is saved fire-and-forget, so localStorage can be
+                  // AHEAD of the server if the user navigated away before the save landed.
+                  // Prefer whichever source has more guesses for the same target.
+                  const localSaved = loadUnlimitedState(category);
+                  if (
+                    localSaved &&
+                    localSaved.targetId === serverSession.target_tmdb_id &&
+                    Array.isArray(localSaved.guesses) &&
+                    localSaved.guesses.length > adapted.guesses.length
+                  ) {
+                    adapted.guesses              = localSaved.guesses;
+                    adapted.gameOver             = localSaved.gameOver;
+                    adapted.won                  = localSaved.won;
+                    adapted.hintsRevealedCount   = localSaved.hintsRevealedCount ?? adapted.hintsRevealedCount;
+                    adapted.hintsRevealed        = Array.isArray(localSaved.hintsRevealed) ? localSaved.hintsRevealed : adapted.hintsRevealed;
+                    adapted.gameOverHintsRevealed = Array.isArray(localSaved.gameOverHintsRevealed) ? localSaved.gameOverHintsRevealed : adapted.gameOverHintsRevealed;
+                  }
                   // Sync back to localStorage so offline fallback stays current
                   saveUnlimitedState(category, adapted);
                   setTargetMovie(target);
