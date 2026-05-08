@@ -1091,40 +1091,62 @@ function LeaderboardBadgesSection({ leaderBadges, isAList, isCertifiedCinephile,
   if (isCertifiedCinephile) statusBadges.push({ id: 'cinephile', label: 'Certified Cinephile', desc: 'All Cinema Awards + active streak in every category', medal: '🎬', color: '168,85,247', iridescent: true });
   else if (isAList) statusBadges.push({ id: 'alist', label: 'A-List', desc: 'All 9 Cinema Awards earned', medal: '⭐', color: '243,206,19', iridescent: false });
 
-  const hasAnything = statusBadges.length > 0 || leaderBadges.length > 0;
-  if (!hasAnything && !loading) return null;
+  const allBadges = [...statusBadges, ...leaderBadges];
 
+  // Same card style as FlameCollection
   return (
-    <div style={{ marginBottom: 'clamp(8px,1.2vh,14px)' }}>
-      {/* Section header */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10,
-        paddingBottom: 8,
-        borderBottom: '1px solid rgba(168,85,247,0.18)',
-      }}>
-        <span style={{ fontSize: '1rem' }}>🎖️</span>
-        <span style={{ fontSize: '0.68rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(168,85,247,0.80)' }}>
-          Badges
-        </span>
+    <div style={{
+      borderRadius: 14,
+      padding: 'clamp(14px,2vh,18px) clamp(14px,2vw,18px)',
+      background: 'rgba(8,8,16,0.96)',
+      border: '1px solid rgba(168,85,247,0.16)',
+    }}>
+      {/* Header — mirrors FlameCollection */}
+      <div style={{ marginBottom: 12 }}>
+        <div style={{ fontSize: 'clamp(0.78rem,1.2vw,0.90rem)', fontWeight: 700, color: '#fff', marginBottom: 2 }}>
+          🎖️ Badges
+        </div>
+        <div style={{ fontSize: '0.60rem', color: 'rgba(255,255,255,0.35)' }}>
+          Earned from leaderboard finishes and profile milestones
+        </div>
       </div>
 
       {loading ? (
+        /* Skeleton shimmer row */
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {[0, 1, 2].map((i) => (
-            <div key={i} style={{ width: 80, height: 72, background: 'rgba(255,255,255,0.04)', borderRadius: 10 }} />
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} style={{ width: 70, height: 78, borderRadius: 10, background: 'rgba(255,255,255,0.04)' }} />
           ))}
+        </div>
+      ) : allBadges.length === 0 ? (
+        /* Empty state */
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '10px 14px', borderRadius: 10,
+          background: 'rgba(255,255,255,0.03)',
+          border: '1px dashed rgba(255,255,255,0.10)',
+        }}>
+          <span style={{ fontSize: '1.2rem', opacity: 0.35 }}>🔒</span>
+          <div>
+            <div style={{ fontSize: '0.62rem', fontWeight: 700, color: 'rgba(255,255,255,0.28)' }}>
+              No badges yet
+            </div>
+            <div style={{ fontSize: '0.54rem', color: 'rgba(255,255,255,0.18)', marginTop: 1 }}>
+              Finish top 10 on any monthly leaderboard to earn your first
+            </div>
+          </div>
         </div>
       ) : (
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
 
-          {/* Status badges */}
+          {/* Status badges (A-List / Certified Cinephile) */}
           {statusBadges.map((b) => (
             <div
               key={b.id}
               title={b.desc}
               style={{
                 display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                padding: '8px 12px', borderRadius: 10, minWidth: 72,
+                padding: '8px 10px', borderRadius: 10, minWidth: 68,
                 background: b.iridescent
                   ? 'linear-gradient(135deg, rgba(168,85,247,0.18), rgba(243,206,19,0.10))'
                   : 'rgba(243,206,19,0.10)',
@@ -1136,8 +1158,8 @@ function LeaderboardBadgesSection({ leaderBadges, isAList, isCertifiedCinephile,
             >
               <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>{b.medal}</span>
               <span style={{
-                fontSize: '0.48rem', fontWeight: 900, letterSpacing: '0.10em',
-                textTransform: 'uppercase', textAlign: 'center',
+                fontSize: '0.48rem', fontWeight: 900, letterSpacing: '0.08em',
+                textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.3,
                 color: b.iridescent ? '#c084fc' : '#F3CE13',
               }}>
                 {b.label}
@@ -1147,14 +1169,14 @@ function LeaderboardBadgesSection({ leaderBadges, isAList, isCertifiedCinephile,
 
           {/* Monthly leaderboard badges */}
           {leaderBadges.map((b, i) => {
-            const rm   = RANK_META[b.rank] || RANK_META[4];
-            const cm   = CAT_BADGE_META[b.category] || { emoji: '🎬', short: b.category };
+            const rm = RANK_META[b.rank] || RANK_META[4];
+            const cm = CAT_BADGE_META[b.category] || { emoji: '🎬', short: b.category };
             return (
               <div
                 key={i}
                 title={`${rm.label} — ${cm.short} — ${formatMonth(b.month)}`}
                 style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
                   padding: '8px 10px', borderRadius: 10, minWidth: 68,
                   background: `rgba(${rm.color},0.09)`,
                   border: `1px solid rgba(${rm.color},0.35)`,
@@ -1167,16 +1189,14 @@ function LeaderboardBadgesSection({ leaderBadges, isAList, isCertifiedCinephile,
                 </div>
                 <span style={{
                   fontSize: '0.47rem', fontWeight: 900, letterSpacing: '0.08em',
-                  textTransform: 'uppercase', textAlign: 'center',
+                  textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.3,
                   color: `rgba(${rm.color},0.90)`,
-                  lineHeight: 1.3,
                 }}>
                   {cm.short}
                 </span>
                 <span style={{
-                  fontSize: '0.42rem', fontWeight: 600,
+                  fontSize: '0.42rem', fontWeight: 600, textAlign: 'center', lineHeight: 1.3,
                   color: 'rgba(255,255,255,0.35)',
-                  textAlign: 'center', lineHeight: 1.3,
                 }}>
                   {formatMonth(b.month)}
                 </span>
@@ -1205,13 +1225,15 @@ function AwardsTab({ awards, allStreaks, loading, leaderBadges }) {
           <FlameCollection allStreaks={allStreaks} loading={loading} />
         </div>
 
-        {/* Badges section — A-List / Certified Cinephile + monthly leaderboard */}
-        <LeaderboardBadgesSection
-          leaderBadges={leaderBadges}
-          isAList={isAList}
-          isCertifiedCinephile={isCertifiedCinephile}
-          loading={loading}
-        />
+        {/* Badges section — always visible, same card style as FlameCollection */}
+        <div style={{ marginBottom: 'clamp(8px,1.2vh,14px)' }}>
+          <LeaderboardBadgesSection
+            leaderBadges={leaderBadges}
+            isAList={isAList}
+            isCertifiedCinephile={isCertifiedCinephile}
+            loading={loading}
+          />
+        </div>
 
         <div style={{
           display: 'grid',
