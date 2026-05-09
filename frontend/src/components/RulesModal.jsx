@@ -209,23 +209,23 @@ export default function RulesModal({ open, onClose, initialPage = 0 }) {
                   <div className="pl-3 space-y-1.5">
                     <div className="flex items-center flex-wrap gap-1.5">
                       <span className="text-[8px] font-bold text-gray-600 uppercase tracking-wider w-7 flex-shrink-0">MCU</span>
-                      {[['Infinity Saga','#ef4444'],['Multiverse Saga','#ef4444']].map(([l,c]) => (
-                        <span key={l} className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full whitespace-nowrap" style={{ background: `${c}18`, color: c, border: `1px solid ${c}35` }}>{l}</span>
+                      {['Infinity Saga','Multiverse Saga'].map((l) => (
+                        <span key={l} className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full whitespace-nowrap" style={{ background: 'rgba(239,68,68,0.12)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.30)' }}>{l}</span>
                       ))}
                     </div>
                     <div className="flex items-center flex-wrap gap-1.5">
                       <span className="text-[8px] font-bold text-gray-600 uppercase tracking-wider w-7 flex-shrink-0">Fox</span>
-                      <span className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full whitespace-nowrap" style={{ background: '#F3CE1318', color: '#F3CE13', border: '1px solid #F3CE1335' }}>X-Men Universe</span>
+                      <span className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full whitespace-nowrap" style={{ background: 'rgba(243,206,19,0.12)', color: '#fde68a', border: '1px solid rgba(243,206,19,0.30)' }}>X-Men Universe</span>
                     </div>
                     <div className="flex items-center flex-wrap gap-1.5">
                       <span className="text-[8px] font-bold text-gray-600 uppercase tracking-wider w-7 flex-shrink-0">Sony</span>
-                      {[['Raimi Spider-Man','#a855f7'],['Amazing Spider-Man','#a855f7'],['Spider-Man Universe','#a855f7'],['Spider-Verse','#a855f7']].map(([l,c]) => (
-                        <span key={l} className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full whitespace-nowrap" style={{ background: `${c}18`, color: c, border: `1px solid ${c}35` }}>{l}</span>
+                      {['Raimi Spider-Man','Amazing Spider-Man','Spider-Man Universe','Spider-Verse'].map((l) => (
+                        <span key={l} className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full whitespace-nowrap" style={{ background: 'rgba(168,85,247,0.12)', color: '#d8b4fe', border: '1px solid rgba(168,85,247,0.30)' }}>{l}</span>
                       ))}
                     </div>
                     <div className="flex items-center flex-wrap gap-1.5">
                       <span className="w-7 flex-shrink-0" />
-                      <span className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full whitespace-nowrap" style={{ background: '#dc262618', color: '#dc2626', border: '1px solid #dc262635' }}>Blade Trilogy</span>
+                      <span className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full whitespace-nowrap" style={{ background: 'rgba(185,28,28,0.14)', color: '#fca5a5', border: '1px solid rgba(185,28,28,0.32)' }}>Blade Trilogy</span>
                     </div>
                   </div>
                 </div>
@@ -237,22 +237,19 @@ export default function RulesModal({ open, onClose, initialPage = 0 }) {
                     DC / WB
                   </span>
                   <div className="pl-3 flex flex-wrap gap-1.5">
-                    {[
-                      ['Nolanverse','#60a5fa'],['DCEU','#60a5fa'],['DCU','#60a5fa'],['Elseworlds','#60a5fa'],
-                      ['Reeveverse','#93c5fd'],['Burtonverse','#93c5fd'],['Schumacherverse','#93c5fd'],['Standalone','#6b7280'],
-                    ].map(([l,c]) => (
-                      <span key={l} className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full whitespace-nowrap" style={{ background: `${c}18`, color: c, border: `1px solid ${c}35` }}>{l}</span>
+                    {['Nolanverse','DCEU','DCU','Elseworlds','Reeveverse','Burtonverse','Schumacherverse','Standalone'].map((l) => (
+                      <span key={l} className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full whitespace-nowrap" style={{ background: 'rgba(96,165,250,0.12)', color: '#93c5fd', border: '1px solid rgba(96,165,250,0.28)' }}>{l}</span>
                     ))}
                   </div>
                 </div>
 
                 {/* ── Other ── */}
                 <div className="flex items-start gap-2.5">
-                  <span className="flex-shrink-0 mt-0.5 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full whitespace-nowrap"
-                    style={{ background: '#6b728018', color: '#6b7280', border: '1px solid #6b728035' }}>
+                  <span className="inline-flex items-center flex-shrink-0 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider"
+                    style={{ background: 'rgba(107,114,128,0.18)', color: '#9ca3af', border: '1px solid rgba(107,114,128,0.40)' }}>
                     Other
                   </span>
-                  <p className="text-[11px] text-gray-400 leading-snug">Independent standalone films: Constantine, V for Vendetta, Watchmen, and Chronicle.</p>
+                  <p className="text-[11px] text-gray-400 leading-snug mt-0.5">Independent standalone films: Constantine, V for Vendetta, Watchmen, and Chronicle.</p>
                 </div>
 
               </div>
