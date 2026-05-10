@@ -1289,7 +1289,7 @@ export default function GamePage() {
       <RulesModal
         open={showRules}
         onClose={() => setShowRules(false)}
-        initialPage={1}
+        initialPage={2}
       />
 
     </div>
