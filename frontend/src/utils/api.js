@@ -175,9 +175,13 @@ export const reportIssue = ({ category, description, movie_id }) =>
 // ---------------------------------------------------------------
 // Pass through locally-served trailer frames (start with /frames/) or any
 // absolute URL unchanged. Otherwise treat the path as a TMDB relative path.
+const SUPABASE_FRAMES = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/frames`;
+
 export const tmdbImage = (path, size = 'w500') => {
   if (!path) return null;
-  if (path.startsWith('/frames/') || path.startsWith('http')) return path;
+  if (path.startsWith('http')) return path;
+  // Old relative frame paths (/frames/TMDB_ID_N.jpg) — rewrite to Supabase full URL
+  if (path.startsWith('/frames/')) return `${SUPABASE_FRAMES}/${path.slice('/frames/'.length)}`;
   return `https://image.tmdb.org/t/p/${size}${path}`;
 };
 
