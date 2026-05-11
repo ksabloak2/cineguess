@@ -38,28 +38,35 @@ const SYSTEM_PROMPT = `You write "Movies Explained Badly" loglines for a movie g
 
 The goal is to describe the movie in a way that is technically 100% accurate but intentionally misleading, reductive, or absurdly narrow. Think: a Reddit comment from someone who completely missed the point.
 
-Style rules:
+HARD RULES — violating any of these is a failure:
 - Output exactly ONE sentence. Max 30 words. No quotation marks. No emoji. No prefix like "Hint:" — just the sentence.
 - NEVER name the movie, the director, any actor, any character name, any franchise, or any sequel number.
-- NEVER use words that appear in the movie's title.
+- NEVER use words that appear in the movie's title — not the words AND not the concept the title refers to (e.g. for a movie called "The Whale" do not describe a whale or the ocean; for "Up" do not describe anything going upward or balloons).
+- NEVER describe the central premise so directly that the movie is immediately obvious. If someone who knows the film would recognize it within 3 words, rewrite it. Bury the lead.
+- SUPERHERO MOVIES ONLY: NEVER mention the hero's powers, abilities, costume appearance, color, or any detail that identifies their superhero identity. Do NOT say "a man who sticks to walls," "a billionaire in armor," "a green rage monster," etc. Instead, describe the civilian drama, a side character's problem, the villain's mundane motivation, or a single throwaway scene.
 
-Techniques to use (pick the best fit for the film):
-1. MINOR DETAIL AS MAIN PLOT — fixate on a trivial side event and present it as the whole story. e.g. Lord of the Rings → "A group of people spend 9 hours returning some jewelry."
-2. STRIP THE SCALE — describe epic or fantastical events as mundane everyday problems. e.g. Up → "An elderly man abducts an overweight boy to replace his dead wife."
-3. VILLAIN FRAMING — describe the hero's actions as if they are the antagonist. e.g. Batman → "A billionaire beats up the mentally ill while dressed as a giant bat."
-4. ABSURDLY LITERAL — describe exactly what physically happens, ignoring all subtext and meaning. e.g. The Shining → "A family's first winter in a hotel goes poorly due to a lack of indoor activities."
+Techniques to use (pick whichever makes the movie hardest to identify):
+1. MINOR DETAIL AS MAIN PLOT — fixate on a trivial side event as if it's the whole story. e.g. Lord of the Rings → "A group of friends have a very long argument about who should carry a piece of jewelry."
+2. STRIP THE SCALE — describe epic or fantastical events as mundane problems. e.g. The Shining → "A family's first winter in a hotel goes poorly due to a lack of indoor activities."
+3. VILLAIN FRAMING — describe events entirely from the antagonist's perspective as if they are the hero.
+4. ZOOM IN ON ONE SCENE — describe a single 30-second moment from the film as if it explains everything.
+5. WRONG GENRE — describe the film as if it belongs to a completely different genre (a horror film as a workplace comedy, an action film as a romance, etc.).
 
-Character descriptions: never use names. Use generic labels like "a farm boy," "a noseless guy," "a high-maintenance foodie," "an angry Scottish dad," "a billionaire in a metal suit," etc.
+Character descriptions: never use names. Use generic labels like "a grieving widower," "a teenager with authority issues," "an overly attached parent," "a middle manager having a bad week," etc. — deliberately generic so they could apply to dozens of films.
 
-The sentence must be punchy and dry — technically not lying, but completely unhelpful as a plot summary.`;
+The sentence must be punchy and dry. A cinephile who has seen the movie should need at least 5 seconds before the penny drops.`;
 
 // Reference examples (for prompt calibration):
 // The Wizard of Oz → "American girl invades a foreign land, kills the first person she meets, and teams up with strangers to kill again."
 // Finding Nemo    → "An overprotective father tracks down the kidnapper who took his disabled son."
 // Harry Potter    → "A noseless guy has an unhealthy obsession with a teenage boy."
 
-async function generateClue(title, year) {
-  const userPrompt = `Movie: ${title} (${year})\n\nWrite the logline.`;
+async function generateClue(title, year, categories = []) {
+  const isSuperhero = categories.includes('superhero');
+  const categoryNote = isSuperhero
+    ? '\nCategory: SUPERHERO — apply the superhero-specific rule (no powers, no costume, no identity clues).'
+    : '';
+  const userPrompt = `Movie: ${title} (${year})${categoryNote}\n\nWrite the logline.`;
   const resp = await client.messages.create({
     model: MODEL,
     max_tokens: 80,
@@ -82,7 +89,7 @@ async function main() {
     : `WHERE (ai_hint_quote IS NULL OR ai_hint_quote = '')`;
 
   const { rows: movies } = await pool.query(
-    `SELECT id, title, year FROM movies ${filter} ORDER BY title`
+    `SELECT id, title, year, categories FROM movies ${filter} ORDER BY title`
   );
 
   console.log(`Generating clues for ${movies.length} movies (force=${FORCE}, model=${MODEL})...\n`);
@@ -93,7 +100,7 @@ async function main() {
   for (let i = 0; i < movies.length; i++) {
     const m = movies[i];
     try {
-      const clue = await generateClue(m.title, m.year);
+      const clue = await generateClue(m.title, m.year, m.categories || []);
       if (!clue) throw new Error('empty clue from model');
       await pool.query(`UPDATE movies SET ai_hint_quote = $1, updated_at = NOW() WHERE id = $2`, [clue, m.id]);
       done++;
