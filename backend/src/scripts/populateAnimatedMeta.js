@@ -227,6 +227,7 @@ const META = {
   // =========================================================
   // SONY ANIMATION — mostly CGI
   // =========================================================
+  'the angry birds movie':             { style: 'CGI/3D', studio: 'Sony Animation', sequel: true,  protagonist: 'Animal', musical: false },
   'spider-man: into the spider-verse': { style: 'CGI/3D', studio: 'Sony Animation', sequel: true, protagonist: 'Human', musical: false },
   'spider-man: across the spider-verse': { style: 'CGI/3D', studio: 'Sony Animation', sequel: true, protagonist: 'Human', musical: false },
   'the mitchell vs the machines': { style: 'CGI/3D', studio: 'Sony Animation', sequel: false, protagonist: 'Human', musical: false },
