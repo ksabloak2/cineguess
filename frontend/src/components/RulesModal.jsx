@@ -385,7 +385,7 @@ export default function RulesModal({ open, onClose, initialPage = 0 }) {
               </div>
               <p className="text-[10px] uppercase tracking-[0.25em] font-semibold text-gray-500 mb-1.5">Leaderboard</p>
               <p className="text-[11px] text-gray-400 leading-relaxed">
-                Top 50 players sorted by Global Rating. Toggle between Global and per-category views via the trophy icon in the nav bar.
+                Top 10 players sorted by Global Rating. Toggle between Global and per-category views via the trophy icon in the nav bar.
               </p>
             </div>
 
