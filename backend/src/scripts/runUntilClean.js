@@ -201,62 +201,52 @@ async function fixAll(flagged) {
 
 // ─── Main loop ───────────────────────────────────────────────────────────────
 
-async function main() {
-  const { rows: allMovies } = await pool.query(
-    `SELECT id, title, year, ai_hint_quote, categories
-     FROM movies
-     WHERE ai_hint_quote IS NOT NULL AND ai_hint_quote != ''
-       AND NOT (categories @> ARRAY['indiancinema']::text[])
-     ORDER BY title`
-  );
+const fs = require('fs');
 
-  console.log(`Total movies to check: ${allMovies.length}\n`);
+async function fetchByIds(ids) {
+  const { rows } = await pool.query(
+    `SELECT id, title, year, ai_hint_quote, categories
+     FROM movies WHERE id = ANY($1) ORDER BY title`,
+    [ids]
+  );
+  return rows;
+}
+
+async function main() {
+  // Load the already-known flagged list — never re-scan movies that passed
+  let flagged = JSON.parse(fs.readFileSync('/tmp/quality_flagged.json', 'utf8'));
+  console.log(`Starting from saved flagged list: ${flagged.length} movies\n`);
 
   let round = 1;
-  let prevFlagged = Infinity;
 
-  while (true) {
-    console.log(`── Round ${round} ──────────────────────`);
+  while (flagged.length > 0) {
+    console.log(`── Round ${round} — fixing ${flagged.length} flagged ──────────────────────`);
 
-    // Re-fetch fresh loglines each round (they may have changed)
-    const { rows: freshMovies } = await pool.query(
-      `SELECT id, title, year, ai_hint_quote, categories
-       FROM movies
-       WHERE ai_hint_quote IS NOT NULL AND ai_hint_quote != ''
-         AND NOT (categories @> ARRAY['indiancinema']::text[])
-       ORDER BY title`
-    );
+    const { fixed, failed } = await fixAll(flagged);
 
-    const flagged = await verifyAll(freshMovies);
+    if (fixed === 0) {
+      console.log('\nNo fixes succeeded (likely out of credits). Stopping.\n');
+      break;
+    }
+
+    // Re-verify ONLY the ones we just fixed
+    const ids = flagged.map(f => f.id);
+    console.log(`\n  Re-verifying ${ids.length} just-fixed loglines...`);
+    const recheckMovies = await fetchByIds(ids);
+    flagged = await verifyAll(recheckMovies);
 
     if (flagged.length === 0) {
-      console.log('\n✅ All loglines pass! Done.\n');
+      console.log('\n✅ All previously flagged loglines now pass!\n');
       break;
     }
 
-    console.log(`\n  Too obvious (A): ${flagged.filter(f => f.status.includes('A')).length}`);
-    console.log(`  Too vague   (B): ${flagged.filter(f => f.status.includes('B')).length}`);
-    console.log(`  Bad formula (C): ${flagged.filter(f => f.status.includes('C')).length}\n`);
-
-    // Stop if no progress
-    if (flagged.length >= prevFlagged) {
-      console.log(`No improvement this round (${flagged.length} flagged). Stopping.\n`);
-      console.log('Still flagged:');
-      flagged.forEach((f) => console.log(`  [${f.status}] ${f.title} (${f.year})\n    "${f.logline}"\n    -> ${f.issue}`));
-      break;
-    }
-
-    prevFlagged = flagged.length;
-    const { failed } = await fixAll(flagged);
-
-    if (failed > 0 && failed >= flagged.length) {
-      console.log('\nAll fixes failed (likely out of credits). Stopping.\n');
-      break;
-    }
+    console.log(`  Still failing: ${flagged.length}`);
+    console.log(`    Too obvious (A): ${flagged.filter(f => f.status.includes('A')).length}`);
+    console.log(`    Too vague   (B): ${flagged.filter(f => f.status.includes('B')).length}`);
+    console.log(`    Bad formula (C): ${flagged.filter(f => f.status.includes('C')).length}\n`);
 
     round++;
-    console.log('');
-    await new Promise((r) => setTimeout(r, 500));
+    await new Promise((r) => setTimeout(r, 300));
   }
 
   await pool.end();
