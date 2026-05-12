@@ -517,10 +517,11 @@ export default function RulesModal({ open, onClose, initialPage = 0 }) {
 
 // ── Rules content ──────────────────────────────────────────────────────────
 const RULES = [
-  'Guess the target movie in 7 tries or fewer (8 for Indian Cinema). Each guess must be a real film from the chosen category. After every guess, tiles reveal how close you are. See the color legend and tile breakdowns below.',
-  'In Daily mode, everyone plays the same movie each day. Daily picks refresh at 12:00 AM EST. Your streak grows with each win and only resets on a wrong answer. Skipping a day keeps your streak alive, but you miss out on points that count toward your Global Rating.',
-  'Unlimited mode lets you play as many rounds as you want with a random target each round. Separate streaks are tracked per category.',
-  'Share your result grid with friends using the share button at the end of a game. Friends cannot see your current-day answers until they finish that category themselves.',
+  'Guess the target movie in 7 tries or fewer (8 for Indian Cinema). Each guess must be a real film from the chosen category.',
+  'After every guess, tiles reveal how close you are. See the color legend and tile breakdowns below.',
+  'Daily mode: everyone gets the same movie. Picks refresh at 12:00 AM EST. Streak grows with each win and resets only on a wrong answer. Skipping keeps your streak but costs you ranking points.',
+  'Unlimited mode: play as many rounds as you want with a random target. Streaks tracked separately per category.',
+  'Share your result grid after a game. Friends cannot see the answer until they finish that day themselves.',
 ];
 
 // ── Tile column descriptions ───────────────────────────────────────────────
