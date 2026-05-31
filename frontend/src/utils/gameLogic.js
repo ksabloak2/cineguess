@@ -154,18 +154,28 @@ export const TILE_TEXT = {
 // Production studio parent map — mirrors backend PRODUCTION_STUDIO_PARENT.
 // Used by evaluateTilesLocal for offline/guest tile evaluation.
 const PRODUCTION_STUDIO_PARENT_FE = {
+  // Disney
   'Walt Disney Pictures': 'Disney', 'Pixar Animation Studios': 'Disney',
   'Marvel Studios': 'Disney', 'Lucasfilm': 'Disney',
   '20th Century Studios': 'Disney', 'Searchlight Pictures': 'Disney',
   'Touchstone Pictures': 'Disney', 'Blue Sky Studios': 'Disney',
+  'Fox Atomic': 'Disney', 'Fox Star Studios': 'Disney',
+  // Universal
   'Universal Pictures': 'Universal', 'Amblin Entertainment': 'Universal',
-  'DreamWorks': 'Universal', 'Working Title Films': 'Universal',
-  'Focus Features': 'Universal', 'Blumhouse Productions': 'Universal',
-  'Illumination': 'Universal',
+  'DreamWorks': 'Universal', 'DreamWorks Animation': 'Universal',
+  'Working Title Films': 'Universal', 'Focus Features': 'Universal',
+  'Blumhouse Productions': 'Universal', 'Illumination': 'Universal',
+  // Warner Bros.
   'Warner Bros.': 'Warner Bros.', 'New Line Cinema': 'Warner Bros.',
   'Castle Rock Entertainment': 'Warner Bros.', 'Village Roadshow': 'Warner Bros.',
-  'Legendary Entertainment': 'Warner Bros.',
+  'Legendary Entertainment': 'Warner Bros.', 'DC Films': 'Warner Bros.',
+  'Warner Animation Group': 'Warner Bros.', 'Warner Bros. Animation': 'Warner Bros.',
+  'Warner Bros. Feature Animation': 'Warner Bros.', 'Hanna-Barbera Cartoons': 'Warner Bros.',
+  'Silver Pictures': 'Warner Bros.',
+  // Sony
   'Columbia Pictures': 'Sony', 'TriStar Pictures': 'Sony',
+  'Screen Gems': 'Sony', 'Sony Pictures Animation': 'Sony',
+  // Others
   'Paramount Pictures': 'Paramount',
   'Lionsgate': 'Lionsgate',
   'MGM': 'MGM',

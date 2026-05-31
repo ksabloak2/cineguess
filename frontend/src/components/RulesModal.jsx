@@ -531,7 +531,7 @@ const TILE_COLUMNS = [
   { icon: '⭐', label: 'Lead Actor/Actress',       detail: 'Green = exact lead match. Yellow = your lead appears in the target cast (different role).' },
   { icon: '🌟', label: 'Supporting Actor/Actress', detail: 'Second-billed cast member. Green = exact match. Yellow = appears anywhere in target film.' },
   { icon: '📅', label: 'Year',                    detail: 'Green = exact. Cyan = ≤2 yrs off. Amber = ≤5 yrs off. Red = 5+ yrs. Arrow shows which direction.' },
-  { icon: '🎥', label: 'Studio',                  detail: 'Primary production studio. Green = same studio. Yellow = same parent company (e.g. Warner Bros. & New Line Cinema both belong to WB). Red = different.' },
+  { icon: '🎥', label: 'Studio',                  detail: 'Primary production studio. Green = same studio. Yellow = same studio family (e.g. New Line Cinema & DC Films both belong to Warner Bros., Screen Gems belongs to Sony). Red = different.' },
 ];
 
 // ── Progressive hints ──────────────────────────────────────────────────────

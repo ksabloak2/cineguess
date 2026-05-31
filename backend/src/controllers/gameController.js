@@ -601,10 +601,13 @@ const PRODUCTION_STUDIO_PARENT = {
   'Searchlight Pictures':     'Disney',
   'Touchstone Pictures':      'Disney',
   'Blue Sky Studios':         'Disney',
+  'Fox Atomic':               'Disney',
+  'Fox Star Studios':         'Disney',
   // Universal / Comcast
   'Universal Pictures':       'Universal',
   'Amblin Entertainment':     'Universal',
   'DreamWorks':               'Universal',
+  'DreamWorks Animation':     'Universal',
   'Working Title Films':      'Universal',
   'Focus Features':           'Universal',
   'Blumhouse Productions':    'Universal',
@@ -615,9 +618,17 @@ const PRODUCTION_STUDIO_PARENT = {
   'Castle Rock Entertainment':'Warner Bros.',
   'Village Roadshow':         'Warner Bros.',
   'Legendary Entertainment':  'Warner Bros.',
+  'DC Films':                 'Warner Bros.',
+  'Warner Animation Group':   'Warner Bros.',
+  'Warner Bros. Animation':   'Warner Bros.',
+  'Warner Bros. Feature Animation': 'Warner Bros.',
+  'Hanna-Barbera Cartoons':   'Warner Bros.',
+  'Silver Pictures':          'Warner Bros.',
   // Sony
   'Columbia Pictures':        'Sony',
   'TriStar Pictures':         'Sony',
+  'Screen Gems':              'Sony',
+  'Sony Pictures Animation':  'Sony',
   // Paramount
   'Paramount Pictures':       'Paramount',
   // Lionsgate
