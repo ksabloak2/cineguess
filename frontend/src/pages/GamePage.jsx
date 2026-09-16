@@ -19,6 +19,7 @@ import HintModal from '../components/HintModal';
 import ResultModal from '../components/ResultModal';
 import RulesModal from '../components/RulesModal';
 import StarterInfoPanel from '../components/StarterInfoPanel';
+import { dailyHintState } from '../utils/dailyHintState';
 
 const VALID_IDS   = new Set([
   ...CATEGORIES.map((c) => c.id),
@@ -196,6 +197,10 @@ export default function GamePage() {
     if (!isUnlimited) {
       const saved = loadDailyState(guestKey);
       if (saved?.rows?.length) {
+        const paidHints = dailyHintState(saved);
+        setHintsRevealed(paidHints.hintsRevealed);
+        setHintsUnlocked(paidHints.hintsUnlocked);
+        setGameOverHintsRevealed(paidHints.gameOverHintsRevealed);
         setGuessResults(saved.rows);
         setGuessedIds(saved.rows.map((r) => r.movie.tmdb_id));
         if (saved.gameOver) {
@@ -206,14 +211,14 @@ export default function GamePage() {
           // Restore hints immediately so the button appears before the server round-trip.
           if (saved.hints?.length) mergeHints(saved.hints, true);
           // Restore hint count and potential score
-          const savedHintCount = saved.hintsRevealedCount || 0;
+          const savedHintCount = paidHints.hintsRevealedCount;
           setHintsRevealedCount(savedHintCount);
         } else {
           setGameOver(false);
           setWon(null);
           setResult(null);
           // Restore hint count for in-progress game
-          const savedHintCount = saved.hintsRevealedCount || 0;
+          const savedHintCount = paidHints.hintsRevealedCount;
           if (savedHintCount > 0) {
             setHintsRevealedCount(savedHintCount);
           }
@@ -389,13 +394,17 @@ export default function GamePage() {
           const hintSnapshot = finalResult?.hint && Object.keys(finalResult.hint).length > 0
             ? hintsFromServer(finalResult.hint)
             : [];
+          // Read again after the request: a reveal may have occurred while it
+          // was in flight. The server owns guesses, not local paid-hint state.
+          const paidHints = dailyHintState(loadDailyState(guestKey) || {});
           saveDailyState(guestKey, {
             rows:               restored,
             gameOver:           state.won !== null,
             won:                state.won,
             result:             finalResult,
             hints:              hintSnapshot,
-            hintsRevealedCount: 0, // server restoration can't know how many hints were revealed
+            ...paidHints,
+            gameOverHintsRevealed: state.won !== null ? paidHints.hintsRevealed : [],
             date:               state.date,
           });
         }
@@ -768,6 +777,9 @@ export default function GamePage() {
           result:             isGameOver ? (postGameResult || revealedResult || null) : null,
           hints:              isGameOver ? postGameHints : [],
           hintsRevealedCount: hintsRevealedCount,
+          hintsRevealed: [...hintsRevealed],
+          gameOverHintsRevealed: isGameOver ? [...hintsRevealed] : [],
+          hintsUnlocked: isGameOver ? postGameHints : (serverHint ? hintsFromServer(serverHint) : hintsUnlocked),
           date:               dailyDate,
         });
       }
@@ -788,7 +800,7 @@ export default function GamePage() {
     } finally {
       setSubmitting(false);
     }
-  }, [gameOver, submitting, guessedIds, guessResults, mode, category, targetMovie, isUnlimited, guestKey, streakKey, session, refreshStreak, hintsRevealed, hintsRevealedCount]);
+  }, [gameOver, submitting, guessedIds, guessResults, mode, category, targetMovie, isUnlimited, guestKey, streakKey, session, refreshStreak, hintsRevealed, hintsRevealedCount, hintsUnlocked]);
 
   function updateHints(guessCount, target) {
     if (!target) return;
@@ -867,9 +879,17 @@ export default function GamePage() {
       }
     } else if (!isUnlimited) {
       const saved = loadDailyState(guestKey);
-      if (saved) {
-        saveDailyState(guestKey, { ...saved, hintsRevealedCount: newCount });
-      }
+      saveDailyState(guestKey, {
+        ...saved,
+        rows: guessResults,
+        gameOver: false,
+        won: null,
+        date: dailyDate,
+        hintsRevealedCount: newCount,
+        hintsRevealed: newRevealed,
+        hintsUnlocked,
+        gameOverHintsRevealed: [],
+      });
     }
   }
 
